@@ -1,0 +1,138 @@
+package nez.expr;
+
+import java.util.TreeMap;
+
+import nez.Grammar;
+import nez.SourceContext;
+import nez.ast.SourcePosition;
+import nez.util.UList;
+import nez.util.UMap;
+import nez.vm.CallPush;
+import nez.vm.Instruction;
+import nez.vm.Optimizer;
+
+public class NonTerminal extends Expression {
+	public Grammar peg;
+	public String  ruleName;
+	String  uniqueName;
+	public NonTerminal(SourcePosition s, Grammar peg, String ruleName) {
+		super(s);
+		this.peg = peg;
+		this.ruleName = ruleName;
+		this.uniqueName = this.peg.uniqueName(this.ruleName);
+	}
+
+	@Override
+	public int size() {
+		return 0;
+	}
+
+	@Override
+	public Expression get(int index) {
+		return null;
+	}
+	
+	@Override
+	public String getInterningKey() {
+		return getUniqueName();
+	}
+
+	@Override
+	public String getPredicate() {
+		return getUniqueName();
+	}
+
+	public final String getLocalName() {
+		return ruleName;
+	}
+
+	public final String getUniqueName() {
+		return this.uniqueName;
+	}
+	
+	public final Rule getRule() {
+		return this.peg.getRule(this.ruleName);
+	}
+	
+	public final Expression deReference() {
+		Rule r = this.peg.getRule(this.ruleName);
+		return (r != null) ? r.getExpression() : null;
+	}
+	
+	@Override
+	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+		Rule r = this.getRule();
+		if(r == null) {
+			checker.reportWarning(s, "undefined rule: " + this.ruleName + " => created empty rule!!");
+			r = this.peg.newRule(this.ruleName, Factory.newEmpty(s));
+		}
+		if(startNonTerminal != null && startNonTerminal.equals(this.uniqueName)) {
+			checker.reportError(s, "left recursion: " + this.ruleName);
+			checker.foundFatalError();
+			return false;
+		}
+		return r.checkAlwaysConsumed(checker, startNonTerminal, stack);
+	}
+
+	@Override
+	public int inferNodeTransition(UMap<String> visited) {
+		Rule r = this.getRule();
+		return r.inferNodeTransition(visited);
+	}
+	@Override
+	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+		Rule r = this.getRule();
+		int t = r.inferNodeTransition();
+		if(t == NodeTransition.BooleanType) {
+			return this;
+		}
+		if(c.required == NodeTransition.ObjectType) {
+			if(t == NodeTransition.OperationType) {
+				checker.reportWarning(s, "unexpected AST operations => removed!!");
+				return this.removeNodeOperator();
+			}
+			c.required = NodeTransition.OperationType;
+			return this;
+		}
+		if(c.required == NodeTransition.OperationType) {
+			if(t == NodeTransition.ObjectType) {
+				checker.reportWarning(s, "expected @ => inserted!!");
+				return Factory.newLink(this.s, this, -1);
+			}
+		}
+		return this;
+	}
+	@Override
+	public Expression removeNodeOperator() {
+		Rule r = (Rule)this.getRule().removeNodeOperator();
+		if(!this.ruleName.equals(r.getLocalName())) {
+			return Factory.newNonTerminal(this.s, peg, r.getLocalName());
+		}
+		return this;
+	}
+	@Override
+	public Expression removeFlag(TreeMap<String,String> undefedFlags) {
+		Rule r = (Rule)this.getRule().removeFlag(undefedFlags);
+		if(!this.ruleName.equals(r.getLocalName())) {
+			return Factory.newNonTerminal(this.s, peg, r.getLocalName());
+		}
+		return this;
+	}
+	
+	@Override
+	public short acceptByte(int ch) {
+		return this.deReference().acceptByte(ch);
+	}
+
+	@Override
+	public boolean match(SourceContext context) {
+		return context.matchNonTerminal(this);
+	}
+	
+	@Override
+	public Instruction encode(Optimizer optimizer, Instruction next) {
+		return new CallPush(optimizer, this.getRule(), next);
+	}
+
+
+}

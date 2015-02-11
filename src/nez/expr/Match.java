@@ -1,0 +1,52 @@
+package nez.expr;
+
+import nez.SourceContext;
+import nez.ast.SourcePosition;
+import nez.util.UList;
+import nez.util.UMap;
+import nez.vm.Instruction;
+import nez.vm.Optimizer;
+
+public class Match extends Unary {
+	Match(SourcePosition s, Expression inner) {
+		super(s, inner);
+	}
+	@Override
+	public String getPredicate() { 
+		return "~";
+	}
+	@Override
+	public String getInterningKey() { 
+		return "~";
+	}	
+	@Override
+	Expression dupUnary(Expression e) {
+		return (this.inner != e) ? Factory.newMatch(this.s, e) : this;
+	}
+	@Override
+	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
+	}
+	@Override
+	public int inferNodeTransition(UMap<String> visited) {
+		return NodeTransition.BooleanType;
+	}
+	@Override
+	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+		return this.inner.removeNodeOperator();
+	}
+	@Override
+	public short acceptByte(int ch) {
+		return this.inner.acceptByte(ch);
+	}
+	@Override
+	public boolean match(SourceContext context) {
+		return this.inner.matcher.match(context);
+	}
+	
+	@Override
+	public Instruction encode(Optimizer optimizer, Instruction next) {
+		return this.inner.encode(optimizer, next);
+	}
+
+}

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>charactersArray</key>
+	<array>
+		<dict>
+			<key>beginString</key>
+			<string>&lt;[a-zA-Z]+</string>
+			<key>endString</key>
+			<string>&gt;</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>beginString</key>
+			<string>\[[a-zA-Z]+:</string>
+			<key>endString</key>
+			<string>\]</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+	</array>
+	<key>commandsArray</key>
+	<array>
+		<dict>
+			<key>beginString</key>
+			<string>#.*</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>beginString</key>
+			<string>{</string>
+		</dict>
+		<dict>
+			<key>beginString</key>
+			<string>}</string>
+		</dict>
+	</array>
+	<key>commentsArray</key>
+	<array>
+		<dict>
+			<key>beginString</key>
+			<string>/*</string>
+			<key>endString</key>
+			<string>*/</string>
+		</dict>
+		<dict>
+			<key>beginString</key>
+			<string>//.*</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+	</array>
+	<key>completionsArray</key>
+	<array>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;block &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;def &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;defindent&gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;if &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;indent&gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;is &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;isa &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;perm &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;permutation &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;powerset &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;with &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>&lt;without &gt;</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>[badexample: ]</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>[example: ]</string>
+		</dict>
+	</array>
+	<key>extensions</key>
+	<array>
+		<dict>
+			<key>keyString</key>
+			<string>peg</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>p4d</string>
+		</dict>
+		<dict>
+			<key>keyString</key>
+			<string>nez</string>
+		</dict>
+	</array>
+	<key>keywordsArray</key>
+	<array>
+		<dict>
+			<key>beginString</key>
+			<string>^[ \t]*[A-Za-z0-9_]+</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+	</array>
+	<key>numOfObjInArray</key>
+	<integer>11</integer>
+	<key>numbersArray</key>
+	<array/>
+	<key>outlineMenuArray</key>
+	<array/>
+	<key>stringsArray</key>
+	<array>
+		<dict>
+			<key>beginString</key>
+			<string>"[^"\r\n]*?"</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>beginString</key>
+			<string>'[^'\r\n]*?"</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>beginString</key>
+			<string>`[^`\r\n]*?`</string>
+			<key>regularExpression</key>
+			<true/>
+		</dict>
+	</array>
+	<key>styleName</key>
+	<string>PEG</string>
+	<key>valuesArray</key>
+	<array/>
+</dict>
+</plist>
