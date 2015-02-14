@@ -2,8 +2,8 @@ package nez.vm;
 
 import nez.expr.Rule;
 
-public class Return extends Instruction {
-	public Return(Optimizer optimizer, Rule e) {
+public class Return extends Instruction implements StackOperation {
+	public Return(Compiler optimizer, Rule e) {
 		super(optimizer, e, null);
 	}
 	@Override
@@ -13,7 +13,7 @@ public class Return extends Instruction {
 
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("ret");
+		sb.append("ret  ## " + ((Rule)e).getLocalName());
 	}
 
 }

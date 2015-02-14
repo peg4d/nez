@@ -5,7 +5,7 @@ import nez.util.StringUtils;
 
 public class MatchByte extends Instruction {
 	public final int byteChar;
-	public MatchByte(Optimizer optimizer, ByteChar e, Instruction next) {
+	public MatchByte(Compiler optimizer, ByteChar e, Instruction next) {
 		super(optimizer, e, next);
 		this.byteChar = e.byteChar;
 	}

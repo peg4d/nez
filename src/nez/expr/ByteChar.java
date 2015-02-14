@@ -5,7 +5,7 @@ import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.MatchByte;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class ByteChar extends Terminal {
 	public int byteChar;
@@ -38,8 +38,17 @@ public class ByteChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new MatchByte(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new MatchByte(bc, this, next);
+	}
+	
+	@Override
+	protected int pattern(GEP gep) {
+		return this.size();
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		sb.append((char)this.byteChar);
 	}
 
 }

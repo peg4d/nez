@@ -136,22 +136,40 @@ public class NezParserCombinator extends ParserCombinator {
 		return Sequence(t("["), New(ZeroMore(Link(_CharChunk)), Tag(NezTag.Character)), t("]"));
 	}
 
+//	public Expression Constructor() {
+//		Expression ConstructorBegin = Choice(t("{"), t("<{"), t("<<"), t("8<"));
+//		Expression Connector  = Choice(t("@"), t("^"));
+//		Expression ConstructorEnd   = Choice(t("}>"), t("}"), t(">>"), t(">8"));
+//		return New(
+//			ConstructorBegin, 
+//			Choice(
+//				Sequence(Connector, P("S"), Tag(NezTag.LeftJoin)), 
+//				Tag(NezTag.Constructor)
+//			), 
+//			P("_"), 
+//			Option(Sequence(Link(P("Expr")), P("_"))),
+//			ConstructorEnd
+//		);
+//	}
+
 	public Expression Constructor() {
-		Expression ConstructorBegin = Choice(t("{"), t("<{"), t("<<"), t("8<"));
-		Expression Connector  = Choice(t("@"), t("^"));
-		Expression ConstructorEnd   = Choice(t("}>"), t("}"), t(">>"), t(">8"));
 		return New(
-			ConstructorBegin, 
+			t("{"), 
 			Choice(
-				Sequence(Connector, P("S"), Tag(NezTag.LeftJoin)), 
+				Sequence(t("@"), P("S"), Tag(NezTag.LeftJoin)), 
 				Tag(NezTag.Constructor)
 			), 
 			P("_"), 
-			Option(Sequence(Link(P("Expr")), P("_"))),
-			ConstructorEnd
+			/*Option(*/Link(P("Expr")), P("_") /*)*/,
+			t("}")
 		);
 	}
-	
+
+	private Expression Repetition(Expression link, Expression p) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public Expression Func() {
 		return Sequence(t("<"), New(
 		Choice(
@@ -188,10 +206,18 @@ public class NezParserCombinator extends ParserCombinator {
 		Expression _Byte = New(t("0x"), P("HEX"), P("HEX"), Tag(NezTag.Byte));
 		Expression _Unicode = New(t("U+"), P("HEX"), P("HEX"), P("HEX"), P("HEX"), Tag(NezTag.Byte));
 		return Choice(
-			P("SingleQuotedString"), P("Charset"), P("Func"),  
-			_Any, P("ValueReplacement"), _Tagging, _Byte, _Unicode,
+			P("SingleQuotedString"), 
+			P("Charset"), 
+			P("Func"),  
+			_Any, 
+			P("ValueReplacement"), 
+			_Tagging, 
+			_Byte, 
+			_Unicode,
 			Sequence(t("("), P("_"), P("Expr"), P("_"), t(")")),
-			P("Constructor"), P("String"), P("NonTerminal") 
+			P("Constructor"), 
+			P("String"), 
+			P("NonTerminal") 
 		);
 	}
 	

@@ -3,6 +3,7 @@ package org.peg4d;
 import java.util.TreeMap;
 
 import nez.expr.NodeTransition;
+import nez.util.ConsoleUtils;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -60,7 +61,7 @@ public class Grammar {
 			ParsingObject po = context.parse2(peg4d, "Chunk", new ParsingObject(), null);
 			if(context.isFailure()) {
 				String msg = context.source.formatPositionLine("error", context.fpos, context.getErrorMessage());
-				Main._Exit(1, msg);
+				ConsoleUtils.exit(1, msg);
 				return false;
 			}
 			if(!builder.parse(po)) {
@@ -190,7 +191,7 @@ public class Grammar {
 			rule.checkAlwaysConsumed(null, stack);
 		}
 		if(this.foundError) {
-			Main._Exit(1, "PegError found");
+			ConsoleUtils.exit(1, "PegError found");
 		}
 		if(stats != null) {
 			stats.setCount("PEG.Rules", definedNameList.size());

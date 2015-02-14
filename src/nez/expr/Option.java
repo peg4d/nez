@@ -5,10 +5,8 @@ import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.FailPop;
-import nez.vm.FailPush;
+import nez.vm.Compiler;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
 
 public class Option extends Unary {
 	Option(SourcePosition s, Expression e) {
@@ -73,10 +71,19 @@ public class Option extends Unary {
 	}
 
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		Instruction pop = new FailPop(optimizer, this, next);
-		return new FailPush(optimizer, this, next, this.inner.encode(optimizer, pop));
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeOption(this, next);
 	}
 
+	@Override
+	protected int pattern(GEP gep) {
+		return 2;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		if(p % 2 == 0) {
+			this.inner.examplfy(gep, sb, p);
+		}
+	}
 
 }

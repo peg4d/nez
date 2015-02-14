@@ -7,7 +7,7 @@ import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class WithoutFlag extends Unary {
 	String flagName;
@@ -59,8 +59,17 @@ public class WithoutFlag extends Unary {
 		return this.inner.matcher.match(context);
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return this.inner.encode(optimizer, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return this.inner.encode(bc, next);
+	}
+	@Override
+	protected int pattern(GEP gep) {
+		return inner.pattern(gep);
+	}
+
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		this.inner.examplfy(gep, sb, p);
 	}
 
 }

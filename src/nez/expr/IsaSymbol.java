@@ -40,4 +40,16 @@ public class IsaSymbol extends Terminal {
 	public boolean match(SourceContext context) {
 		return context.matchSymbolTable(table);
 	}
+
+	@Override
+	protected int pattern(GEP gep) {
+		return gep.countTable(table);
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		int size = gep.countTable(table);
+		String token = gep.getOneOfSymbol(table, p % size);
+		sb.append(token);
+	}
+
 }

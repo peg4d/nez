@@ -4,7 +4,7 @@ import nez.expr.Link;
 
 public class NodeStore extends Instruction {
 	public final int index;
-	public NodeStore(Optimizer optimizer, Link e, Instruction next) {
+	public NodeStore(Compiler optimizer, Link e, Instruction next) {
 		super(optimizer, e, next);
 		this.index = e.index;
 	}

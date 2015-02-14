@@ -5,7 +5,7 @@ import nez.util.StringUtils;
 
 public class MatchByteMap extends Instruction {
 	public final boolean[] byteMap;
-	public MatchByteMap(Optimizer optimizer, ByteMap e, Instruction next) {
+	public MatchByteMap(Compiler optimizer, ByteMap e, Instruction next) {
 		super(optimizer, e, next);
 		this.byteMap = e.charMap;
 	}

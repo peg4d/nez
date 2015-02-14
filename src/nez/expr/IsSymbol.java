@@ -31,4 +31,15 @@ public class IsSymbol extends Terminal {
 	public boolean match(SourceContext context) {
 		return context.matchSymbolTableTop(table);
 	}
+
+	@Override
+	protected int pattern(GEP gep) {
+		return 1;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		String token = gep.getSymbol(table);
+		sb.append(token);
+	}
+
 }

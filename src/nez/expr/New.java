@@ -10,7 +10,7 @@ import nez.util.UMap;
 import nez.vm.Instruction;
 import nez.vm.NodeCapture;
 import nez.vm.NodeNew;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class New extends ExpressionList {
 	int prefetchIndex = 0;
@@ -102,13 +102,32 @@ public class New extends ExpressionList {
 	}
 	
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		next = new NodeCapture(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		next = new NodeCapture(bc, this, next);
 		for(int i = this.size() -1; i >= 0; i--) {
 			Expression e = this.get(i);
-			next = e.encode(optimizer, next);
+			next = e.encode(bc, next);
 		}
-		return new NodeNew(optimizer, this, next);
+		return new NodeNew(bc, this, next);
 	}
+
+	@Override
+	protected int pattern(GEP gep) {
+		int max = 0;
+		for(Expression p: this) {
+			int c = p.pattern(gep);
+			if(c > max) {
+				max = c;
+			}
+		}
+		return max;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		for(Expression e: this) {
+			e.examplfy(gep, sb, p);
+		}
+	}
+
 
 }

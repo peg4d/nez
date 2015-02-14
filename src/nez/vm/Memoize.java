@@ -4,7 +4,7 @@ import nez.expr.Expression;
 
 public class Memoize extends Instruction {
 	public final int memoPoint;
-	public Memoize(Optimizer optimizer, Expression e, int memoPoint, Instruction next) {
+	public Memoize(Compiler optimizer, Expression e, int memoPoint, Instruction next) {
 		super(optimizer, e, next);
 		this.memoPoint = memoPoint;
 	}

@@ -6,7 +6,7 @@ import nez.util.StringUtils;
 
 public class NodeTag extends Instruction {
 	public final Tag tag;
-	public NodeTag(Optimizer optimizer, Tagging e, Instruction next) {
+	public NodeTag(Compiler optimizer, Tagging e, Instruction next) {
 		super(optimizer, e, next);
 		this.tag = e.tag;
 	}

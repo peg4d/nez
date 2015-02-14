@@ -6,18 +6,35 @@ import nez.SourceContext;
 import nez.ast.AST;
 import nez.ast.Converter;
 import nez.ast.Tag;
+import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
 
-public class NezConstructor extends Converter {
+public class NezParser extends Converter {
 
-	Grammar peg;
+	Grammar loaded;
+	Production product;
 	
-	NezConstructor(Grammar peg) {
-		this.peg = peg;
+	public NezParser() {
+		product = NezParserCombinator.newGrammar().getProduction("Chunk");
 	}
 	
-	boolean parse(AST ast, ExpressionChecker checker) {
+	public Grammar load(SourceContext sc, ExpressionChecker checker) {
+		this.loaded = new Grammar(sc.getResourceName());
+		while(sc.hasUnconsumed()) {
+			AST ast = product.parse(sc, new AST());
+			if(ast == null) {
+				ConsoleUtils.exit(1, sc.formatPositionMessage("error", sc.getPosition(), "syntax error"));
+			}
+			if(!this.parse(ast, checker)) {
+				break;
+			}
+		}
+		checker.verify(loaded);
+		return loaded;
+	}
+	
+	private boolean parse(AST ast, ExpressionChecker checker) {
 		//System.out.println("DEBUG? parsed: " + ast);
 		if(ast.is(NezTag.Rule)) {
 			if(ast.size() > 3) {
@@ -27,13 +44,13 @@ public class NezConstructor extends Converter {
 			if(ast.get(0).is(NezTag.String)) {
 				ruleName = quote(ruleName);
 			}
-			Rule rule = peg.getRule(ruleName);
+			Rule rule = loaded.getRule(ruleName);
 			Expression e = toExpression(ast.get(1));
 			if(rule != null) {
 				checker.reportWarning(ast, "duplicated rule name: " + ruleName);
 				rule = null;
 			}
-			rule = peg.defineRule(ast.get(0), ruleName, e);
+			rule = loaded.defineRule(ast.get(0), ruleName, e);
 			if(ast.size() >= 3) {
 				readAnnotations(rule, ast.get(2));
 			}
@@ -53,7 +70,7 @@ public class NezConstructor extends Converter {
 //			System.out.println(ast.formatSourceMessage("error", "syntax error: ascii=" + c));
 //			return false;
 //		}
-		System.out.println(ast.formatSourceMessage("error", "PEG rule is required: " + ast));
+		ConsoleUtils.exit(1, ast.formatSourceMessage("error", "Not Nez construct: " + ast));
 		return false;
 	}
 	
@@ -95,7 +112,7 @@ public class NezConstructor extends Converter {
 //			Main.printVerbose("implicit importing", symbol);
 //			peg.setRule(symbol, GrammarFactory.Grammar.getRule(symbol));
 //		}
-		return Factory.newNonTerminal(ast, peg, symbol);
+		return Factory.newNonTerminal(ast, this.loaded, symbol);
 	}
 
 	private String quote(String t) {
@@ -104,7 +121,7 @@ public class NezConstructor extends Converter {
 
 	public Expression toString(AST ast) {
 		String name = quote(ast.getText());
-		Rule r = peg.getRule(name);
+		Rule r = this.loaded.getRule(name);
 		if(r != null) {
 			return r.getExpression();
 		}
@@ -292,30 +309,30 @@ public class NezConstructor extends Converter {
 //		return Factory.newRepeat(toExpression(ast.get(0)));
 //	}
 	
-	public final static Grammar load(SourceContext sc) {
-		Grammar nez = NezParserCombinator.newGrammar();
-		Production p = nez.getProduction("Chunk");
-//		this.name = fileName;
-//		if(fileName.indexOf('/') > 0) {
-//			this.name = fileName.substring(fileName.lastIndexOf('/')+1);
-//		}
-		Grammar peg = new Grammar(sc.getResourceName());
-		NezConstructor builder = new NezConstructor(peg);
-		while(sc.hasUnconsumed()) {
-			AST ast = p.parse(sc, new AST());
-			if(ast != null) {
-				if(!builder.parse(ast, null /*FIXME*/)) {
-					System.out.println("parse failed");
-					return peg;
-				}
-			}
-//			if(context.isFailure()) {
-//				String msg = context.source.formatPositionLine("error", context.fpos, context.getErrorMessage());
-//				Main._Exit(1, msg);
-//				return false;
+//	public final static Grammar load(SourceContext sc) {
+//		Grammar nez = NezParserCombinator.newGrammar();
+//		Production p = nez.getProduction("Chunk");
+////		this.name = fileName;
+////		if(fileName.indexOf('/') > 0) {
+////			this.name = fileName.substring(fileName.lastIndexOf('/')+1);
+////		}
+//		Grammar peg = new Grammar(sc.getResourceName());
+//		NezParser builder = new NezParser(peg);
+//		while(sc.hasUnconsumed()) {
+//			AST ast = p.parse(sc, new AST());
+//			if(ast != null) {
+//				if(!builder.parse(ast, null /*FIXME*/)) {
+//					System.out.println("parse failed");
+//					return peg;
+//				}
 //			}
-		}
-		return peg;
-	}
+////			if(context.isFailure()) {
+////				String msg = context.source.formatPositionLine("error", context.fpos, context.getErrorMessage());
+////				Main._Exit(1, msg);
+////				return false;
+////			}
+//		}
+//		return peg;
+//	}
 
 }

@@ -9,7 +9,7 @@ import nez.expr.Rule;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 import nez.vm.PEG;
 
 public class Production {
@@ -115,7 +115,7 @@ public class Production {
 	private Instruction compiledCode = null;
 	public Instruction compile() {
 		if(compiledCode == null) {
-			Optimizer optimizer = new Optimizer();
+			Compiler optimizer = new Compiler();
 			compiledCode = optimizer.encode(this.ruleList);
 			optimizer.dump(this.ruleList);
 		}
@@ -202,13 +202,20 @@ public class Production {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Node> T parse(SourceContext sc, T ast) {
-		sc.setBaseNode(ast);
+	public <T extends Node> T parse(SourceContext sc, T base) {
+		long startPosition = sc.getPosition();
+		sc.setBaseNode(base);
 		if(!this.match(sc)) {
 			return null;
 		}
 		Node node = sc.getParsedNode();
-		sc.commitConstruction(0, node);
+		if(node == null) {
+			node = base.newNode(sc, startPosition);
+			node.setEndingPosition(sc.getPosition());
+		}
+		else {
+			sc.commitConstruction(0, node);
+		}
 		node = node.commit();
 		return (T)node;
 	}

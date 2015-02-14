@@ -2,12 +2,16 @@ package nez.vm;
 
 import java.util.HashMap;
 
+import nez.expr.Choice;
 import nez.expr.Expression;
+import nez.expr.Not;
+import nez.expr.Option;
+import nez.expr.Repetition;
 import nez.expr.Rule;
 import nez.util.UList;
 import nez.util.UMap;
 
-public class Optimizer {
+public class Compiler {
 	UList<Instruction> codeList;
 	UMap<CodeBlock> ruleMap;
 	
@@ -17,7 +21,7 @@ public class Optimizer {
 		int end;
 	}
 	
-	public Optimizer() {
+	public Compiler() {
 		this.codeList = new UList<Instruction>(new Instruction[64]);
 		this.ruleMap = new UMap<CodeBlock>();
 	}
@@ -90,5 +94,33 @@ public class Optimizer {
 			}
 		}
 	}
+
+	public final Instruction encodeRepetition(Repetition p, Instruction next) {
+		FailSkip skip = new FailSkip(this, p);
+		Instruction start = p.get(0).encode(this, skip);
+		skip.next = start;
+		return new FailPush(this, p, next, start);
+	}
+
+	public final Instruction encodeOption(Option p, Instruction next) {
+		Instruction pop = new FailPop(this, p, next);
+		return new FailPush(this, p, next, p.get(0).encode(this, pop));
+	}
+
+	public final Instruction encodeNot(Not p, Instruction next) {
+		Instruction fail = new FailPop(this, p, new Fail(this, p));
+		return new FailPush(this, p, next, p.get(0).encode(this, fail));
+	}
+
+	public final Instruction encodeChoice(Choice p, Instruction next) {
+		Instruction nextChoice = p.get(p.size()-1).encode(this, next);
+		for(int i = p.size() -2; i >= 0; i--) {
+			Expression e = p.get(i);
+			nextChoice = new FailPush(this, e, nextChoice, e.encode(this, new FailPop(this, e, next)));
+		}
+		return nextChoice;
+	}
+
+
 	
 }

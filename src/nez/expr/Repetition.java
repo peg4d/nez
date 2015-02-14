@@ -5,9 +5,8 @@ import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.FailPush;
+import nez.vm.Compiler;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
 
 public class Repetition extends Unary {
 	Repetition(SourcePosition s, Expression e) {
@@ -82,8 +81,22 @@ public class Repetition extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new FailPush(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeRepetition(this, next);
+	}
+
+	@Override
+	protected int pattern(GEP gep) {
+		return 2;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		if(p > 0) {
+			int p2 = this.inner.pattern(gep);
+			for(int i = 0; i < p2; i++) {
+				this.inner.examplfy(gep, sb, p2);
+			}
+		}
 	}
 
 

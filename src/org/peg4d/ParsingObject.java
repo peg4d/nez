@@ -2,6 +2,8 @@ package org.peg4d;
 
 import java.util.AbstractList;
 
+import nez.util.ConsoleUtils;
+
 import org.peg4d.expression.ParsingExpression;
 
 public class ParsingObject extends AbstractList<ParsingObject> implements ParsingTree {
@@ -375,7 +377,7 @@ public class ParsingObject extends AbstractList<ParsingObject> implements Parsin
 		}
 		else {
 			String[] paths = path.split("#");
-			Main._Exit(1, "TODO: path = " + paths.length + ", " + paths[0]);
+			ConsoleUtils.exit(1, "TODO: path = " + paths.length + ", " + paths[0]);
 			return null;
 		}
 	}

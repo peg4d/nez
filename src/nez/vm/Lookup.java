@@ -5,7 +5,7 @@ import nez.expr.Expression;
 public class Lookup extends Instruction {
 	public final int memoPoint;
 	public final Instruction jump;
-	public Lookup(Optimizer optimizer, Expression e, int memoPoint, Instruction jump, Instruction next) {
+	public Lookup(Compiler optimizer, Expression e, int memoPoint, Instruction jump, Instruction next) {
 		super(optimizer, e, next);
 		this.memoPoint = memoPoint;
 		this.jump = labeling(jump);

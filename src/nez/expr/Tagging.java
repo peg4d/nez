@@ -6,7 +6,7 @@ import nez.ast.Tag;
 import nez.util.StringUtils;
 import nez.vm.Instruction;
 import nez.vm.NodeTag;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class Tagging extends Unconsumed {
 	public Tag tag;
@@ -43,8 +43,17 @@ public class Tagging extends Unconsumed {
 		return true;
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new NodeTag(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new NodeTag(bc, this, next);
+	}
+
+	@Override
+	protected int pattern(GEP gep) {
+		return 0;
+	}
+
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
 	}
 
 }

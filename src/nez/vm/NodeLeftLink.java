@@ -3,7 +3,7 @@ package nez.vm;
 import nez.expr.Expression;
 
 public class NodeLeftLink extends Instruction {
-	public NodeLeftLink(Optimizer optimizer, Expression e, Instruction next) {
+	public NodeLeftLink(Compiler optimizer, Expression e, Instruction next) {
 		super(optimizer, e, next);
 	}
 	@Override

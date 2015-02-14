@@ -3,7 +3,7 @@ package nez.vm;
 import nez.expr.Expression;
 
 public class MatchAny extends Instruction {
-	public MatchAny(Optimizer optimizer, Expression e, Instruction next) {
+	public MatchAny(Compiler optimizer, Expression e, Instruction next) {
 		super(optimizer, e, next);
 	}
 

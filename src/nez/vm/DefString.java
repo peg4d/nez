@@ -5,7 +5,7 @@ import nez.expr.DefSymbol;
 
 public class DefString extends Instruction {
 	Tag tableName;
-	public DefString(Optimizer optimizer, DefSymbol e, Instruction next) {
+	public DefString(Compiler optimizer, DefSymbol e, Instruction next) {
 		super(optimizer, e, next);
 		this.tableName = e.table;
 	}

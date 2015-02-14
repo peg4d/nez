@@ -11,6 +11,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import nez.util.ConsoleUtils;
+
 public abstract class ParsingSource {
 	public final static int EOF = 256; 
 	public final static String DefaultEncoding = "UTF8";
@@ -53,7 +55,7 @@ public abstract class ParsingSource {
 		try {
 			return text.getBytes(DefaultEncoding);
 		} catch (UnsupportedEncodingException e) {
-			Main._Exit(1, "unsupported character: " + e);
+			ConsoleUtils.exit(1, "unsupported character: " + e);
 		}
 		return text.getBytes();
 	}
@@ -234,7 +236,7 @@ public abstract class ParsingSource {
 				}
 				Stream = new FileInputStream(fileName);
 			} catch (IOException e) {
-				Main._Exit(1, "file error: " + fileName);
+				ConsoleUtils.exit(1, "file error: " + fileName);
 				return null;
 			}
 		}
@@ -251,7 +253,7 @@ public abstract class ParsingSource {
 		}
 		catch(IOException e) {
 			e.printStackTrace();
-			Main._Exit(1, "file error: " + fileName);
+			ConsoleUtils.exit(1, "file error: " + fileName);
 		}
 		return null;
 	}

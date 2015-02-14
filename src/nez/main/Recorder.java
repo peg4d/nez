@@ -1,4 +1,4 @@
-package nez;
+package nez.main;
 
 public class Recorder {
 

@@ -3,7 +3,7 @@ package nez.vm;
 import nez.expr.And;
 
 public class PosBack extends Instruction {
-	public PosBack(Optimizer optimizer, And e, Instruction next) {
+	public PosBack(Compiler optimizer, And e, Instruction next) {
 		super(optimizer, e, next);
 	}
 	@Override

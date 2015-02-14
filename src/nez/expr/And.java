@@ -5,7 +5,7 @@ import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 import nez.vm.PosPush;
 
 public class And extends Unary {
@@ -62,10 +62,17 @@ public class And extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new PosPush(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new PosPush(bc, this, next);
 	}
-
 	
+	@Override
+	protected int pattern(GEP gep) {
+		return -1;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		// TODO Auto-generated method stub
+	}
 	
 }

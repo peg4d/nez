@@ -8,7 +8,7 @@ public abstract class Instruction {
 	public Instruction next;
 	int id;
 	boolean label = false;
-	public Instruction(Optimizer optimizer, Expression e, Instruction next) {
+	public Instruction(Compiler optimizer, Expression e, Instruction next) {
 		this.e = e;
 		this.id = -1;
 		this.next = next;
@@ -44,14 +44,23 @@ public abstract class Instruction {
 	
 	abstract Instruction exec(Context sc) throws TerminationException;
 	
+	private static boolean isDebug(Instruction inst) {
+		return inst instanceof StackOperation;
+	}
+	
 	public static boolean run(Instruction code, SourceContext sc) {
 		boolean result = false;
 		try {
 			while(true) {
-//				if(code.debug()) {
-//					System.out.println("" + code);
+//				if(isDebug(code)) {
+//					Instruction prev = code;
+//					sc.dumpStack("Before " + prev);
+//					code = code.exec(sc);
+//					sc.dumpStack("After  " + prev);
 //				}
-				code = code.exec(sc);
+//				else {
+					code = code.exec(sc);
+//				}
 			}
 		}
 		catch (TerminationException e) {

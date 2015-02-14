@@ -2,6 +2,7 @@ package org.peg4d;
 
 import java.util.HashMap;
 
+import nez.util.ConsoleUtils;
 import nez.util.UList;
 
 import org.peg4d.expression.NonTerminal;
@@ -395,7 +396,7 @@ public class ParsingContext {
 	public <T extends ParsingTree> T parse2(Grammar peg, String startPoint, T base, MemoizationManager conf) {
 		ParsingRule start = peg.getRule(startPoint);
 		if(start == null) {
-			Main._Exit(1, "undefined start rule: " + startPoint );
+			ConsoleUtils.exit(1, "undefined start rule: " + startPoint );
 		}
 		if(conf != null) {
 			conf.exploitMemo(start);
@@ -422,7 +423,7 @@ public class ParsingContext {
 	public final boolean match(Grammar peg, String startPoint, MemoizationManager conf) {
 		ParsingExpression start = peg.getExpression(startPoint);
 		if(start == null) {
-			Main._Exit(1, "undefined start rule: " + startPoint );
+			ConsoleUtils.exit(1, "undefined start rule: " + startPoint );
 		}
 		ParsingRule r = peg.getLexicalRule(startPoint);
 		if(conf != null) {

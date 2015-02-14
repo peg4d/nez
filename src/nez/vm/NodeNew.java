@@ -3,7 +3,7 @@ package nez.vm;
 import nez.expr.Expression;
 
 public class NodeNew extends Instruction {
-	public NodeNew(Optimizer optimizer, Expression e, Instruction next) {
+	public NodeNew(Compiler optimizer, Expression e, Instruction next) {
 		super(optimizer, e, next);
 	}
 	@Override

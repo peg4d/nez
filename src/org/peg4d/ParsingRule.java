@@ -3,6 +3,7 @@ package org.peg4d;
 import java.util.TreeMap;
 
 import nez.expr.NodeTransition;
+import nez.util.ConsoleUtils;
 import nez.util.ReportLevel;
 import nez.util.UList;
 import nez.util.UMap;
@@ -263,7 +264,7 @@ public class ParsingRule extends ParsingExpression {
 				}
 				String msg = ( ok ? "[PASS]" : "[FAIL]" ) + " " + this.localName + " " + a.value.getText();
 				if(Main.TestMode && !ok) {	
-					Main._Exit(1, "[FAIL] tested " + a.value.getText() + " by " + peg.getRule(this.localName));
+					ConsoleUtils.exit(1, "[FAIL] tested " + a.value.getText() + " by " + peg.getRule(this.localName));
 				}
 				Main.printVerbose("Testing", msg);
 			}

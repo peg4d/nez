@@ -2,10 +2,10 @@ package nez.vm;
 
 import nez.expr.Rule;
 
-public class CallPush extends Instruction {
+public class CallPush extends Instruction implements StackOperation {
 	Rule rule;
 	public Instruction jump = null;
-	public CallPush(Optimizer optimizer, Rule rule, Instruction next) {
+	public CallPush(Compiler optimizer, Rule rule, Instruction next) {
 		super(optimizer, rule, next);
 		this.rule = rule;
 	}

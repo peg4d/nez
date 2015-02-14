@@ -5,7 +5,7 @@ import nez.util.StringUtils;
 
 public class NodeReplace extends Instruction {
 	public final String value;
-	public NodeReplace(Optimizer optimizer, Replace e, Instruction next) {
+	public NodeReplace(Compiler optimizer, Replace e, Instruction next) {
 		super(optimizer, e, next);
 		this.value = e.value;
 	}

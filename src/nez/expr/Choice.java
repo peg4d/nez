@@ -7,10 +7,8 @@ import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.FailPop;
-import nez.vm.FailPush;
+import nez.vm.Compiler;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
 
 public class Choice extends ExpressionList {
 	Choice(SourcePosition s, UList<Expression> l) {
@@ -101,13 +99,8 @@ public class Choice extends ExpressionList {
 		return false;
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		Instruction nextChoice = this.get(this.size()-1).encode(optimizer, next);
-		for(int i = this.size() -2; i >= 0; i--) {
-			Expression e = this.get(i);
-			nextChoice = new FailPush(optimizer, e, nextChoice, e.encode(optimizer, new FailPop(optimizer, this, next)));
-		}
-		return nextChoice;
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeChoice(this, next);
 	}
 	
 	// optimize
@@ -200,5 +193,16 @@ public class Choice extends ExpressionList {
 			}
 		}
 	}
+	
+	@Override
+	protected int pattern(GEP gep) {
+		return this.size();
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		this.get(p % size()).examplfy(gep, sb, p);
+	}
+
+
 
 }

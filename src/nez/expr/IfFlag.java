@@ -4,7 +4,7 @@ import java.util.TreeMap;
 
 import nez.ast.SourcePosition;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class IfFlag extends Unconsumed {
 	String flagName;
@@ -24,8 +24,15 @@ public class IfFlag extends Unconsumed {
 		return this;
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
+	public Instruction encode(Compiler bc, Instruction next) {
 		return next;
+	}
+	@Override
+	protected int pattern(GEP gep) {
+		return 0;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
 	}
 
 }

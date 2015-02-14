@@ -1,18 +1,12 @@
 package nez.vm;
 
 import nez.expr.Expression;
-import nez.expr.Repetition;
 
-public class FailPush extends Instruction{
+public class FailPush extends Instruction implements StackOperation {
 	public final Instruction jump;
-	public FailPush(Optimizer optimizer, Expression e, Instruction jump, Instruction next) {
+	FailPush(Compiler optimizer, Expression e, Instruction jump, Instruction next) {
 		super(optimizer, e, next);
 		this.jump = labeling(jump);
-	}
-	public FailPush(Optimizer optimizer, Repetition e, Instruction next) {
-		super(optimizer, e, null);
-		this.next = e.get(0).encode(optimizer, this);
-		this.jump = labeling(next);
 	}
 	@Override
 	Instruction branch() {
@@ -22,7 +16,6 @@ public class FailPush extends Instruction{
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opFailPush(this);
 	}
-
 	@Override
 	protected void stringfy(StringBuilder sb) {
 		sb.append("failpush ");

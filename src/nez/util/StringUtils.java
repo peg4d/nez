@@ -4,11 +4,8 @@ import java.io.UnsupportedEncodingException;
 
 import nez.expr.ByteMap;
 
-import org.peg4d.Main;
-
 public abstract class StringUtils {
 
-	public final static int EOF = 256; 
 	public final static String DefaultEncoding = "UTF8";
 
 	private final static int E = 1;
@@ -36,7 +33,7 @@ public abstract class StringUtils {
 		try {
 			return text.getBytes(DefaultEncoding);
 		} catch (UnsupportedEncodingException e) {
-			Main._Exit(1, "unsupported character: " + e);
+			ConsoleUtils.exit(1, "unsupported character: " + e);
 		}
 		return text.getBytes();
 	}

@@ -9,7 +9,7 @@ import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.CallPush;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class NonTerminal extends Expression {
 	public Grammar peg;
@@ -130,8 +130,18 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new CallPush(optimizer, this.getRule(), next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new CallPush(bc, this.getRule(), next);
+	}
+
+	@Override
+	protected int pattern(GEP gep) {
+		return this.deReference().pattern(gep);
+	}
+
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		this.deReference().examplfy(gep, sb, p);
 	}
 
 

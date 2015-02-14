@@ -8,7 +8,7 @@ import nez.util.UMap;
 import nez.vm.Instruction;
 import nez.vm.NodePush;
 import nez.vm.NodeStore;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class Link extends Unary {
 	public int index;
@@ -79,8 +79,17 @@ public class Link extends Unary {
 		return false;
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new NodePush(optimizer, this, this.inner.encode(optimizer, new NodeStore(optimizer, this, next)));
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new NodePush(bc, this, this.inner.encode(bc, new NodeStore(bc, this, next)));
+	}
+	@Override
+	protected int pattern(GEP gep) {
+		return inner.pattern(gep);
+	}
+
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		this.inner.examplfy(gep, sb, p);
 	}
 
 }

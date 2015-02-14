@@ -3,7 +3,7 @@ package nez.vm;
 import nez.expr.Link;
 
 public class NodePush extends Instruction {
-	public NodePush(Optimizer optimizer, Link e, Instruction next) {
+	public NodePush(Compiler optimizer, Link e, Instruction next) {
 		super(optimizer, e, next);
 	}
 	@Override

@@ -8,7 +8,7 @@ import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Instruction;
 import nez.vm.MatchAny;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 import org.peg4d.ParsingSource;
 
@@ -58,7 +58,15 @@ public class AnyChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new MatchAny(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new MatchAny(bc, this, next);
+	}
+	@Override
+	protected int pattern(GEP gep) {
+		return 1;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		sb.append(".");
 	}
 }

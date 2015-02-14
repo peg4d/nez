@@ -5,7 +5,7 @@ import nez.ast.SourcePosition;
 import nez.util.StringUtils;
 import nez.vm.Instruction;
 import nez.vm.NodeReplace;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class Replace extends Unconsumed {
 	public String value;
@@ -39,8 +39,18 @@ public class Replace extends Unconsumed {
 		return true;
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new NodeReplace(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new NodeReplace(bc, this, next);
 	}
+	
+	@Override
+	protected int pattern(GEP gep) {
+		return 0;
+	}
+
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+	}
+
 
 }

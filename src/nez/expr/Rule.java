@@ -223,5 +223,15 @@ public class Rule extends Expression {
 //		return null;
 //	}
 
+	@Override
+	protected int pattern(GEP gep) {
+		return body.pattern(gep);
+	}
+	
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		body.examplfy(gep, sb, p);
+	}
+
 
 }

@@ -1,11 +1,11 @@
 package nez.vm;
 
-import nez.Recorder;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.Source;
 import nez.ast.Tag;
 import nez.expr.NonTerminal;
+import nez.main.Recorder;
 import nez.util.UList;
 import nez.vm.MemoTable.MemoEntry;
 
@@ -53,6 +53,15 @@ public abstract class Context implements Source {
 		this.left = null;
 		return false;
 	}
+	
+	public final String getSyntaxErrorMessage() {
+		return this.formatPositionLine("error", this.head_pos, "syntax error");
+	}
+
+	public final String getUnconsumedMessage() {
+		return this.formatPositionLine("unconsumed", this.pos, "");
+	}
+
 
 	/* PEG4d : AST construction */
 
@@ -327,92 +336,104 @@ public abstract class Context implements Source {
 		long pos;
 		Node node;
 		int  prevFailTop;
-		int  prevLocalTop;
+//		int  prevLocalTop;
 		int  nodeCheckPoint;
 	}
-	private ContextStack[] jumpStacks = null;
-	private int unusedStackTop;
+	private ContextStack[] contextStacks = null;
+	private int usedStackTop;
 	private int failStackTop;
-	private int localStackTop;
 	
 	public final void initJumpStack(int n) {
-		this.jumpStacks = new ContextStack[n];
+		this.contextStacks = new ContextStack[n];
 		for(int i = 0; i < n; i++) {
-			this.jumpStacks[i] = new ContextStack();
+			this.contextStacks[i] = new ContextStack();
 		}
-		this.jumpStacks[0].jump = new Exit(false);
-		this.jumpStacks[1].jump = new Exit(true);  // for a point of the first called nonterminal
+		this.contextStacks[0].jump = new Exit(false);
+		this.contextStacks[1].jump = new Exit(true);  // for a point of the first called nonterminal
 		this.failStackTop = 0;
-		this.localStackTop = 1;
-		this.unusedStackTop = 2;
+		this.usedStackTop = 1;
 	}
 
 	private ContextStack newUnusedStack() {
-		if(jumpStacks.length == unusedStackTop) {
-			ContextStack[] newstack = new ContextStack[jumpStacks.length*2];
-			System.arraycopy(jumpStacks, 0, newstack, 0, jumpStacks.length);
-			for(int i = this.jumpStacks.length; i < newstack.length; i++) {
+		usedStackTop++;
+		if(contextStacks.length == usedStackTop) {
+			ContextStack[] newstack = new ContextStack[contextStacks.length*2];
+			System.arraycopy(contextStacks, 0, newstack, 0, contextStacks.length);
+			for(int i = this.contextStacks.length; i < newstack.length; i++) {
 				newstack[i] = new ContextStack();
 			}
-			jumpStacks = newstack;
+			contextStacks = newstack;
 		}
-		unusedStackTop++;
-		return jumpStacks[unusedStackTop - 1];
+		return contextStacks[usedStackTop];
+	}
+
+	public final void dumpStack(String op) {
+		System.out.println(op + " F="+this.failStackTop +", T=" +usedStackTop);
 	}
 
 	public final Instruction opFailPush(FailPush op) {
 		ContextStack top = newUnusedStack();
 		top.prevFailTop   = failStackTop;
-		top.prevLocalTop = localStackTop;
+		failStackTop = usedStackTop;
 		top.jump = op.jump;
 		top.pos = pos;
 		top.node = this.left;
 		top.nodeCheckPoint = this.startConstruction();
-		failStackTop = unusedStackTop - 1;
 		return op.next;
 	}
 
+	public final Instruction opFailPop(FailPop op) {
+		ContextStack top = contextStacks[failStackTop];
+		usedStackTop = failStackTop - 1;
+		failStackTop = top.prevFailTop;
+		return op.next;
+	}
+	
+	public final Instruction opFailSkip(FailSkip op) {
+		ContextStack top = contextStacks[failStackTop];
+		top.pos = this.pos;
+		top.nodeCheckPoint = this.startConstruction();
+		return op.next;
+	}
 	public final Instruction opFail() {
-		ContextStack top = jumpStacks[failStackTop];
-		this.unusedStackTop = failStackTop;
-		this.failStackTop = top.prevFailTop;
-		this.localStackTop = top.prevLocalTop;
+		ContextStack top = contextStacks[failStackTop];
+		usedStackTop = failStackTop - 1;
+		failStackTop = top.prevFailTop;
 		this.pos = top.pos;
 		this.left = top.node;
 		this.abortConstruction(top.nodeCheckPoint);
 		return top.jump;
 	}
 
-	public final Instruction opFailPop(FailPop op) {
-		ContextStack top = jumpStacks[failStackTop];
-		this.unusedStackTop = failStackTop;
-		this.failStackTop = top.prevFailTop;
-		this.localStackTop = top.prevLocalTop;
-		return op.next;
-	}
-
 	private final ContextStack newUnusedLocalStack() {
 		ContextStack top = newUnusedStack();
-		top.prevLocalTop = localStackTop;
-		localStackTop = unusedStackTop - 1;
+		assert(this.failStackTop < this.usedStackTop);
 		return top;
 	}
-
+	
 	private final ContextStack popLocalStack() {
-		ContextStack top = jumpStacks[localStackTop];
-		unusedStackTop = localStackTop;
-		localStackTop = top.prevLocalTop;
+		ContextStack top = contextStacks[this.usedStackTop];
+		usedStackTop--;
+		if(!(this.failStackTop <= this.usedStackTop)) {
+			dumpStack("assert");
+		}
+		assert(this.failStackTop <= this.usedStackTop);
 		return top;
 	}
 
 	public final Instruction opCallPush(CallPush op) {
 		ContextStack top = newUnusedLocalStack();
 		top.jump = op.jump;
+		//dumpStack("@call " + op.rule.getLocalName());
+		//System.out.println("[" + usedStackTop + "] push call " + top.jump.id);		
 		return op.next;
 	}
 	
 	public final Instruction opReturn() {
-		return popLocalStack().jump;
+		Instruction jump = popLocalStack().jump;
+		//System.out.println("[" + usedStackTop + "] return call " + jump.id);		
+		//dumpStack("@ret");
+		return jump;
 	}
 
 	public final Instruction opNodePush(NodePush op) {
@@ -520,10 +541,9 @@ public abstract class Context implements Source {
 
 	public final Instruction opMemoize(Memoize op) {
 		// opFailTop
-		ContextStack top = jumpStacks[failStackTop];
-		this.unusedStackTop = failStackTop;
+		ContextStack top = contextStacks[failStackTop];
+		this.usedStackTop = failStackTop;
 		this.failStackTop = top.prevFailTop;
-		this.localStackTop = top.prevLocalTop;
 		// End of opFailTop
 
 		int length = (int)(pos - top.pos);
@@ -547,6 +567,7 @@ public abstract class Context implements Source {
 		this.pushSymbolTable(op.tableName, this.substring(top.pos, this.pos));
 		return op.next;
 	}
+
 		
 
 }

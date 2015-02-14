@@ -9,7 +9,7 @@ import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.NodeCapture;
 import nez.vm.NodeLeftLink;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class NewLeftLink extends New {
 	NewLeftLink(SourcePosition s, UList<Expression> list) {
@@ -73,13 +73,13 @@ public class NewLeftLink extends New {
 	}
 	
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		next = new NodeCapture(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		next = new NodeCapture(bc, this, next);
 		for(int i = this.size() -1; i >= 0; i--) {
 			Expression e = this.get(i);
-			next = e.encode(optimizer, next);
+			next = e.encode(bc, next);
 		}
-		return new NodeLeftLink(optimizer, this, next);
+		return new NodeLeftLink(bc, this, next);
 	}
 
 }

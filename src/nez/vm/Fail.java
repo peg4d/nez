@@ -2,8 +2,8 @@ package nez.vm;
 
 import nez.expr.Expression;
 
-public class Fail extends Instruction {
-	public Fail(Optimizer optimizer, Expression e) {
+public class Fail extends Instruction implements StackOperation {
+	public Fail(Compiler optimizer, Expression e) {
 		super(optimizer, e, null);
 	}
 	@Override

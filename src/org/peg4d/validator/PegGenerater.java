@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import nez.util.ConsoleUtils;
 import nez.util.UMap;
 
 import org.peg4d.Main;
@@ -68,7 +69,7 @@ class XMLPegGenerater extends PegGenerater {
 //				}
 				Stream = new FileInputStream(fileName);
 			} catch (IOException e) {
-				Main._Exit(1, "file error: " + fileName);
+				ConsoleUtils.exit(1, "file error: " + fileName);
 				return null;
 			}
 		}
@@ -84,7 +85,7 @@ class XMLPegGenerater extends PegGenerater {
 			return builder.toString();
 		} catch (IOException e) {
 			e.printStackTrace();
-			Main._Exit(1, "file error: " + fileName);
+			ConsoleUtils.exit(1, "file error: " + fileName);
 		}
 		return null;
 	}

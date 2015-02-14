@@ -7,7 +7,7 @@ import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class Sequence extends ExpressionList {
 	Sequence(SourcePosition s, UList<Expression> l) {
@@ -89,11 +89,31 @@ public class Sequence extends ExpressionList {
 		return true;
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
+	public Instruction encode(Compiler bc, Instruction next) {
 		for(int i = this.size() -1; i >= 0; i--) {
 			Expression e = this.get(i);
-			next = e.encode(optimizer, next);
+			next = e.encode(bc, next);
 		}
 		return next;
 	}
+	
+	@Override
+	protected int pattern(GEP gep) {
+		int max = 0;
+		for(Expression p: this) {
+			int c = p.pattern(gep);
+			if(c > max) {
+				max = c;
+			}
+		}
+		return max;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		for(Expression e: this) {
+			e.examplfy(gep, sb, p);
+		}
+	}
+
+
 }

@@ -3,7 +3,7 @@ package nez.vm;
 import nez.expr.Expression;
 
 public class NodeCapture extends Instruction {
-	public NodeCapture(Optimizer optimizer, Expression e, Instruction next) {
+	public NodeCapture(Compiler optimizer, Expression e, Instruction next) {
 		super(optimizer, e, next);
 	}
 

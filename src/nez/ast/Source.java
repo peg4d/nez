@@ -1,10 +1,11 @@
 package nez.ast;
 
 public interface Source {
-	public final static int EOF = 256; 
+	//public final static int EOF = 256; 
 
 	public String  getResourceName();
 	public int     byteAt(long pos);
+	public int     EOF();
 	public long    length();
 	public boolean match(long pos, byte[] text);
 

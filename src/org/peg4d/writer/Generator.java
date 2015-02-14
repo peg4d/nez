@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import nez.util.ConsoleUtils;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -30,7 +31,7 @@ public class Generator {
 				this.out = new BufferedOutputStream(new FileOutputStream(fileName));
 			} catch (IOException e) {
 				e.printStackTrace();
-				Main._Exit(1, "cannot open output file: " + fileName);
+				ConsoleUtils.exit(1, "cannot open output file: " + fileName);
 			}
 		}
 	}
@@ -43,7 +44,7 @@ public class Generator {
 			try {
 				out.write(text.getBytes(CHARSET));
 			} catch (IOException e) {
-				Main._Exit(1, "IO error: " + e.getMessage());
+				ConsoleUtils.exit(1, "IO error: " + e.getMessage());
 			}
 		}
 	}
@@ -60,7 +61,7 @@ public class Generator {
 				out.write(indent.getBytes(CHARSET));
 				out.write(text.getBytes(CHARSET));
 			} catch (IOException e) {
-				Main._Exit(1, "IO error: " + e.getMessage());
+				ConsoleUtils.exit(1, "IO error: " + e.getMessage());
 			}
 		}
 	}
@@ -74,7 +75,7 @@ public class Generator {
 				out.flush();
 				out.close();
 			} catch (IOException e) {
-				Main._Exit(1, "IO error: " + e.getMessage());
+				ConsoleUtils.exit(1, "IO error: " + e.getMessage());
 			}
 			out = null;
 		}

@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import nez.Production;
+import nez.util.ConsoleUtils;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -112,7 +113,7 @@ public class Main {
 						OutputWriterClass = c;
 					}
 				} catch (ClassNotFoundException e) {
-					Main._Exit(1, "-X specified class is not found: " + args[index]);
+					ConsoleUtils.exit(1, "-X specified class is not found: " + args[index]);
 				}
 				index = index + 1;
 			}
@@ -248,7 +249,7 @@ public class Main {
 		System.out.println("  nezex        Convert -i regex to peg");
 		System.out.println("  conv         Convert PEG4d rules to the specified format in -o");
 		System.out.println("  find         Search nonterminals that can match inputs");
-		Main._Exit(0, Message);
+		ConsoleUtils.exit(0, Message);
 	}
 
 	private final static UMap<Class<?>> driverMap = new UMap<Class<?>>();
@@ -575,16 +576,6 @@ public class Main {
 		}
 	}
 
-	public final static void _Exit(int status, String message) {
-		if(Main.VerboseMode) {
-			System.out.println("EXIT " + Main._GetStackInfo(3) + " " + message);
-		}
-		else {
-			System.out.println("EXIT " + message);
-		}
-		System.exit(status);
-	}
-
 	public static boolean DebugMode = false;
 
 	public final static void _PrintDebug(String msg) {
@@ -631,7 +622,7 @@ public class Main {
 
 	public final static void reportException(Exception e) {
 		e.printStackTrace();
-		Main._Exit(1, e.getMessage());
+		ConsoleUtils.exit(1, e.getMessage());
 	}
 
 }

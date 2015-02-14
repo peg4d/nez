@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import nez.util.ConsoleUtils;
 import nez.util.UMap;
 
 public class NezLogger {
@@ -305,7 +306,7 @@ public class NezLogger {
 			}
 		}
 		catch (IOException e) {
-			Main._Exit(1, "Can't write csv log: " + this.logFile);
+			ConsoleUtils.exit(1, "Can't write csv log: " + this.logFile);
 		}
 	}
 	

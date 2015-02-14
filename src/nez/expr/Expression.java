@@ -6,7 +6,7 @@ import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public abstract class Expression extends AbstractList<Expression> implements Recognizer {
 	protected Expression(SourcePosition s) {
@@ -94,10 +94,12 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	}
 	
 //	public abstract Instruction encode(Instruction next);
-	Optimizer op;
-	public Instruction encode(Optimizer optimizer, Instruction next) {
+	public Instruction encode(Compiler bc, Instruction next) {
 		// todo
 		return next;
 	}
 
+	protected abstract int pattern(GEP gep);
+	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);
+	
 }

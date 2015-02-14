@@ -4,7 +4,7 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.vm.Fail;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class Failure extends Unconsumed {
 	Failure(SourcePosition s) {
@@ -27,8 +27,18 @@ public class Failure extends Unconsumed {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new Fail(optimizer, this);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new Fail(bc, this);
+	}
+	
+	@Override
+	protected int pattern(GEP gep) {
+		return 1;
+	}
+
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		sb.append("\0");
 	}
 
 }

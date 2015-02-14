@@ -6,7 +6,7 @@ import nez.util.StringUtils;
 import nez.util.UList;
 import nez.vm.Instruction;
 import nez.vm.MatchByteMap;
-import nez.vm.Optimizer;
+import nez.vm.Compiler;
 
 public class ByteMap extends Terminal {
 	public boolean[] charMap; // Immutable
@@ -21,7 +21,7 @@ public class ByteMap extends Terminal {
 	}
 	
 	public final static boolean[] newMap() {
-		return new boolean[SourceContext.BinaryEOF];
+		return new boolean[257];
 	}
 
 	public final static void appendRange(boolean[] b, int beginChar, int endChar) {
@@ -56,9 +56,30 @@ public class ByteMap extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		return new MatchByteMap(optimizer, this, next);
+	public Instruction encode(Compiler bc, Instruction next) {
+		return new MatchByteMap(bc, this, next);
 	}
-
+	@Override
+	protected int pattern(GEP gep) {
+		int c = 0;
+		for(boolean b: this.charMap) {
+			if(b) {
+				c += 1;
+			}
+		}
+		return c;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		int c = 0;
+		for(int ch = 0; ch < 127; ch++) {
+			if(this.charMap[ch]) {
+				c += 1;
+			}
+			if(c == p) {
+				sb.append((char)ch);
+			}
+		}
+	}
 
 }

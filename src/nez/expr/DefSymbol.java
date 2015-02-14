@@ -84,4 +84,17 @@ public class DefSymbol extends Unary {
 		return false;
 	}
 	
+	@Override
+	protected int pattern(GEP gep) {
+		return 1;
+	}
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+		StringBuilder sb2 = new StringBuilder();
+		inner.examplfy(gep, sb2, p);
+		String token = sb2.toString();
+		gep.addTable(table, token);
+		sb.append(token);
+	}
+	
 }

@@ -11,13 +11,12 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import nez.ast.Source;
 import nez.util.StringUtils;
 import nez.vm.Context;
 
 public abstract class SourceContext extends Context {
-	public final static int TextEOF   = 0;
-	public final static int BinaryEOF = 256; 
+//	public final static int TextEOF   = 0;
+//	public final static int BinaryEOF = 256; 
 	
 	private String     fileName;
 	protected long     startLineNum = 1;
@@ -130,12 +129,12 @@ public abstract class SourceContext extends Context {
 		return this.formatPositionMessage(messageType, pos, message) + this.getTextAround(pos, "\n ");
 	}
 
-	public final String getTextAround(long pos, String delim) {
+	private final String getTextAround(long pos, String delim) {
 		int ch = 0;
 		if(pos < 0) {
 			pos = 0;
 		}
-		while(this.byteAt(pos) == Source.EOF && pos > 0) {
+		while(this.byteAt(pos) == this.EOF() && pos > 0) {
 			pos -= 1;
 		}
 		long startIndex = pos;
@@ -151,11 +150,16 @@ public abstract class SourceContext extends Context {
 			startIndex = startIndex - 1;
 		}
 		long endIndex = pos + 1;
-		while((ch = byteAt(endIndex)) != Source.EOF) {
-			if(ch == '\n' || endIndex - startIndex > 78 && ch < 128) {
-				break;
+		if(endIndex < this.length()) {
+			while((ch = byteAt(endIndex)) != this.EOF()) {
+				if(ch == '\n' || endIndex - startIndex > 78 && ch < 128) {
+					break;
+				}
+				endIndex = endIndex + 1;
 			}
-			endIndex = endIndex + 1;
+		}
+		else {
+			endIndex = this.length();
 		}
 		StringBuilder source = new StringBuilder();
 		StringBuilder marker = new StringBuilder();
@@ -256,6 +260,11 @@ class StringSourceContext extends SourceContext {
 	public final int byteAt(long pos) {
 		return this.utf8[(int)pos] & 0xff;
 	}
+	
+	@Override
+	public final int EOF() {
+		return 0;
+	}
 
 	@Override
 	public final boolean match(long pos, byte[] text) {
@@ -354,6 +363,11 @@ class FileSourceContext extends SourceContext {
 		return this.buffer[buffer_pos] & 0xff;
 	}
 
+	@Override
+	public final int EOF() {
+		return 0;  //
+	}
+	
 	@Override
 	public final boolean match(long pos, byte[] text) {
 		int offset = (int)(pos - this.buffer_offset);

@@ -5,11 +5,8 @@ import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Fail;
-import nez.vm.FailPop;
-import nez.vm.FailPush;
+import nez.vm.Compiler;
 import nez.vm.Instruction;
-import nez.vm.Optimizer;
 
 public class Not extends Unary {
 	Not(SourcePosition s, Expression e) {
@@ -74,10 +71,25 @@ public class Not extends Unary {
 	}
 
 	@Override
-	public Instruction encode(Optimizer optimizer, Instruction next) {
-		Instruction fail = new FailPop(optimizer, this, new Fail(optimizer, this));
-		return new FailPush(optimizer, this, next, this.inner.encode(optimizer, fail));
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeNot(this, next);
 	}
+	@Override
+	protected int pattern(GEP gep) {
+		int max = 0;
+		for(Expression p: this) {
+			int c = p.pattern(gep);
+			if(c > max) {
+				max = c;
+			}
+		}
+		return max;
+	}
+
+	@Override
+	protected void examplfy(GEP gep, StringBuilder sb, int p) {
+	}
+
 
 
 }
