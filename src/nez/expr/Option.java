@@ -25,7 +25,7 @@ public class Option extends Unary {
 		return "?";
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return false;
 	}
 	@Override
@@ -37,7 +37,7 @@ public class Option extends Unary {
 		return t;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		int required = c.required;
 		Expression inn = this.inner.checkNodeTransition(checker, c);
 		if(required != NodeTransition.OperationType && c.required == NodeTransition.OperationType) {

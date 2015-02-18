@@ -22,7 +22,7 @@ public class Replace extends Unconsumed {
 		return "`" + this.value;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		if(c.required != NodeTransition.OperationType) {
 			checker.reportWarning(s, "unexpected `" + value + "` => removed");
 			return Factory.newEmpty(this.s);

@@ -24,7 +24,7 @@ public class Match extends Unary {
 		return (this.inner != e) ? Factory.newMatch(this.s, e) : this;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override
@@ -32,7 +32,7 @@ public class Match extends Unary {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		return this.inner.removeNodeOperator();
 	}
 	@Override

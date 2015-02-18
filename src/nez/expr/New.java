@@ -26,7 +26,7 @@ public class New extends ExpressionList {
 		return "{}";
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		for(Expression e: this) {
 			if(e.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
 				return true;
@@ -47,7 +47,7 @@ public class New extends ExpressionList {
 		return NodeTransition.ObjectType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		if(c.required != NodeTransition.ObjectType) {
 			checker.reportWarning(s, "unexpected { .. => removed!");
 			return this.removeNodeOperator();

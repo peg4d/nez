@@ -8,8 +8,8 @@ import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.CallPush;
-import nez.vm.Instruction;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class NonTerminal extends Expression {
 	public Grammar peg;
@@ -60,7 +60,7 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		Rule r = this.getRule();
 		if(r == null) {
 			checker.reportWarning(s, "undefined rule: " + this.ruleName + " => created empty rule!!");
@@ -80,7 +80,7 @@ public class NonTerminal extends Expression {
 		return r.inferNodeTransition(visited);
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		Rule r = this.getRule();
 		int t = r.inferNodeTransition();
 		if(t == NodeTransition.BooleanType) {

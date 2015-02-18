@@ -21,7 +21,7 @@ public class IsaSymbol extends Terminal {
 		return "isa " + table.name;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return true;
 	}
 	@Override
@@ -29,7 +29,7 @@ public class IsaSymbol extends Terminal {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		return this;
 	}
 	@Override

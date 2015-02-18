@@ -26,7 +26,7 @@ public class Tagging extends Unconsumed {
 		return "#" + this.tag.toString();
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		if(c.required != NodeTransition.OperationType) {
 			checker.reportWarning(s, "unexpected #" + tag.toString() + " => removed!!");
 			return Factory.newEmpty(this.s);

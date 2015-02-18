@@ -20,17 +20,36 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 		this.length     = 0;
 	}
 
-	private AST(Tag tag, Source source, long pos) {
+	private AST(Tag tag, Source source, long pos, long epos, int size) {
 		this.tag        = tag;
 		this.source     = source;
 		this.pos        = pos;
-		this.length     = 0;
+		this.length     = (int)(epos - pos);
+		if(size > 0) {
+			this.subTree = new AST[size];
+		}
 	}
 
 	@Override
-	public Node newNode(Source source, long pos) {
-		return new AST(this.tag, source, pos);
+	public Node newNode(Tag tag, Source source, long spos, long epos, int size) {
+		return new AST(tag == null ? this.tag : tag, source, spos, epos, size);
 	}
+
+	@Override
+	public void setValue(Object value) {
+		this.value = value;
+	}
+	
+	@Override
+	public Node commit() {
+		return this;
+	}
+
+	@Override
+	public void link(int index, Node child) {
+		this.set(index, (AST)child);
+	}
+
 
 	@Override
 	public Tag getTag() {
@@ -40,11 +59,6 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 	@Override
 	public void setTag(Tag tag) {
 		this.tag = tag;
-	}
-
-	@Override
-	public void setValue(Object value) {
-		this.value = value;
 	}
 
 	@Override
@@ -58,16 +72,7 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 			this.resizeAst(newSize);
 		}
 	}
-
-	@Override
-	public void commitChild(int index, Node child) {
-		this.set(index, (AST)child);
-	}
 	
-	@Override
-	public Node commit() {
-		return this;
-	}
 
 //	/*
 //	 * duplicate object

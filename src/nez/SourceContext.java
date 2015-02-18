@@ -224,6 +224,7 @@ public abstract class SourceContext extends Context {
 		reader.close();
 		return new StringSourceContext(fileName, 1, builder.toString());
 	}
+
 	
 	
 }

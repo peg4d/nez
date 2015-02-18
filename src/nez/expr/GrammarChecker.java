@@ -4,9 +4,10 @@ import java.util.TreeMap;
 
 import nez.Grammar;
 import nez.ast.SourcePosition;
+import nez.util.ConsoleUtils;
 import nez.util.UList;
 
-public class ExpressionChecker {
+public class GrammarChecker {
 	
 	public final static int Undefined         = -1;
 	public final static int BooleanType       = 0;
@@ -17,7 +18,7 @@ public class ExpressionChecker {
 
 	boolean foundFlag  = false;
 
-	public ExpressionChecker(int optimizedLevel) {
+	public GrammarChecker(int optimizedLevel) {
 		// TODO Auto-generated constructor stub
 	}
 
@@ -33,24 +34,24 @@ public class ExpressionChecker {
 	
 	public void reportError(SourcePosition s, String message) {
 		if(s != null) {
-			System.out.println(s.formatSourceMessage("error", message));
+			ConsoleUtils.println(s.formatSourceMessage("error", message));
 		}
 	}
 
 	public void reportWarning(SourcePosition s, String message) {
 		if(s != null) {
-			System.out.println(s.formatSourceMessage("warning", message));
+			ConsoleUtils.println(s.formatSourceMessage("warning", message));
 		}
 	}
 
 	public void reportNotice(SourcePosition s, String message) {
 		if(s != null) {
-			System.out.println(s.formatSourceMessage("notice", message));
+			ConsoleUtils.println(s.formatSourceMessage("notice", message));
 		}
 	}
 
 	public void exit(int exit, String message) {
-		System.exit(exit);
+		ConsoleUtils.exit(exit, message);
 	}
 	
 	public void verify(Grammar grammar) {
@@ -61,9 +62,10 @@ public class ExpressionChecker {
 		UList<String> stack = new UList<String>(new String[64]);
 		for(Rule r: grammar.getDefinedRuleList()) {
 			r.checkAlwaysConsumed(this, null, stack);
+			ConsoleUtils.debug(r.getUniqueName() + " = " + r.getExpression());
 		}
 		if(this.foundError) {
-			this.exit(1, "PegError found");
+			ConsoleUtils.exit(1, "PegError found");
 		}
 		// type check
 		for(Rule r: grammar.getRuleList()) {
@@ -106,7 +108,6 @@ public class ExpressionChecker {
 //				rule.testExample1(this, context);
 //			}
 //		}
-
 		// TODO Auto-generated method stub
 		
 	}

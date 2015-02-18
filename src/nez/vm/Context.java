@@ -73,13 +73,13 @@ public abstract class Context implements Source {
 	}
 
 	public final Node newNode() {
-		return this.base.newNode(this, this.pos);
+		return this.base.newNode(null, this, this.pos, this.pos, 0);
 	}
 	
 	public final Node getParsedNode() {
 		return this.left;
 	}
-
+	
 	private class NodeLog {
 		NodeLog next;
 		Node parentNode;
@@ -87,33 +87,34 @@ public abstract class Context implements Source {
 		Node childNode;
 	}
 
-	private NodeLog logStack = null;
-	private NodeLog unusedLog = null;
+	private NodeLog nodeStack = null;
+	private NodeLog unusedNodeLog = null;
 	private int     logStackSize = 0;
 	
 	private NodeLog newNodeLog() {
-		if(this.unusedLog == null) {
+		if(this.unusedNodeLog == null) {
 			return new NodeLog();
 		}
-		NodeLog l = this.unusedLog;
-		this.unusedLog = l.next;
+		NodeLog l = this.unusedNodeLog;
+		this.unusedNodeLog = l.next;
 		l.next = null;
 		return l;
 	}
 
 	private void unusedNodeLog(NodeLog log) {
 		log.childNode = null;
-		log.next = this.unusedLog;
-		this.unusedLog = log;
+		log.next = this.unusedNodeLog;
+		this.unusedNodeLog = log;
 	}
 
+	
 	public final void lazyLink(Node parent, int index, Node child) {
 		NodeLog l = this.newNodeLog();
 		l.parentNode = parent;
 		l.childNode  = child;
 		l.index = index;
-		l.next = this.logStack;
-		this.logStack = l;
+		l.next = this.nodeStack;
+		this.nodeStack = l;
 		this.logStackSize += 1;
 	}
 	
@@ -121,8 +122,8 @@ public abstract class Context implements Source {
 		NodeLog l = this.newNodeLog();
 		l.childNode  = left;
 		l.index = -9;
-		l.next = this.logStack;
-		this.logStack = l;
+		l.next = this.nodeStack;
+		this.nodeStack = l;
 		this.logStackSize += 1;
 	}
 
@@ -143,8 +144,8 @@ public abstract class Context implements Source {
 		int objectSize = 0;
 		//System.out.println("commit: " + checkPoint + " < " + this.logStackSize);
 		while(checkPoint < this.logStackSize) {
-			NodeLog cur = this.logStack;
-			this.logStack = this.logStack.next;
+			NodeLog cur = this.nodeStack;
+			this.nodeStack = this.nodeStack.next;
 			this.logStackSize--;
 			if(cur.index == -9) { // lazyCommit
 				commitConstruction(checkPoint, cur.childNode);
@@ -168,7 +169,7 @@ public abstract class Context implements Source {
 				if(cur.index == -1) {
 					cur.index = i;
 				}
-				newnode.commitChild(cur.index, cur.childNode);
+				newnode.link(cur.index, cur.childNode);
 				this.unusedNodeLog(cur);
 			}
 			//checkNullEntry(newnode);
@@ -177,8 +178,8 @@ public abstract class Context implements Source {
 	
 	public final void abortConstruction(int checkPoint) {
 		while(checkPoint < this.logStackSize) {
-			NodeLog l = this.logStack;
-			this.logStack = this.logStack.next;
+			NodeLog l = this.nodeStack;
+			this.nodeStack = this.nodeStack.next;
 			this.logStackSize--;
 			unusedNodeLog(l);
 		}
@@ -332,23 +333,27 @@ public abstract class Context implements Source {
 	// Instruction 
 	
 	class ContextStack {
+		boolean debugFailStackFlag;
 		Instruction jump;
 		long pos;
-		Node node;
 		int  prevFailTop;
-//		int  prevLocalTop;
-		int  nodeCheckPoint;
+		//DataLog newPoint;
+		DataLog lastLog;
 	}
+	
 	private ContextStack[] contextStacks = null;
 	private int usedStackTop;
 	private int failStackTop;
 	
 	public final void initJumpStack(int n) {
 		this.contextStacks = new ContextStack[n];
+		this.lastAppendedLog = new DataLog();
 		for(int i = 0; i < n; i++) {
 			this.contextStacks[i] = new ContextStack();
 		}
 		this.contextStacks[0].jump = new Exit(false);
+		this.contextStacks[0].debugFailStackFlag = true;
+		this.contextStacks[0].lastLog = this.lastAppendedLog;
 		this.contextStacks[1].jump = new Exit(true);  // for a point of the first called nonterminal
 		this.failStackTop = 0;
 		this.usedStackTop = 1;
@@ -372,86 +377,72 @@ public abstract class Context implements Source {
 	}
 
 	public final Instruction opFailPush(FailPush op) {
-		ContextStack top = newUnusedStack();
-		top.prevFailTop   = failStackTop;
+		ContextStack stackTop = newUnusedStack();
+		stackTop.prevFailTop   = failStackTop;
 		failStackTop = usedStackTop;
-		top.jump = op.jump;
-		top.pos = pos;
-		top.node = this.left;
-		top.nodeCheckPoint = this.startConstruction();
+		stackTop.jump = op.jump;
+		stackTop.pos = pos;
+		stackTop.lastLog = this.lastAppendedLog;
+		assert(stackTop.lastLog != null);
+		//stackTop.newPoint = this.newPoint;
+		stackTop.debugFailStackFlag = true;
 		return op.next;
 	}
 
 	public final Instruction opFailPop(FailPop op) {
-		ContextStack top = contextStacks[failStackTop];
+		ContextStack stackTop = contextStacks[failStackTop];
+		assert(stackTop.debugFailStackFlag);
 		usedStackTop = failStackTop - 1;
-		failStackTop = top.prevFailTop;
+		failStackTop = stackTop.prevFailTop;
 		return op.next;
 	}
 	
 	public final Instruction opFailSkip(FailSkip op) {
-		ContextStack top = contextStacks[failStackTop];
-		top.pos = this.pos;
-		top.nodeCheckPoint = this.startConstruction();
+		ContextStack stackTop = contextStacks[failStackTop];
+		assert(stackTop.debugFailStackFlag);
+		stackTop.pos = this.pos;
+		stackTop.lastLog = this.lastAppendedLog;
+		assert(stackTop.lastLog != null);
 		return op.next;
 	}
+
 	public final Instruction opFail() {
-		ContextStack top = contextStacks[failStackTop];
+		ContextStack stackTop = contextStacks[failStackTop];
+		assert(stackTop.debugFailStackFlag);
 		usedStackTop = failStackTop - 1;
-		failStackTop = top.prevFailTop;
-		this.pos = top.pos;
-		this.left = top.node;
-		this.abortConstruction(top.nodeCheckPoint);
-		return top.jump;
+		failStackTop = stackTop.prevFailTop;
+		this.pos = stackTop.pos;
+		if(stackTop.lastLog != this.lastAppendedLog) {
+			this.logAbort(stackTop.lastLog, true);
+			//this.newPoint = stackTop.newPoint;
+		}
+		return stackTop.jump;
 	}
 
 	private final ContextStack newUnusedLocalStack() {
-		ContextStack top = newUnusedStack();
+		ContextStack stackTop = newUnusedStack();
 		assert(this.failStackTop < this.usedStackTop);
-		return top;
+		stackTop.debugFailStackFlag = false;
+		return stackTop;
 	}
 	
 	private final ContextStack popLocalStack() {
-		ContextStack top = contextStacks[this.usedStackTop];
+		ContextStack stackTop = contextStacks[this.usedStackTop];
 		usedStackTop--;
-		if(!(this.failStackTop <= this.usedStackTop)) {
-			dumpStack("assert");
-		}
+		assert(!stackTop.debugFailStackFlag);
 		assert(this.failStackTop <= this.usedStackTop);
-		return top;
+		return stackTop;
 	}
 
 	public final Instruction opCallPush(CallPush op) {
 		ContextStack top = newUnusedLocalStack();
 		top.jump = op.jump;
-		//dumpStack("@call " + op.rule.getLocalName());
-		//System.out.println("[" + usedStackTop + "] push call " + top.jump.id);		
 		return op.next;
 	}
 	
 	public final Instruction opReturn() {
 		Instruction jump = popLocalStack().jump;
-		//System.out.println("[" + usedStackTop + "] return call " + jump.id);		
-		//dumpStack("@ret");
 		return jump;
-	}
-
-	public final Instruction opNodePush(NodePush op) {
-		ContextStack top = newUnusedLocalStack();
-		top.node = this.left;
-		top.pos = this.startConstruction();
-		//this.left = null;
-		return op.next;
-	}
-	
-	public final Instruction opNodeStore(NodeStore op) {
-		ContextStack top = popLocalStack();
-		Node parent = top.node;
-		this.commitConstruction((int)top.pos, this.left);
-		this.left = this.left.commit();
-		lazyLink(parent, op.index, this.left);
-		this.left = parent;
-		return op.next;
 	}
 	
 	public final Instruction opPosPush(PosPush op) {
@@ -491,32 +482,198 @@ public abstract class Context implements Source {
 		return this.opFail();
 	}
 
+	private final static int LazyLink    = 0;
+	private final static int LazyCapture = 1;
+	private final static int LazyTag     = 2;
+	private final static int LazyReplace = 3;
+	private final static int LazyLeftNew = 4;
+	private final static int LazyNew     = 5;
+	
+	private class DataLog {
+		int     type;
+		long    pos;
+		Object  value;
+		DataLog prev;
+		DataLog next;
+		int id() {
+			if(prev == null) return 0;
+			return prev.id() + 1;
+		}
+		@Override
+		public String toString() {
+			switch(type) {
+			case LazyLink:
+				return "["+id()+"] link<" + this.pos + "," + this.value + ">";
+			case LazyCapture:
+				return "["+id()+"] cap<pos=" + this.pos + ">";
+			case LazyTag:
+				return "["+id()+"] tag<" + this.value + ">";
+			case LazyReplace:
+				return "["+id()+"] replace<" + this.value + ">";
+			case LazyNew:
+				return "["+id()+"] new<pos=" + this.pos + ">"  + "   ## " + this.value  ;
+			case LazyLeftNew:
+				return "["+id()+"] leftnew<pos=" + this.pos + "," + this.value + ">";
+			}
+			return "["+id()+"] nop";
+		}
+	}
+
+	//private DataLog newPoint = null;
+	private DataLog lastAppendedLog = null;
+	private DataLog unusedDataLog = null;
+	
+	private final void pushDataLog(int type, long pos, Object value) {
+		DataLog l;
+		if(this.unusedDataLog == null) {
+			l = new DataLog();
+		}
+		else {
+			l = this.unusedDataLog;
+			this.unusedDataLog = l.next;
+		}
+		l.type = type;
+		l.pos  = pos;
+		l.value = value;
+		l.prev = lastAppendedLog;
+		l.next = null;
+		lastAppendedLog.next = l;
+		lastAppendedLog = l;
+	}
+	
+	public final Node logCommit(DataLog start) {
+		assert(start.type == LazyNew);
+		long spos = start.pos, epos = spos;
+		Tag tag = null;
+		Object value = null;
+		int objectSize = 0;
+		Node left = null;
+		for(DataLog cur = start.next; cur != null; cur = cur.next ) {
+			switch(cur.type) {
+			case LazyLink:
+				int index = (int)cur.pos;
+				if(index == -1) {
+					cur.pos = objectSize;
+					objectSize++;
+				}
+				else if(!(index < objectSize)) {
+					objectSize = index + 1;
+				}
+				break;
+			case LazyCapture:
+				epos = cur.pos;
+				break;
+			case LazyTag:
+				tag = (Tag)cur.value;
+				break;
+			case LazyReplace:
+				value = cur.value;
+				break;
+			case LazyLeftNew:
+				left = commitNode(start, cur, spos, epos, objectSize, left, tag, value);
+				start = cur;
+				spos = cur.pos; 
+				epos = spos;
+				tag = null; value = null;
+				objectSize = 1;
+				break;
+			}
+		}
+		return commitNode(start, null, spos, epos, objectSize, left, tag, value);
+	}
+
+	private Node commitNode(DataLog start, DataLog end, long spos, long epos,
+			int objectSize, Node left, Tag tag, Object value) {
+		Node newnode = this.base.newNode(tag, this, spos, epos, objectSize);
+		if(left != null) {
+			newnode.link(0, left);
+		}
+		if(value != null) {
+			newnode.setValue(value);
+		}
+		if(objectSize > 0) {
+//			System.out.println("PREV " + start.prev);
+//			System.out.println(">>> BEGIN");
+//			System.out.println("  LOG " + start);
+			for(DataLog cur = start.next; cur != end; cur = cur.next ) {
+//				System.out.println("  LOG " + cur);
+				if(cur.type == LazyLink) {
+					newnode.link((int)cur.pos, (Node)cur.value);
+				}
+			}
+//			System.out.println("<<< END");
+//			System.out.println("COMMIT " + newnode);
+		}
+		return newnode.commit();
+	}
+
+	public final void logAbort(DataLog checkPoint, boolean isFail) {
+		assert(checkPoint != null);
+//		if(isFail) {
+//			for(DataLog cur = checkPoint.next; cur != null; cur = cur.next ) {
+//				System.out.println("ABORT " + cur);
+//			}
+//		}
+		lastAppendedLog.next = this.unusedDataLog;
+		this.unusedDataLog = checkPoint.next;
+		this.unusedDataLog.prev = null;
+
+		this.lastAppendedLog = checkPoint;
+		this.lastAppendedLog.next = null;
+	}
+
+	public final Instruction opNodePush(NodePush op) {
+		ContextStack top = newUnusedLocalStack();
+		top.lastLog = this.lastAppendedLog;
+		return op.next;
+	}
+	
+	public final Instruction opNodeStore(NodeStore op) {
+		ContextStack top = popLocalStack();
+		if(top.lastLog.next != null) {
+			Node child = this.logCommit(top.lastLog.next);
+			logAbort(top.lastLog, false);
+			if(child != null) {
+				pushDataLog(LazyLink, op.index, child);
+			}
+			//System.out.println("LINK " + this.lastAppendedLog);
+		}
+		return op.next;
+	}
+
 	public final Instruction opNew(NodeNew op) {
-		this.left = this.base.newNode(this, this.pos);
+		pushDataLog(LazyNew, this.pos, null); //op.e);
 		return op.next;
 	}
 
 	public final Instruction opNodeLeftLink(NodeLeftLink op) {
-		Node left = this.left;
-		Node newnode = this.base.newNode(this, this.pos);
-		this.lazyJoin(left);
-		this.lazyLink(newnode, 0, left);
-		this.left = newnode;
+		pushDataLog(LazyLeftNew, this.pos, null); // op.e);
 		return op.next;
 	}
 
+	public final Node newTopLevelNode() {
+		for(DataLog cur = this.lastAppendedLog; cur != null; cur = cur.prev) {
+			if(cur.type == LazyNew) {
+				this.left = logCommit(cur);
+				logAbort(cur.prev, false);
+				return this.left;
+			}
+		}
+		return null;
+	}
+	
 	public final Instruction opNodeTag(NodeTag op) {
-		this.left.setTag(op.tag);
+		pushDataLog(LazyTag, 0, op.tag);
 		return op.next;
 	}
 
 	public final Instruction opReplace(NodeReplace op) {
-		this.left.setValue(op.value);
+		pushDataLog(LazyReplace, 0, op.value);
 		return op.next;
 	}
 
 	public final Instruction opCapture(NodeCapture op) {
-		this.left.setEndingPosition(this.pos);
+		pushDataLog(LazyCapture, this.pos, null);
 		return op.next;
 	}
 
@@ -540,18 +697,18 @@ public abstract class Context implements Source {
 	}
 
 	public final Instruction opMemoize(Memoize op) {
-		// opFailTop
-		ContextStack top = contextStacks[failStackTop];
-		this.usedStackTop = failStackTop;
-		this.failStackTop = top.prevFailTop;
-		// End of opFailTop
-
-		int length = (int)(pos - top.pos);
-		memoTable.setMemo2(pos, op.memoPoint, stateValue, (this.left == top.node) ? null : this.left, length);
-//		if(Tracing && memo.checkUseless()) {
-//		enableMemo = false;
-//		disabledMemo();
-//	}
+//		// opFailTop
+//		ContextStack top = contextStacks[failStackTop];
+//		this.usedStackTop = failStackTop;
+//		this.failStackTop = top.prevFailTop;
+//		// End of opFailTop
+//
+//		int length = (int)(pos - top.pos);
+//		memoTable.setMemo2(pos, op.memoPoint, stateValue, (this.left == top.node) ? null : this.left, length);
+////		if(Tracing && memo.checkUseless()) {
+////		enableMemo = false;
+////		disabledMemo();
+////	}
 		return op.next;
 	}
 	

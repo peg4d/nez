@@ -5,8 +5,8 @@ import java.util.TreeMap;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public abstract class Expression extends AbstractList<Expression> implements Recognizer {
 	protected Expression(SourcePosition s) {
@@ -33,13 +33,14 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	public boolean isAlwaysConsumed() {
 		return this.checkAlwaysConsumed(null, null, null);
 	}
+
 	public int inferNodeTransition() {
 		return this.inferNodeTransition(null);
 	}
 
-	public abstract boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack);
+	public abstract boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack);
 	public abstract int inferNodeTransition(UMap<String> visited);
-	public abstract Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c);
+	public abstract Expression checkNodeTransition(GrammarChecker checker, NodeTransition c);
 	public abstract Expression removeNodeOperator();
 	public abstract Expression removeFlag(TreeMap<String, String> undefedFlags);
 	

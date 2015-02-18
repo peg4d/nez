@@ -24,7 +24,7 @@ abstract class Unconsumed extends Expression {
 		return this.getPredicate();
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return false;
 	}
 	@Override
@@ -32,7 +32,7 @@ abstract class Unconsumed extends Expression {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		return this;
 	}
 	@Override

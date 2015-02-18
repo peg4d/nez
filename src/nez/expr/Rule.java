@@ -50,7 +50,7 @@ public class Rule extends Expression {
 	public int minlen = -1;
 	
 	@Override
-	public final boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public final boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		if(stack != null && this.minlen != 0 && stack.size() > 0) {
 			for(String n : stack) { // Check Unconsumed Recursion
 				if(uname.equals(n)) {
@@ -103,7 +103,7 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		int t = checkNamingConvention(this.name);
 		c.required = this.inferNodeTransition(null);
 		if(t != NodeTransition.Undefined && c.required != t) {

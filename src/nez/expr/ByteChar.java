@@ -22,7 +22,7 @@ public class ByteChar extends Terminal {
 		return "'" + byteChar;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return true;
 	}
 	@Override

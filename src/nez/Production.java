@@ -8,11 +8,13 @@ import nez.expr.NonTerminal;
 import nez.expr.Rule;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 import nez.vm.PEG;
 
 public class Production {
+	public static boolean OptionClassic = false;
+
 	Rule startingRule;
 	UMap<Rule>           ruleMap;
 	UList<Rule>          ruleList;
@@ -123,8 +125,17 @@ public class Production {
 	}
 	
 	public final boolean match(SourceContext s) {
-		s.initJumpStack(64);
-		return Instruction.run(this.compile(), s);
+		if(OptionClassic) {
+			return this.startingRule.match(s);
+		}
+		else {
+			s.initJumpStack(64);
+			boolean matched = Instruction.run(this.compile(), s);
+			if(matched) {
+				s.newTopLevelNode();
+			}
+			return matched;
+		}
 	}
 
 	
@@ -188,11 +199,7 @@ public class Production {
 	}
 
 	/* --------------------------------------------------------------------- */
-	
-	public final boolean match0(SourceContext s) {
-		return this.startingRule.match(s);
-	}
-	
+		
 	public final boolean match(String str) {
 		SourceContext sc = SourceContext.newStringSourceContext(str);
 		if(match(sc)) {
@@ -210,8 +217,7 @@ public class Production {
 		}
 		Node node = sc.getParsedNode();
 		if(node == null) {
-			node = base.newNode(sc, startPosition);
-			node.setEndingPosition(sc.getPosition());
+			node = base.newNode(null, sc, startPosition, sc.getPosition(), 0);
 		}
 		else {
 			sc.commitConstruction(0, node);

@@ -6,9 +6,9 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
+import nez.vm.Compiler;
 import nez.vm.Instruction;
 import nez.vm.MatchAny;
-import nez.vm.Compiler;
 
 import org.peg4d.ParsingSource;
 
@@ -25,7 +25,7 @@ public class AnyChar extends Terminal {
 		return ".";
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return true;
 	}
 	@Override
@@ -33,7 +33,7 @@ public class AnyChar extends Terminal {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		return this;
 	}
 	@Override
@@ -50,7 +50,7 @@ public class AnyChar extends Terminal {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		if(context.charAt(context.pos) != -1) {
+		if(context.byteAt(context.pos) != context.EOF()) {
 			int len = context.charLength(context.pos);
 			context.consume(len);
 			return true;

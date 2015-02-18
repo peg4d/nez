@@ -20,7 +20,7 @@ public class IsSymbol extends Terminal {
 		return "is " + table.name;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return true;
 	}
 	@Override

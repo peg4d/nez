@@ -25,7 +25,7 @@ public class Repetition extends Unary {
 		return "*";
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return false;
 	}
 	@Override
@@ -37,9 +37,9 @@ public class Repetition extends Unary {
 		return t;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		int required = c.required;
-		if(!this.inner.isAlwaysConsumed()) {
+		if(!this.inner.checkAlwaysConsumed(checker, null, null)) {
 			checker.reportWarning(s, "empty repetition");
 		}
 		Expression inn = this.inner.checkNodeTransition(checker, c);

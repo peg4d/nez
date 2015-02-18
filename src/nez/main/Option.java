@@ -5,7 +5,7 @@ import java.io.IOException;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
-import nez.expr.ExpressionChecker;
+import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
 import nez.expr.NezParserCombinator;
 import nez.util.ConsoleUtils;
@@ -67,6 +67,7 @@ public class Option {
 		ConsoleUtils.println("  -W<num>                    Warning Level (default:1)");
 		ConsoleUtils.println("  -O<num>                    Optimization Level (default:2)");
 		ConsoleUtils.println("  -g                         Debug Level");
+		ConsoleUtils.println("   -Xclassic                 Running on the classic recusive decent parsing");
 		ConsoleUtils.println("  --memo:x                   Memo configuration");
 		ConsoleUtils.println("     none|packrat|window|slide|notrace");
 		ConsoleUtils.println("  --memo:<num>               Expected backtrack distance (default: 256)");
@@ -183,6 +184,9 @@ public class Option {
 					VerboseMode = true;
 				}
 			}
+			else if(argument.equals("-Xclassic")) {
+				Production.OptionClassic = true;
+			}
 			else {
 				this.showUsage("unknown option: " + argument);
 			}
@@ -225,7 +229,7 @@ public class Option {
 		if(GrammarFile != null) {
 			try {
 				NezParser p = new NezParser();
-				return p.load(SourceContext.loadSource(GrammarFile), new ExpressionChecker(this.OptimizationLevel));
+				return p.load(SourceContext.loadSource(GrammarFile), new GrammarChecker(this.OptimizationLevel));
 			} catch (IOException e) {
 				ConsoleUtils.exit(1, "cannot open " + GrammarFile + "; " + e.getMessage());
 			}

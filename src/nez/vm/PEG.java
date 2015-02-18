@@ -4,7 +4,7 @@ import nez.Grammar;
 import nez.ParserCombinator;
 import nez.ast.Tag;
 import nez.expr.Expression;
-import nez.expr.ExpressionChecker;
+import nez.expr.GrammarChecker;
 
 public class PEG extends ParserCombinator {
 
@@ -15,7 +15,7 @@ public class PEG extends ParserCombinator {
 	private static Grammar peg = null;
 	public final static Grammar newGrammar() {
 		if(peg == null) {
-			peg = new PEG(new Grammar("peg")).load(new ExpressionChecker(1));
+			peg = new PEG(new Grammar("peg")).load(new GrammarChecker(1));
 		}
 		return peg;
 	}

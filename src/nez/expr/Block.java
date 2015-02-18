@@ -18,7 +18,7 @@ public class Block extends Unary {
 		return (this.inner != e) ? Factory.newBlock(this.s, e) : this;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override
@@ -26,7 +26,7 @@ public class Block extends Unary {
 		return this.inner.inferNodeTransition(visited);
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		this.inner = this.inner.checkNodeTransition(checker, c);
 		return this;
 	}

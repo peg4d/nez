@@ -19,7 +19,7 @@ public class NezParser extends Converter {
 		product = NezParserCombinator.newGrammar().getProduction("Chunk");
 	}
 	
-	public Grammar load(SourceContext sc, ExpressionChecker checker) {
+	public Grammar load(SourceContext sc, GrammarChecker checker) {
 		this.loaded = new Grammar(sc.getResourceName());
 		while(sc.hasUnconsumed()) {
 			AST ast = product.parse(sc, new AST());
@@ -34,8 +34,8 @@ public class NezParser extends Converter {
 		return loaded;
 	}
 	
-	private boolean parse(AST ast, ExpressionChecker checker) {
-		//System.out.println("DEBUG? parsed: " + ast);
+	private boolean parse(AST ast, GrammarChecker checker) {
+		System.out.println("DEBUG? parsed: " + ast);
 		if(ast.is(NezTag.Rule)) {
 			if(ast.size() > 3) {
 				System.out.println("DEBUG? parsed: " + ast);		

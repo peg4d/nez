@@ -23,7 +23,7 @@ public class Choice extends ExpressionList {
 		return "/";
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		boolean afterAll = true;
 		for(Expression e: this) {
 			if(!e.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
@@ -43,7 +43,7 @@ public class Choice extends ExpressionList {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		int required = c.required;
 		UList<Expression> l = newList();
 		for(Expression e : this) {

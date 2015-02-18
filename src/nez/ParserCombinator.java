@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.expr.Expression;
-import nez.expr.ExpressionChecker;
+import nez.expr.GrammarChecker;
 import nez.expr.Factory;
 import nez.util.UList;
 
@@ -16,7 +16,7 @@ public class ParserCombinator {
 		this.grammar = grammar;
 	}
 	
-	public final Grammar load(ExpressionChecker checker) {
+	public final Grammar load(GrammarChecker checker) {
 		Class<?> c = this.getClass();
 		for(Method m : c.getDeclaredMethods()) {
 			if(m.getReturnType() == Expression.class && m.getParameterCount() == 0) {
@@ -44,7 +44,7 @@ public class ParserCombinator {
 	}
 
 	public final Grammar load() {
-		return this.load(new ExpressionChecker(3));
+		return this.load(new GrammarChecker(3));
 	}
 
 	private SourcePosition src() {

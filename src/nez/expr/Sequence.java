@@ -22,7 +22,7 @@ public class Sequence extends ExpressionList {
 		return " ";
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		for(Expression e: this) {
 			if(e.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
 				return true;
@@ -49,7 +49,7 @@ public class Sequence extends ExpressionList {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		UList<Expression> l = newList();
 		for(Expression e : this) {
 			Factory.addSequence(l, e.checkNodeTransition(checker, c));

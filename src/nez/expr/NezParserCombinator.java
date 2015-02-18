@@ -12,7 +12,7 @@ public class NezParserCombinator extends ParserCombinator {
 	private static Grammar peg = null;
 	public final static Grammar newGrammar() {
 		if(peg == null) {
-			peg = new NezParserCombinator(new Grammar("nez")).load(new ExpressionChecker(1));
+			peg = new NezParserCombinator(new Grammar("nez")).load(new GrammarChecker(1));
 		}
 		return peg;
 	}
@@ -165,11 +165,6 @@ public class NezParserCombinator extends ParserCombinator {
 		);
 	}
 
-	private Expression Repetition(Expression link, Expression p) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public Expression Func() {
 		return Sequence(t("<"), New(
 		Choice(
@@ -253,8 +248,12 @@ public class NezParserCombinator extends ParserCombinator {
 		);
 	}
 
+//	public Expression NOTRULE() {
+//		return Not(Choice(P("Rule"), P("Import")));
+//	}
+
 	public Expression NOTRULE() {
-		return Not(Choice(P("Rule"), P("Import")));
+		return Not(Choice(t(";"), P("RuleHead"), P("Import")));
 	}
 
 	public Expression Sequence() {
@@ -334,7 +333,17 @@ public class NezParserCombinator extends ParserCombinator {
 			Tag(NezTag.Rule) 
 		);
 	}
-	
+
+	public Expression RuleHead() {
+		return New(
+			Link(0, Choice(P("Name"), P("String"))), P("_"), 
+//			Optional(Sequence(Link(3, P("Param_")), P("_"))),
+			Option(Sequence(Link(2, P("Annotations")), P("_"))),
+			t("="), 
+			Tag(NezTag.Rule) 
+		);
+	}
+
 	public Expression Import() {
 //		return Constructor(
 //			t("import"), 

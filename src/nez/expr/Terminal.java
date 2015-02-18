@@ -21,7 +21,7 @@ public abstract class Terminal extends Expression {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		return this;
 	}
 	@Override

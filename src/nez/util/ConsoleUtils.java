@@ -15,5 +15,9 @@ public class ConsoleUtils {
 	public final static void print(Object s) {
 		System.out.print(s);
 	}
+
+	public final static void debug(String s) {
+		System.out.println(s);
+	}
 	
 }

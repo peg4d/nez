@@ -25,7 +25,7 @@ public class WithFlag extends Unary {
 		return (this.inner != e) ? Factory.newWithFlag(this.s, this.flagName, e) : this;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override
@@ -33,7 +33,7 @@ public class WithFlag extends Unary {
 		return this.inner.inferNodeTransition(visited);
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		this.inner = this.inner.checkNodeTransition(checker, c);
 		return this;
 	}

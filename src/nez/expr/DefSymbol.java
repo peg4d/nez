@@ -21,7 +21,7 @@ public class DefSymbol extends Unary {
 		return "def " + table.name;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		if(!this.checkAlwaysConsumed(checker, startNonTerminal, stack) && checker != null) {
 			checker.reportWarning(s, "unconsumed expression: " + this.inner);
 		}
@@ -32,7 +32,7 @@ public class DefSymbol extends Unary {
 		return NodeTransition.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		int t = this.inner.inferNodeTransition(null);
 		if(t != NodeTransition.BooleanType) {
 			this.inner = this.inner.removeNodeOperator();

@@ -29,7 +29,7 @@ public class Link extends Unary {
 		return (this.inner != e) ? Factory.newLink(this.s, e, this.index) : this;
 	}
 	@Override
-	public boolean checkAlwaysConsumed(ExpressionChecker checker, String startNonTerminal, UList<String> stack) {
+	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override
@@ -37,7 +37,7 @@ public class Link extends Unary {
 		return NodeTransition.OperationType;
 	}
 	@Override
-	public Expression checkNodeTransition(ExpressionChecker checker, NodeTransition c) {
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		if(c.required != NodeTransition.OperationType) {
 			checker.reportWarning(s, "unexpected @ => removed");
 			return this.inner.removeNodeOperator();
