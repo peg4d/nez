@@ -8,7 +8,7 @@ import nez.util.ConsoleUtils;
 class ParseCommand extends Command {
 
 	@Override
-	void exec(Option opt) {
+	void exec(CommandConfigure opt) {
 		Production p = opt.getProduction(opt.StartingPoint);
 		if(p == null) {
 			ConsoleUtils.exit(1, "undefined nonterminal: " + opt.StartingPoint);

@@ -7,7 +7,6 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.CallPush;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
@@ -131,7 +130,7 @@ public class NonTerminal extends Expression {
 	
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new CallPush(bc, this.getRule(), next);
+		return bc.encodeNonTerminal(this, next);
 	}
 
 	@Override

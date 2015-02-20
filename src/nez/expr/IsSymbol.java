@@ -5,7 +5,7 @@ import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.util.UList;
 
-public class IsSymbol extends Terminal {
+public class IsSymbol extends Terminal implements ContextSensitive {
 	Tag table;
 	IsSymbol(SourcePosition s, Tag table) {
 		super(s);

@@ -16,13 +16,13 @@ public abstract class Command {
 	public final static String  License = "BSD-Style Open Source";
 
 	public final static void main(String[] args) {
-		Option opt = new Option();
+		CommandConfigure opt = new CommandConfigure();
 		opt.parseCommandOption(args);
 		Command com = opt.getCommand();
 		com.exec(opt);
 	}
 
-	abstract void exec(Option opt);
+	abstract void exec(CommandConfigure opt);
 	
 	
 	public final static void displayVersion() {

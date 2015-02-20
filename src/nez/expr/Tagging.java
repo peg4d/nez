@@ -4,9 +4,8 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.util.StringUtils;
-import nez.vm.Instruction;
-import nez.vm.NodeTag;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class Tagging extends Unconsumed {
 	public Tag tag;
@@ -37,14 +36,16 @@ public class Tagging extends Unconsumed {
 	public Expression removeNodeOperator() {
 		return Factory.newEmpty(null);
 	}
+	
 	@Override
 	public boolean match(SourceContext context) {
 		context.left.setTag(this.tag);
 		return true;
 	}
+	
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new NodeTag(bc, this, next);
+		return bc.encodeTagging(this, next);
 	}
 
 	@Override

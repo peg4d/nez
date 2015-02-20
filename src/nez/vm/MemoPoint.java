@@ -2,18 +2,30 @@ package nez.vm;
 
 import nez.expr.Expression;
 
-
 public class MemoPoint {
-	Expression e;
-	int memoPoint;
+	final int id;
+	final Expression e;
+	final boolean contextSensitive;
+
 	int memoHit = 0;
 	long hitLength = 0;
 	int  maxLength = 0;
 	int memoMiss = 0;
-	MemoPoint(int memoPoint, Expression e) {
-		this.memoPoint = memoPoint;
+	
+	MemoPoint(int id, Expression e, boolean contextSensitive) {
+		this.id = id;
 		this.e = e;
+		this.contextSensitive = contextSensitive;
 	}
+	
+	void hit(int consumed) {
+		this.memoHit += 1;
+		this.hitLength += consumed;
+		if(this.maxLength < consumed) {
+			this.maxLength = consumed;
+		}
+	}
+	
 	final double ratio() {
 		if(this.memoMiss == 0.0) return 0.0;
 		return (double)this.memoHit / this.memoMiss;
@@ -50,12 +62,5 @@ public class MemoPoint {
 		return false;
 	}
 
-	void hit(int consumed) {
-		this.memoHit += 1;
-		this.hitLength += consumed;
-		if(this.maxLength < consumed) {
-			this.maxLength = consumed;
-		}
-	}
 
 }

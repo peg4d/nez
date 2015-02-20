@@ -4,7 +4,7 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 
-public class Indent extends Terminal {
+public class Indent extends Terminal implements ContextSensitive {
 	Indent(SourcePosition s) {
 		super(s);
 	}

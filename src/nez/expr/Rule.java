@@ -74,6 +74,9 @@ public class Rule extends Expression {
 	}
 	
 	public int transType = NodeTransition.Undefined;
+	public final boolean isPurePEG() {
+		return this.transType == NodeTransition.BooleanType;
+	}
 	private Rule definedRule;  // defined
 
 	@Override

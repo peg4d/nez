@@ -15,7 +15,7 @@ import nez.util.UMap;
 
 import org.peg4d.MemoizationManager;
 
-public class Option {
+public class CommandConfigure {
 //	// -X specified
 //	private static Class<?> OutputWriterClass = null;
 

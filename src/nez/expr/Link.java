@@ -5,10 +5,8 @@ import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
-import nez.vm.NodePush;
-import nez.vm.NodeStore;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class Link extends Unary {
 	public int index;
@@ -80,7 +78,7 @@ public class Link extends Unary {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new NodePush(bc, this, this.inner.encode(bc, new NodeStore(bc, this, next)));
+		return bc.encodeLink(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

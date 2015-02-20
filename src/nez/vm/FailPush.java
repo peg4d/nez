@@ -3,14 +3,14 @@ package nez.vm;
 import nez.expr.Expression;
 
 public class FailPush extends Instruction implements StackOperation {
-	public final Instruction jump;
-	FailPush(Compiler optimizer, Expression e, Instruction jump, Instruction next) {
+	public final Instruction failjump;
+	FailPush(Compiler optimizer, Expression e, Instruction failjump, Instruction next) {
 		super(optimizer, e, next);
-		this.jump = labeling(jump);
+		this.failjump = labeling(failjump);
 	}
 	@Override
 	Instruction branch() {
-		return this.jump;
+		return this.failjump;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
@@ -19,7 +19,7 @@ public class FailPush extends Instruction implements StackOperation {
 	@Override
 	protected void stringfy(StringBuilder sb) {
 		sb.append("failpush ");
-		sb.append(label(this.jump));
+		sb.append(label(this.failjump));
 		sb.append("  ## " + e);
 	}
 

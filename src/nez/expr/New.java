@@ -7,10 +7,8 @@ import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
-import nez.vm.NodeCapture;
-import nez.vm.NodeNew;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class New extends ExpressionList {
 	int prefetchIndex = 0;
@@ -103,12 +101,7 @@ public class New extends ExpressionList {
 	
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		next = new NodeCapture(bc, this, next);
-		for(int i = this.size() -1; i >= 0; i--) {
-			Expression e = this.get(i);
-			next = e.encode(bc, next);
-		}
-		return new NodeNew(bc, this, next);
+		return bc.encodeNew(this, next);
 	}
 
 	@Override

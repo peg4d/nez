@@ -38,6 +38,10 @@ public abstract class Instruction {
 		return sb.toString();
 	}
 	
+	public final String getName() {
+		return this.getClass().getSimpleName();
+	}
+	
 	boolean debug() {
 		return false;
 	}

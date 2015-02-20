@@ -3,13 +3,16 @@ package nez.vm;
 import nez.ast.Tag;
 import nez.expr.DefSymbol;
 
-public class DefString extends Instruction {
+public interface ContextSensitive {
+	
+}
+
+class DefString extends Instruction implements ContextSensitive {
 	Tag tableName;
-	public DefString(Compiler optimizer, DefSymbol e, Instruction next) {
-		super(optimizer, e, next);
+	public DefString(Compiler bc, DefSymbol e, Instruction next) {
+		super(bc, e, next);
 		this.tableName = e.table;
 	}
-
 	@Override
 	protected void stringfy(StringBuilder sb) {
 		sb.append("def ");

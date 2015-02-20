@@ -10,13 +10,6 @@ import org.junit.Test;
 
 public class ExampleTest {
 
-//	@Test
-//	public void test() throws IOException, URISyntaxException {
-//		assertTrue(true);
-//		List<String> contents = Files.readAllLines(Paths.get(this.getClass().getResource("sample.txt").toURI()));
-//		assertEquals(1, contents.size());
-//	}
-
 	@Test
 	public void test() throws IOException, URISyntaxException {
 		Grammar g = new Grammar("");

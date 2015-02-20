@@ -6,7 +6,7 @@ import nez.ast.Tag;
 import nez.util.UList;
 import nez.util.UMap;
 
-public class IsaSymbol extends Terminal {
+public class IsaSymbol extends Terminal implements ContextSensitive {
 	Tag table;
 	IsaSymbol(SourcePosition s, Tag table) {
 		super(s);

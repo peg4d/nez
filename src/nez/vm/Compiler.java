@@ -3,15 +3,26 @@ package nez.vm;
 import java.util.HashMap;
 
 import nez.expr.Choice;
+import nez.expr.ContextSensitive;
 import nez.expr.Expression;
+import nez.expr.Factory;
+import nez.expr.Link;
+import nez.expr.New;
+import nez.expr.NewLeftLink;
+import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
 import nez.expr.Repetition;
+import nez.expr.Replace;
 import nez.expr.Rule;
+import nez.expr.Tagging;
 import nez.util.UList;
 import nez.util.UMap;
 
 public class Compiler {
+	boolean disableASTConstruction = false;
+	boolean disablePackratParsing  = false;
+
 	UList<Instruction> codeList;
 	UMap<CodeBlock> ruleMap;
 	
@@ -28,16 +39,37 @@ public class Compiler {
 	
 	HashMap<Integer, MemoPoint> memoMap = new HashMap<Integer, MemoPoint>();
     
-	MemoPoint getMemoPoint(Expression e) {
+	MemoPoint issueMemoPoint(Expression e) {
 		Integer key = e.internId;
 		assert(e.internId != 0);
 		MemoPoint m = this.memoMap.get(key);
 		if(m == null) {
-			m = new MemoPoint(this.memoMap.size(), e);
+			this.visitedMap.clear();
+			m = new MemoPoint(this.memoMap.size(), e, this.isContextSensitive(e));
 			this.memoMap.put(key, m);
 		}
 		return m;
 	}
+	
+	private UMap<String> visitedMap = new UMap<String>();
+
+	private boolean isContextSensitive(Expression e) {
+		if(e instanceof NonTerminal) {
+			String un = ((NonTerminal) e).getUniqueName();
+			if(visitedMap.get(un) == null) {
+				visitedMap.put(un, un);
+				return isContextSensitive(((NonTerminal) e).getRule().getExpression());
+			}
+			return false;
+		}
+		for(int i = 0; i < e.size(); i++) {
+			if(isContextSensitive(e.get(i))) {
+				return true;
+			}
+		}
+		return (e instanceof ContextSensitive);
+	}
+
 	
 	public final Instruction encode(UList<Rule> ruleList) {
 		for(Rule r : ruleList) {
@@ -69,9 +101,6 @@ public class Compiler {
 				}
 				encode(inst.branch());
 			}
-//			if(inst instanceof FailPush) {
-//				encode(((FailPush)inst).jump);
-//			}
 		}
 	}
 	
@@ -94,6 +123,8 @@ public class Compiler {
 			}
 		}
 	}
+	
+	// encoding 
 
 	public final Instruction encodeRepetition(Repetition p, Instruction next) {
 		FailSkip skip = new FailSkip(this, p);
@@ -121,6 +152,91 @@ public class Compiler {
 		return nextChoice;
 	}
 
+	public final Instruction encodeSequence(Expression p, Instruction next) {
+		for(int i = p.size() -1; i >= 0; i--) {
+			Expression e = p.get(i);
+			next = e.encode(this, next);
+		}
+		return next;
+	}
+
+	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next) {
+		if(!this.disablePackratParsing) {
+			Rule r = p.getRule();
+			if(r.isPurePEG()) {
+				Expression ref = Factory.resolveNonTerminal(r.getExpression());
+				MemoPoint m = this.issueMemoPoint(ref);
+				if(m != null) {
+					Instruction inside = new CallPush(this, r, new Memoize(this, p, m, next));
+					return newLookup(p, m, next, inside, new MemoizeFail(this, p, m));
+				}
+			}
+		}	
+		return new CallPush(this, p.getRule(), next);
+	}
+	
+	private Lookup newLookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		if(m.contextSensitive) {
+			return new Lookup2(this, e, m, next, skip, failjump);
+		}
+		return new Lookup(this, e, m, next, skip, failjump);
+	}
+	
+
+	
+	
+	// AST Construction
+	
+	public final Instruction encodeLink(Link p, Instruction next) {
+		if(this.disableASTConstruction) {
+			return p.get(0).encode(this, next);
+		}
+		else if(!this.disablePackratParsing) {
+			Expression inner = Factory.resolveNonTerminal(p.get(0));
+			MemoPoint m = this.issueMemoPoint(inner);
+			if(m != null) {
+				Instruction inside = inner.encode(this, new MemoizeNode(this, p, m, next));
+				return new LookupNode(this, p, m, next, inside, new MemoizeFail(this, p, m));
+			}
+		}	
+		return new NodePush(this, p, p.get(0).encode(this, new NodeStore(this, p, next)));
+	}
+
+	public final Instruction encodeNew(New p, Instruction next) {
+		if(this.disableASTConstruction) {
+			return this.encodeSequence(p, next);
+		}
+		else {
+			return new NodeNew(this, p, this.encodeSequence(p, new NodeCapture(this, p, next)));
+		}
+	}
+
+	public final Instruction encodeLeftNew(NewLeftLink p, Instruction next) {
+		if(this.disableASTConstruction) {
+			return this.encodeSequence(p, next);
+		}
+		else {
+			return new NodeLeftLink(this, p, this.encodeSequence(p, new NodeCapture(this, p, next)));
+		}
+	}
+		
+	public final Instruction encodeTagging(Tagging p, Instruction next) {
+		if(this.disableASTConstruction) {
+			return next;
+		}
+		else {
+			return new NodeTag(this, p, next);
+		}
+	}
+
+	public final Instruction encodeReplace(Replace p, Instruction next) {
+		if(this.disableASTConstruction) {
+			return next;
+		}
+		else {
+			return new NodeReplace(this, p, next);
+		}
+	}
 
 	
 }

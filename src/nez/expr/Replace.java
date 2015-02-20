@@ -3,9 +3,8 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.StringUtils;
-import nez.vm.Instruction;
-import nez.vm.NodeReplace;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class Replace extends Unconsumed {
 	public String value;
@@ -40,7 +39,7 @@ public class Replace extends Unconsumed {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new NodeReplace(bc, this, next);
+		return bc.encodeReplace(this, next);
 	}
 	
 	@Override
