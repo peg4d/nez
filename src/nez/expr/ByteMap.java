@@ -4,9 +4,8 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.StringUtils;
 import nez.util.UList;
-import nez.vm.Instruction;
-import nez.vm.MatchByteMap;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class ByteMap extends Terminal {
 	public boolean[] charMap; // Immutable
@@ -57,7 +56,7 @@ public class ByteMap extends Terminal {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new MatchByteMap(bc, this, next);
+		return bc.encodeMatchByteMap(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

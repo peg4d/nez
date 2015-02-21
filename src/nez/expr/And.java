@@ -4,9 +4,8 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
 import nez.vm.Compiler;
-import nez.vm.PosPush;
+import nez.vm.Instruction;
 
 public class And extends Unary {
 	And(SourcePosition s, Expression e) {
@@ -63,7 +62,7 @@ public class And extends Unary {
 	
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new PosPush(bc, this, next);
+		return bc.encodeAnd(this, next);
 	}
 	
 	@Override

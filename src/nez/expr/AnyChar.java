@@ -8,7 +8,6 @@ import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
-import nez.vm.MatchAny;
 
 import org.peg4d.ParsingSource;
 
@@ -59,7 +58,7 @@ public class AnyChar extends Terminal {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new MatchAny(bc, this, next);
+		return bc.encodeMatchAny(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

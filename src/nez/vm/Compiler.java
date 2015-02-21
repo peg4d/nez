@@ -2,6 +2,10 @@ package nez.vm;
 
 import java.util.HashMap;
 
+import nez.expr.And;
+import nez.expr.AnyChar;
+import nez.expr.ByteChar;
+import nez.expr.ByteMap;
 import nez.expr.Choice;
 import nez.expr.ContextSensitive;
 import nez.expr.Expression;
@@ -20,38 +24,57 @@ import nez.util.UList;
 import nez.util.UMap;
 
 public class Compiler {
-	boolean disableASTConstruction = false;
-	boolean disablePackratParsing  = false;
+	public final static int DefaultOption = 0;
+	final boolean enableASTConstruction;
+	final boolean enablePackratParsing;
+	final int CompilerOption;
 
-	UList<Instruction> codeList;
-	UMap<CodeBlock> ruleMap;
-	
 	class CodeBlock {
 		Instruction head;
 		int start;
 		int end;
 	}
+
+	UList<Instruction> codeList;
+	UMap<CodeBlock> ruleMap;
+	HashMap<Integer, MemoPoint> memoMap;
 	
-	public Compiler() {
+	public Compiler(boolean enableASTConstruction, boolean enablePackratParsing, int CompilerOption) {
+		this.enableASTConstruction = enableASTConstruction;
+		this.enablePackratParsing = enablePackratParsing;
+		this.CompilerOption = CompilerOption;
+
 		this.codeList = new UList<Instruction>(new Instruction[64]);
 		this.ruleMap = new UMap<CodeBlock>();
-	}
-	
-	HashMap<Integer, MemoPoint> memoMap = new HashMap<Integer, MemoPoint>();
-    
-	MemoPoint issueMemoPoint(Expression e) {
-		Integer key = e.internId;
-		assert(e.internId != 0);
-		MemoPoint m = this.memoMap.get(key);
-		if(m == null) {
-			this.visitedMap.clear();
-			m = new MemoPoint(this.memoMap.size(), e, this.isContextSensitive(e));
-			this.memoMap.put(key, m);
+		if(this.enablePackratParsing) {
+			this.memoMap = new HashMap<Integer, MemoPoint>();
+			this.visitedMap = new UMap<String>();
 		}
-		return m;
 	}
 	
-	private UMap<String> visitedMap = new UMap<String>();
+	MemoPoint issueMemoPoint(Expression e) {
+		if(this.enablePackratParsing) {
+			Integer key = e.internId;
+			assert(e.internId != 0);
+			MemoPoint m = this.memoMap.get(key);
+			if(m == null) {
+				m = new MemoPoint(this.memoMap.size(), e, this.isContextSensitive(e));
+				this.visitedMap.clear();
+				this.memoMap.put(key, m);
+			}
+			return m;
+		}
+		return null;
+	}
+	
+	public final int getMemoPointSize() {
+		if(this.enablePackratParsing) {
+			return this.memoMap.size();
+		}
+		return 0;
+	}
+	
+	private UMap<String> visitedMap = null;
 
 	private boolean isContextSensitive(Expression e) {
 		if(e instanceof NonTerminal) {
@@ -69,7 +92,6 @@ public class Compiler {
 		}
 		return (e instanceof ContextSensitive);
 	}
-
 	
 	public final Instruction encode(UList<Rule> ruleList) {
 		for(Rule r : ruleList) {
@@ -100,6 +122,7 @@ public class Compiler {
 					Instruction.labeling(inst.next);
 				}
 				encode(inst.branch());
+				//encode(inst.branch2());
 			}
 		}
 	}
@@ -126,28 +149,49 @@ public class Compiler {
 	
 	// encoding 
 
+	public final Instruction encodeMatchAny(AnyChar p, Instruction next) {
+		return new MatchAny(p, next);
+	}
+
+	public final Instruction newMatchByte(ByteChar p, Instruction next) {
+		return new MatchByte(p, next);
+	}
+
+	public final Instruction encodeMatchByteMap(ByteMap p, Instruction next) {
+		return new MatchByteMap(p, next);
+	}
+
+	public final Instruction encodeAnd(And p, Instruction next) {
+		Instruction inner = p.get(0).encode(this, new PosBack(p, next));
+		return new PosPush(p, inner);
+	}
+
+	public Instruction encodeFail(Expression p) {
+		return new Fail(p);
+	}
+
 	public final Instruction encodeRepetition(Repetition p, Instruction next) {
 		FailSkip skip = new FailSkip(this, p);
 		Instruction start = p.get(0).encode(this, skip);
 		skip.next = start;
-		return new FailPush(this, p, next, start);
+		return new FailPush(p, next, start);
 	}
 
 	public final Instruction encodeOption(Option p, Instruction next) {
 		Instruction pop = new FailPop(this, p, next);
-		return new FailPush(this, p, next, p.get(0).encode(this, pop));
+		return new FailPush(p, next, p.get(0).encode(this, pop));
 	}
 
 	public final Instruction encodeNot(Not p, Instruction next) {
-		Instruction fail = new FailPop(this, p, new Fail(this, p));
-		return new FailPush(this, p, next, p.get(0).encode(this, fail));
+		Instruction fail = new FailPop(this, p, new Fail(p));
+		return new FailPush(p, next, p.get(0).encode(this, fail));
 	}
 
 	public final Instruction encodeChoice(Choice p, Instruction next) {
 		Instruction nextChoice = p.get(p.size()-1).encode(this, next);
 		for(int i = p.size() -2; i >= 0; i--) {
 			Expression e = p.get(i);
-			nextChoice = new FailPush(this, e, nextChoice, e.encode(this, new FailPop(this, e, next)));
+			nextChoice = new FailPush(e, nextChoice, e.encode(this, new FailPop(this, e, next)));
 		}
 		return nextChoice;
 	}
@@ -161,82 +205,101 @@ public class Compiler {
 	}
 
 	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next) {
-		if(!this.disablePackratParsing) {
+		if(this.enablePackratParsing) {
 			Rule r = p.getRule();
 			if(r.isPurePEG()) {
 				Expression ref = Factory.resolveNonTerminal(r.getExpression());
 				MemoPoint m = this.issueMemoPoint(ref);
 				if(m != null) {
-					Instruction inside = new CallPush(this, r, new Memoize(this, p, m, next));
-					return newLookup(p, m, next, inside, new MemoizeFail(this, p, m));
+					Instruction inside = new CallPush(this, r, newMemoize(p, m, next));
+					return newLookup(p, m, inside, next, newMemoizeFail(p, m));
 				}
 			}
 		}	
 		return new CallPush(this, p.getRule(), next);
 	}
 	
-	private Lookup newLookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+	private Instruction newLookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		if(m.contextSensitive) {
-			return new Lookup2(this, e, m, next, skip, failjump);
+			return new Lookup2(e, m, next, skip, failjump);
 		}
-		return new Lookup(this, e, m, next, skip, failjump);
+		return new Lookup(e, m, next, skip, failjump);
 	}
-	
 
-	
+	private Instruction newMemoize(Expression e, MemoPoint m, Instruction next) {
+		if(m.contextSensitive) {
+			return new Memoize2(e, m, next);
+		}
+		return new Memoize(e, m, next);
+	}
+
+	private Instruction newMemoizeFail(Expression e, MemoPoint m) {
+		if(m.contextSensitive) {
+			return new MemoizeFail2(e, m);
+		}
+		return new MemoizeFail2(e, m);
+	}
+
 	
 	// AST Construction
 	
 	public final Instruction encodeLink(Link p, Instruction next) {
-		if(this.disableASTConstruction) {
-			return p.get(0).encode(this, next);
-		}
-		else if(!this.disablePackratParsing) {
-			Expression inner = Factory.resolveNonTerminal(p.get(0));
-			MemoPoint m = this.issueMemoPoint(inner);
-			if(m != null) {
-				Instruction inside = inner.encode(this, new MemoizeNode(this, p, m, next));
-				return new LookupNode(this, p, m, next, inside, new MemoizeFail(this, p, m));
+		if(this.enableASTConstruction) {
+			if(this.enablePackratParsing) {
+				Expression inner = Factory.resolveNonTerminal(p.get(0));
+				MemoPoint m = this.issueMemoPoint(inner);
+				if(m != null) {
+					Instruction inside = inner.encode(this, newMemoizeNode(p, m, next));
+					return newLookupNode(p, m, inside, next, new MemoizeFail(p, m));
+				}
 			}
-		}	
-		return new NodePush(this, p, p.get(0).encode(this, new NodeStore(this, p, next)));
+			return new NodePush(p, p.get(0).encode(this, new NodeStore(p, next)));
+		}
+		return p.get(0).encode(this, next);
 	}
 
-	public final Instruction encodeNew(New p, Instruction next) {
-		if(this.disableASTConstruction) {
-			return this.encodeSequence(p, next);
+	private Instruction newLookupNode(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		if(m.contextSensitive) {
+			return new LookupNode2(e, m, next, skip, failjump);
 		}
-		else {
-			return new NodeNew(this, p, this.encodeSequence(p, new NodeCapture(this, p, next)));
-		}
+		return new LookupNode(e, m, next, skip, failjump);
 	}
 
-	public final Instruction encodeLeftNew(NewLeftLink p, Instruction next) {
-		if(this.disableASTConstruction) {
-			return this.encodeSequence(p, next);
+	private Instruction newMemoizeNode(Link e, MemoPoint m, Instruction next) {
+		if(m.contextSensitive) {
+			return new MemoizeNode2(e, m, next);
 		}
-		else {
-			return new NodeLeftLink(this, p, this.encodeSequence(p, new NodeCapture(this, p, next)));
-		}
-	}
-		
-	public final Instruction encodeTagging(Tagging p, Instruction next) {
-		if(this.disableASTConstruction) {
-			return next;
-		}
-		else {
-			return new NodeTag(this, p, next);
-		}
-	}
-
-	public final Instruction encodeReplace(Replace p, Instruction next) {
-		if(this.disableASTConstruction) {
-			return next;
-		}
-		else {
-			return new NodeReplace(this, p, next);
-		}
+		return new MemoizeNode(e, m, next);
 	}
 
 	
+	public final Instruction encodeNew(New p, Instruction next) {
+		if(this.enableASTConstruction) {
+			return new NodeNew(p, this.encodeSequence(p, new NodeCapture(p, next)));
+		}
+		return this.encodeSequence(p, next);
+	}
+
+	public final Instruction encodeLeftNew(NewLeftLink p, Instruction next) {
+		if(this.enableASTConstruction) {
+			return new NodeLeftNew(p, this.encodeSequence(p, new NodeCapture(p, next)));
+		}
+		return this.encodeSequence(p, next);
+	}
+		
+	public final Instruction encodeTagging(Tagging p, Instruction next) {
+		if(this.enableASTConstruction) {
+			return new NodeTag(p, next);
+		}
+		return next;
+	}
+
+	public final Instruction encodeReplace(Replace p, Instruction next) {
+		if(this.enableASTConstruction) {
+			return new NodeReplace(p, next);
+		}
+		return next;
+	}
+
+
 }

@@ -5,13 +5,10 @@ import java.util.HashMap;
 import nez.ast.Node;
 
 public abstract class MemoTable {
+	public abstract MemoTable newMemoTable(long len, int w, int n);
 	abstract void setMemo(long pos, int memoPoint, boolean failed, Node result, int consumed, int stateValue);
-//	abstract void setMemo(long pos, int memoPoint, Node result, int consumed);
-//	abstract void setFailure(long pos, int memoPoint);
 	abstract MemoEntry getMemo(long pos, int memoPoint);
 	abstract MemoEntry getMemo2(long pos, int memoPoint, int stateValue);
-//	abstract void setMemo2(long pos, int id, int stateValue, Node left, int length);
-//	abstract void setFailure2(long pos, int memoPoint, int stateValue);
 
 	int CountStored;
 	int CountUsed;
@@ -33,48 +30,49 @@ public abstract class MemoTable {
 //		stat.setRatio("HitRatio",    this.MemoUsed, this.MemoMissed);
 //	}
 	
-	static MemoTable newNullTable(int len, int w, int n) {
+	public static MemoTable newNullTable(long len, int w, int n) {
 		return new NullTable(len, w, n);
 	}
 
-	static MemoTable newElasticTable(int len, int w, int n) {
+	public static MemoTable newElasticTable(long len, int w, int n) {
 		return new ElasticTable(len, w, n);
 	}
 
-	static MemoTable newPackratHashTable(int len, int w, int n) {
+	public static MemoTable newPackratHashTable(int len, int w, int n) {
 		return new PackratHashTable(len, w, n);
 	}
 	
 }
 
 class NullTable extends MemoTable {
-	NullTable(int len, int w, int n) {
+	@Override
+	public
+	MemoTable newMemoTable(long len, int w, int n) {
+		return this;
+	}
+	NullTable(long len, int w, int n) {
 		this.initStat();
 	}
-	
 	@Override
 	void setMemo(long pos, int memoPoint, boolean failed, Node result,
 			int consumed, int stateValue) {
 		this.CountStored += 1;
 	}
-
 	@Override
 	MemoEntry getMemo(long pos, int id) {
 		return null;
 	}
-
 	@Override
 	MemoEntry getMemo2(long pos, int id, int stateValue) {
 		return null;
 	}
-
 }
 
 class ElasticTable extends MemoTable {
 	private MemoEntryKey[] memoArray;
 	private final int shift;
 
-	ElasticTable(int len, int w, int n) {
+	ElasticTable(long len, int w, int n) {
 		this.memoArray = new MemoEntryKey[w * n + 1];
 		for(int i = 0; i < this.memoArray.length; i++) {
 			this.memoArray[i] = new MemoEntryKey();
@@ -83,8 +81,14 @@ class ElasticTable extends MemoTable {
 		this.shift = (int)(Math.log(n) / Math.log(2.0)) + 1;
 		this.initStat();
 	}
+
+	@Override
+	public
+	MemoTable newMemoTable(long len, int w, int n) {
+		return new ElasticTable(len, w, n);
+	}
 	
-	protected long longkey(long pos, int memoPoint, int shift) {
+	final long longkey(long pos, int memoPoint, int shift) {
 		return ((pos << shift) | memoPoint) & Long.MAX_VALUE;
 	}
 	
@@ -101,7 +105,7 @@ class ElasticTable extends MemoTable {
 	}
 
 	@Override
-	protected final MemoEntry getMemo(long pos, int memoPoint) {
+	final MemoEntry getMemo(long pos, int memoPoint) {
 		long key = longkey(pos, memoPoint, shift);
 		int hash =  (int)(key % memoArray.length);
 		MemoEntryKey m = this.memoArray[hash];
@@ -113,7 +117,7 @@ class ElasticTable extends MemoTable {
 	}
 
 	@Override
-	protected final MemoEntry getMemo2(long pos, int memoPoint, int stateValue) {
+	final MemoEntry getMemo2(long pos, int memoPoint, int stateValue) {
 		long key = longkey(pos, memoPoint, shift);
 		int hash =  (int)(key % memoArray.length);
 		MemoEntryKey m = this.memoArray[hash];
@@ -133,8 +137,14 @@ class PackratHashTable extends MemoTable {
 	HashMap<Long, MemoEntryList> memoMap;
 	private MemoEntryList UnusedMemo = null;
 
-	PackratHashTable(int len, int w, int n) {
+	PackratHashTable(long len, int w, int n) {
 		this.memoMap = new HashMap<Long, MemoEntryList>(w * n);
+	}
+	
+	@Override
+	public
+	MemoTable newMemoTable(long len, int w, int n) {
+		return new PackratHashTable(len, w, n);
 	}
 	
 	private final MemoEntryList newMemo() {

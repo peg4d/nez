@@ -3,9 +3,8 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
-import nez.vm.Instruction;
-import nez.vm.MatchByte;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class ByteChar extends Terminal {
 	public int byteChar;
@@ -39,7 +38,7 @@ public class ByteChar extends Terminal {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new MatchByte(bc, this, next);
+		return bc.newMatchByte(this, next);
 	}
 	
 	@Override

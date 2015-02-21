@@ -209,16 +209,16 @@ public class CommandConfigure {
 //		}
 	}
 	
-	private static UMap<Command> comTable = new UMap<Command>();
+	private static UMap<Command> commandTable = new UMap<Command>();
 	private static void addCommand(String name, Command com) {
-		comTable.put(name, com);
+		commandTable.put(name, com);
 	}
 	static {
 		addCommand("parse", new ParseCommand());
 	}
 	
 	public final Command getCommand() {
-		Command com = comTable.get(this.CommandName);
+		Command com = commandTable.get(this.CommandName);
 		if(com == null) {
 			this.showUsage("unknown command: " + this.CommandName);
 		}
@@ -236,6 +236,13 @@ public class CommandConfigure {
 		}
 		ConsoleUtils.println("unspecifed grammar");
 		return NezParserCombinator.newGrammar();
+	}
+
+	public final Production getProduction(String start, boolean enableASTConstruction, boolean enablePackratParsing, int CompilerOption) {
+		if(start == null) {
+			start = this.StartingPoint;
+		}
+		return getGrammar().getProduction(start, enableASTConstruction, enablePackratParsing, CompilerOption);
 	}
 
 	public final Production getProduction(String start) {

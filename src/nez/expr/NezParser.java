@@ -16,7 +16,7 @@ public class NezParser extends Converter {
 	Production product;
 	
 	public NezParser() {
-		product = NezParserCombinator.newGrammar().getProduction("Chunk");
+		product = NezParserCombinator.newGrammar().getProduction("Chunk", true, false, 0);
 	}
 	
 	public Grammar load(SourceContext sc, GrammarChecker checker) {

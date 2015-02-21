@@ -10,7 +10,7 @@ public interface ContextSensitive {
 class DefString extends Instruction implements ContextSensitive {
 	Tag tableName;
 	public DefString(Compiler bc, DefSymbol e, Instruction next) {
-		super(bc, e, next);
+		super(e, next);
 		this.tableName = e.table;
 	}
 	@Override

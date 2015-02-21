@@ -2,9 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.vm.Fail;
-import nez.vm.Instruction;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class Failure extends Unconsumed {
 	Failure(SourcePosition s) {
@@ -28,7 +27,7 @@ public class Failure extends Unconsumed {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return new Fail(bc, this);
+		return bc.encodeFail(this);
 	}
 	
 	@Override

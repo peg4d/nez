@@ -64,10 +64,18 @@ public class Grammar {
 		return ruleList;
 	}
 
+	public final Production getProduction(String name, boolean enableASTConstruction, boolean enablePackratParsing, int CompilerOption) {
+		Rule r = this.getRule(name);
+		if(r != null) {
+			return new Production(r, enableASTConstruction, enablePackratParsing, CompilerOption);
+		}
+		return null;
+	}
+
 	public final Production getProduction(String name) {
 		Rule r = this.getRule(name);
 		if(r != null) {
-			return new Production(r);
+			return new Production(r, true, true, nez.vm.Compiler.DefaultOption);
 		}
 		return null;
 	}

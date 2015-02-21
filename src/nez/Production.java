@@ -10,6 +10,7 @@ import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
+import nez.vm.MemoTable;
 import nez.vm.PEG;
 
 public class Production {
@@ -19,10 +20,13 @@ public class Production {
 	UMap<Rule>           ruleMap;
 	UList<Rule>          ruleList;
 
-	Production(Rule rule) {
+	Production(Rule rule, boolean enableASTConstruction, boolean enablePackratParsing, int CompilerOption) {
 		this.startingRule = rule;
 		this.ruleList = new UList<Rule>(new Rule[4]);
 		this.ruleMap = new UMap<Rule>();
+		this.enableASTConstruction(enableASTConstruction);
+		this.enablePackratParsing(enablePackratParsing);
+		this.setOptimization(CompilerOption);
 		add(0, rule);
 		//dump();
 	}
@@ -113,13 +117,59 @@ public class Production {
 	}
 
 	/* --------------------------------------------------------------------- */
-
+	/* memoization configuration */
+	
 	private Instruction compiledCode = null;
+
+	private boolean enableASTConstruction;
+	private boolean enablePackratParsing;
+	private int CompilerOption;
+
+	public final void enableASTConstruction (boolean option) {
+		if(this.enableASTConstruction != option) {
+			this.compiledCode = null; // recompile
+		}
+		this.enableASTConstruction = option;
+	}
+	
+	public final void setOptimization (int option) {
+		if(this.CompilerOption != option) {
+			this.compiledCode = null; // recompile
+		}
+		this.CompilerOption = option;
+	}
+
+	private MemoTable defaultMemoTable;
+	private int windowSize = 32;
+	private int memoPointSize;
+
+	public final void enablePackratParsing (boolean option) {
+		if(this.enablePackratParsing != option) {
+			this.compiledCode = null; // recompile
+		}
+		if(option && this.defaultMemoTable == null) {
+			this.defaultMemoTable = MemoTable.newElasticTable(0, 0, 0);
+		}
+		this.enablePackratParsing = option;
+	}
+	
+	public void config(MemoTable memoTable) {
+		this.defaultMemoTable = memoTable;
+	}
+	
+	private MemoTable getMemoTable(SourceContext sc) {
+		if(memoPointSize == 0) {
+			return MemoTable.newNullTable(sc.length(), this.windowSize, this.memoPointSize);
+		}
+		return this.defaultMemoTable.newMemoTable(sc.length(), this.windowSize, this.memoPointSize);
+	}
+
 	public Instruction compile() {
 		if(compiledCode == null) {
-			Compiler optimizer = new Compiler();
-			compiledCode = optimizer.encode(this.ruleList);
-			optimizer.dump(this.ruleList);
+			Compiler bc = new Compiler(this.enableASTConstruction, this.enablePackratParsing, this.CompilerOption);
+			compiledCode = bc.encode(this.ruleList);
+			this.memoPointSize = bc.getMemoPointSize();
+			bc.dump(this.ruleList);
 		}
 		return compiledCode;
 	}
@@ -129,8 +179,9 @@ public class Production {
 			return this.startingRule.match(s);
 		}
 		else {
-			s.initJumpStack(64);
-			boolean matched = Instruction.run(this.compile(), s);
+			Instruction pc = this.compile();
+			s.initJumpStack(64, getMemoTable(s));
+			boolean matched = Instruction.run(pc, s);
 			if(matched) {
 				s.newTopLevelNode();
 			}
