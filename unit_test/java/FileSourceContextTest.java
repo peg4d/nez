@@ -1,12 +1,11 @@
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+
+import nez.SourceContext;
 
 import org.junit.Test;
 
@@ -16,8 +15,17 @@ public class FileSourceContextTest {
 	public void test() throws IOException, URISyntaxException {
 		assertTrue(true);
 		Path path = Paths.get(this.getClass().getResource("lines.txt").toURI());
-		List<String> contents = Files.readAllLines(path);
-		assertEquals(9999, contents.size());
+		SourceContext sc = SourceContext.loadSource(path.getFileName().toString());
+		int linenum = 1;
+		while(sc.hasUnconsumed()) {
+			long pos = sc.getPosition();
+			int ch = sc.byteAt(pos);
+			assertTrue(sc.linenum(pos) == linenum);
+			if(ch == '\n') {
+				linenum++;
+			}
+			sc.consume(1);
+		}
 	}
 
 }
