@@ -22,7 +22,7 @@ public abstract class Command {
 		com.exec(opt);
 	}
 
-	abstract void exec(CommandConfigure opt);
+	abstract void exec(CommandConfigure config);
 	
 	
 	public final static void displayVersion() {

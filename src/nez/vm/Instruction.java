@@ -74,7 +74,7 @@ public abstract class Instruction {
 //					sc.dumpStack("After  " + prev);
 //				}
 //				else {
-				System.out.println("" + code.id + " " + code);
+				//System.out.println("" + code.id + " " + code);
 				code = code.exec(sc);
 //				}
 			}

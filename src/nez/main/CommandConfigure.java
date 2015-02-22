@@ -271,7 +271,7 @@ public class CommandConfigure {
 		}
 		if(this.InputFileName != null) {
 			String f = this.InputFileName;
-			this.InputFileName = f;
+			this.InputFileName = null;
 			try {
 				return SourceContext.loadSource(f);
 			} catch (IOException e) {

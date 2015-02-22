@@ -8,13 +8,13 @@ import nez.util.ConsoleUtils;
 class ParseCommand extends Command {
 
 	@Override
-	void exec(CommandConfigure opt) {
-		Production p = opt.getProduction(opt.StartingPoint);
+	void exec(CommandConfigure config) {
+		Production p = config.getProduction(config.StartingPoint);
 		if(p == null) {
-			ConsoleUtils.exit(1, "undefined nonterminal: " + opt.StartingPoint);
+			ConsoleUtils.exit(1, "undefined nonterminal: " + config.StartingPoint);
 		}
-		while(opt.hasInput()) {
-			SourceContext file = opt.getInputSourceContext();
+		while(config.hasInput()) {
+			SourceContext file = config.getInputSourceContext();
 			AST ast = p.parse(file, new AST());
 			if(ast == null) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
