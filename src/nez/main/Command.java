@@ -24,7 +24,6 @@ public abstract class Command {
 
 	abstract void exec(CommandConfigure config);
 	
-	
 	public final static void displayVersion() {
 		ConsoleUtils.println(ProgName + "-" + Version + " (" + CodeName + ") on Java JVM-" + System.getProperty("java.version"));
 		ConsoleUtils.println(Copyright);
@@ -72,7 +71,6 @@ public abstract class Command {
 			return null;
 		}
 	}
-
 
 }
 

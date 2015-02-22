@@ -6,6 +6,9 @@ import nez.expr.Expression;
 import nez.expr.NezParserCombinator;
 import nez.expr.NonTerminal;
 import nez.expr.Rule;
+import nez.main.Recorder;
+import nez.main.Verbose;
+import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Compiler;
@@ -14,20 +17,16 @@ import nez.vm.MemoTable;
 import nez.vm.PEG;
 
 public class Production {
-	public static boolean OptionClassic = false;
-
-	Rule startingRule;
+	Rule start;
 	UMap<Rule>           ruleMap;
 	UList<Rule>          ruleList;
 
-	Production(Rule rule, boolean enableASTConstruction, boolean enablePackratParsing, int CompilerOption) {
-		this.startingRule = rule;
+	Production(Rule start, int option) {
+		this.start = start;
 		this.ruleList = new UList<Rule>(new Rule[4]);
 		this.ruleMap = new UMap<Rule>();
-		this.enableASTConstruction(enableASTConstruction);
-		this.enablePackratParsing(enablePackratParsing);
-		this.setOptimization(CompilerOption);
-		add(0, rule);
+		this.setOption(option);
+		add(0, start);
 		//dump();
 	}
 
@@ -120,39 +119,22 @@ public class Production {
 	/* memoization configuration */
 	
 	private Instruction compiledCode = null;
-
-	private boolean enableASTConstruction;
-	private boolean enablePackratParsing;
-	private int CompilerOption;
-
-	public final void enableASTConstruction (boolean option) {
-		if(this.enableASTConstruction != option) {
-			this.compiledCode = null; // recompile
-		}
-		this.enableASTConstruction = option;
-	}
+	private int option;
 	
-	public final void setOptimization (int option) {
-		if(this.CompilerOption != option) {
+	public final void setOption (int option) {
+		if(this.option != option) {
 			this.compiledCode = null; // recompile
 		}
-		this.CompilerOption = option;
+		if(FlagUtils.hasFlag(option, PackratParsing) && this.defaultMemoTable == null) {
+			this.defaultMemoTable = MemoTable.newElasticTable(0, 0, 0);
+		}
+		this.option = option;
 	}
 
 	private MemoTable defaultMemoTable;
 	private int windowSize = 32;
 	private int memoPointSize;
 
-	public final void enablePackratParsing (boolean option) {
-		if(this.enablePackratParsing != option) {
-			this.compiledCode = null; // recompile
-		}
-		if(option && this.defaultMemoTable == null) {
-			this.defaultMemoTable = MemoTable.newElasticTable(0, 0, 0);
-		}
-		this.enablePackratParsing = option;
-	}
-	
 	public void config(MemoTable memoTable) {
 		this.defaultMemoTable = memoTable;
 	}
@@ -166,17 +148,19 @@ public class Production {
 
 	public Instruction compile() {
 		if(compiledCode == null) {
-			Compiler bc = new Compiler(this.enableASTConstruction, this.enablePackratParsing, this.CompilerOption);
+			Compiler bc = new Compiler(this.option);
 			compiledCode = bc.encode(this.ruleList);
 			this.memoPointSize = bc.getMemoPointSize();
-			bc.dump(this.ruleList);
+			if(Verbose.VirtualMachine) {
+				bc.dump(this.ruleList);
+			}
 		}
 		return compiledCode;
 	}
 	
 	public final boolean match(SourceContext s) {
-		if(OptionClassic) {
-			return this.startingRule.match(s);
+		if(FlagUtils.hasFlag(this.option, Production.ClassicMode)) {
+			return this.start.match(s);
 		}
 		else {
 			Instruction pc = this.compile();
@@ -280,6 +264,47 @@ public class Production {
 	public final AST parseAST(String str) {
 		SourceContext sc = SourceContext.newStringSourceContext(str);
 		return this.parse(sc, new AST());
+	}
+
+	public final void record(Recorder rec) {
+		if(rec != null) {
+			this.compile();
+			rec.setFile("G.File", this.start.getGrammar().name);
+			rec.setCount("G.NonTerminals", this.ruleMap.size());
+			rec.setCount("G.MemoPoint", this.memoPointSize);
+		}
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Production Option */
+	
+	public final static int ClassicMode = 1;
+	public final static int ASTConstruction = 1 << 1;
+	public final static int PackratParsing  = 1 << 2;
+	
+	public final static int DefaultOption = ASTConstruction | PackratParsing;
+	public final static int SafeOption = ASTConstruction ;
+
+	
+	public final static String stringfyOption(int option, String delim) {
+		StringBuilder sb = new StringBuilder();
+		if(FlagUtils.hasFlag(option, Production.ClassicMode)) {
+			sb.append(delim);
+			sb.append("classic");
+		}
+		if(FlagUtils.hasFlag(option, Production.ASTConstruction)) {
+			sb.append(delim);
+			sb.append("AST");
+		}
+		if(FlagUtils.hasFlag(option, Production.PackratParsing)) {
+			sb.append(delim);
+			sb.append("memo");
+		}
+		String s = sb.toString();
+		if(s.length() > 0) {
+			return s.substring(delim.length());
+		}
+		return s;
 	}
 
 }

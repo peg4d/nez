@@ -8,7 +8,6 @@ import nez.ast.AST;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
 
 public class Rule extends Expression {
 	Grammar    grammar;
@@ -23,6 +22,10 @@ public class Rule extends Expression {
 		this.uname = grammar.uniqueName(name);
 		this.body = (body == null) ? Factory.newEmpty(s) : body;
 		this.definedRule = definedRule;
+	}
+	
+	public final Grammar getGrammar() {
+		return this.grammar;
 	}
 	
 	@Override
@@ -217,14 +220,6 @@ public class Rule extends Expression {
 		// TODO Auto-generated method stub
 		
 	}
-
-	private Instruction inst = null;
-//	public Instruction getInstruction() {
-//		if(inst == null) {
-//			this.body.encode(optimizer, new Return(this));
-//		}
-//		return null;
-//	}
 
 	@Override
 	protected int pattern(GEP gep) {

@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import nez.main.Recorder;
 import nez.util.StringUtils;
 import nez.vm.Context;
 
@@ -223,6 +224,13 @@ public abstract class SourceContext extends Context {
 		}
 		reader.close();
 		return new StringSourceContext(fileName, 1, builder.toString());
+	}
+
+	public final void record(Recorder rec) {
+		if(rec != null) {
+			rec.setFile("I.File",  this.getResourceName());
+			rec.setCount("I.Size", this.length());
+		}
 	}
 
 	

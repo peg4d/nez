@@ -13,8 +13,6 @@ import nez.util.StringUtils;
 import nez.util.UList;
 import nez.util.UMap;
 
-import org.peg4d.MemoizationManager;
-
 public class CommandConfigure {
 //	// -X specified
 //	private static Class<?> OutputWriterClass = null;
@@ -52,9 +50,6 @@ public class CommandConfigure {
 	// -O
 	public int OptimizationLevel = 2;
 
-	// --log
-	public static Recorder  rec = null;
-	public static String    RecorderFileName = "results.csv";
 	
 	void showUsage(String Message) {
 		ConsoleUtils.println("nez <command> optional files");
@@ -140,6 +135,9 @@ public class CommandConfigure {
 			else if (argument.startsWith("-g")) {
 				DebugLevel = StringUtils.parseInt(argument.substring(2), 1);
 			}
+			else if (argument.startsWith("-g")) {
+				DebugLevel = StringUtils.parseInt(argument.substring(2), 1);
+			}
 //			else if(argument.startsWith("--memo")) {
 //				if(argument.equals("--memo:none")) {
 //					MemoizationManager.NoMemo = true;
@@ -166,26 +164,31 @@ public class CommandConfigure {
 //					}
 //				}
 //			}
-			else if(argument.startsWith("--log")) {
-				String logFile = "nezlog.csv";
+			else if(argument.startsWith("-Xconfig")) {
+				ProductionOption = StringUtils.parseInt(argument.substring(9), Production.DefaultOption);
+				Verbose.println("configuration: " + Production.stringfyOption(ProductionOption, ", "));
+			}
+			else if(argument.startsWith("-Xrec")) {
+				RecorderFileName = "nezrec.csv";
 				if(argument.endsWith(".csv")) {
-					logFile = argument.substring(6);
+					RecorderFileName = argument.substring(6);
 				}
-//				Logger = new NezLogger(logFile);
-//				if(OutputWriterClass == null) {
-//					OutputWriterClass = TagWriter.class;
-//				}
+				Verbose.println("recording " + RecorderFileName);
 			}
 			else if(argument.startsWith("--verbose")) {
 				if(argument.equals("--verbose:memo")) {
-					MemoizationManager.VerboseMemo = true;
+					Verbose.PackratParsing = true;
+				}
+				else if(argument.equals("--verbose:vm")) {
+					Verbose.VirtualMachine = true;
+				}
+				else if(argument.equals("--verbose:none")) {
+					Verbose.General = false;
 				}
 				else {
-					VerboseMode = true;
+					Verbose.setAll();
+					Verbose.println("unknown verbose option: " + argument);
 				}
-			}
-			else if(argument.equals("-Xclassic")) {
-				Production.OptionClassic = true;
 			}
 			else {
 				this.showUsage("unknown option: " + argument);
@@ -208,7 +211,7 @@ public class CommandConfigure {
 //			OutputWriterClass = ParsingObjectWriter.class;
 //		}
 	}
-	
+
 	private static UMap<Command> commandTable = new UMap<Command>();
 	private static void addCommand(String name, Command com) {
 		commandTable.put(name, com);
@@ -238,18 +241,20 @@ public class CommandConfigure {
 		return NezParserCombinator.newGrammar();
 	}
 
-	public final Production getProduction(String start, boolean enableASTConstruction, boolean enablePackratParsing, int CompilerOption) {
+	public final Production getProduction(String start, int option) {
 		if(start == null) {
 			start = this.StartingPoint;
 		}
-		return getGrammar().getProduction(start, enableASTConstruction, enablePackratParsing, CompilerOption);
+		return getGrammar().getProduction(start, option);
 	}
 
+	private int ProductionOption = Production.DefaultOption;
+	
 	public final Production getProduction(String start) {
 		if(start == null) {
 			start = this.StartingPoint;
 		}
-		return getGrammar().getProduction(start);
+		return getGrammar().getProduction(start, ProductionOption);
 	}
 
 	private boolean ShellMode = true;
@@ -279,6 +284,22 @@ public class CommandConfigure {
 			}
 		}
 		return SourceContext.newStringSourceContext(""); // empty input
+	}
+
+	public String getOutputFileName(SourceContext input) {
+		return null;
+	}
+
+	public String RecorderFileName = null;
+
+	public final Recorder getRecorder() {
+		if(RecorderFileName != null) {
+			Recorder rec = new Recorder(RecorderFileName);
+			rec.setText("nez", Command.Version);
+			rec.setText("config", Production.stringfyOption(ProductionOption, ";"));
+			return rec;
+		}
+		return null;
 	}
 
 }

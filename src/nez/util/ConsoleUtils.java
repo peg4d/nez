@@ -19,5 +19,9 @@ public class ConsoleUtils {
 	public final static void debug(String s) {
 		System.out.println(s);
 	}
+
+	public static void notice(String message) {
+		System.out.println("NOTICE: " + message);
+	}
 	
 }

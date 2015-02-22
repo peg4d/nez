@@ -2,6 +2,7 @@ package nez.vm;
 
 import java.util.HashMap;
 
+import nez.Production;
 import nez.expr.And;
 import nez.expr.AnyChar;
 import nez.expr.ByteChar;
@@ -20,15 +21,13 @@ import nez.expr.Repetition;
 import nez.expr.Replace;
 import nez.expr.Rule;
 import nez.expr.Tagging;
+import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
 
 public class Compiler {
-	public final static int DefaultOption = 0;
-	final boolean enableASTConstruction;
-	final boolean enablePackratParsing;
-	final int CompilerOption;
-
+	final int option;
+	
 	class CodeBlock {
 		Instruction head;
 		int start;
@@ -39,21 +38,26 @@ public class Compiler {
 	UMap<CodeBlock> ruleMap;
 	HashMap<Integer, MemoPoint> memoMap;
 	
-	public Compiler(boolean enableASTConstruction, boolean enablePackratParsing, int CompilerOption) {
-		this.enableASTConstruction = enableASTConstruction;
-		this.enablePackratParsing = enablePackratParsing;
-		this.CompilerOption = CompilerOption;
-
+	public Compiler(int CompilerOption) {
+		this.option = CompilerOption;
 		this.codeList = new UList<Instruction>(new Instruction[64]);
 		this.ruleMap = new UMap<CodeBlock>();
-		if(this.enablePackratParsing) {
+		if(this.enablePackratParsing()) {
 			this.memoMap = new HashMap<Integer, MemoPoint>();
 			this.visitedMap = new UMap<String>();
 		}
 	}
 	
+	private final boolean enablePackratParsing() {
+		return FlagUtils.hasFlag(this.option, Production.PackratParsing);
+	}
+
+	private final boolean enableASTConstruction() {
+		return FlagUtils.hasFlag(this.option, Production.ASTConstruction);
+	}
+
 	MemoPoint issueMemoPoint(Expression e) {
-		if(this.enablePackratParsing) {
+		if(this.enablePackratParsing()) {
 			Integer key = e.internId;
 			assert(e.internId != 0);
 			MemoPoint m = this.memoMap.get(key);
@@ -68,7 +72,7 @@ public class Compiler {
 	}
 	
 	public final int getMemoPointSize() {
-		if(this.enablePackratParsing) {
+		if(this.enablePackratParsing()) {
 			return this.memoMap.size();
 		}
 		return 0;
@@ -205,7 +209,7 @@ public class Compiler {
 	}
 
 	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next) {
-		if(this.enablePackratParsing) {
+		if(this.enablePackratParsing()) {
 			Rule r = p.getRule();
 			if(r.isPurePEG()) {
 				Expression ref = Factory.resolveNonTerminal(r.getExpression());
@@ -244,8 +248,8 @@ public class Compiler {
 	// AST Construction
 	
 	public final Instruction encodeLink(Link p, Instruction next) {
-		if(this.enableASTConstruction) {
-			if(this.enablePackratParsing) {
+		if(this.enableASTConstruction()) {
+			if(this.enablePackratParsing()) {
 				Expression inner = Factory.resolveNonTerminal(p.get(0));
 				MemoPoint m = this.issueMemoPoint(inner);
 				if(m != null) {
@@ -274,28 +278,28 @@ public class Compiler {
 
 	
 	public final Instruction encodeNew(New p, Instruction next) {
-		if(this.enableASTConstruction) {
+		if(this.enableASTConstruction()) {
 			return new NodeNew(p, this.encodeSequence(p, new NodeCapture(p, next)));
 		}
 		return this.encodeSequence(p, next);
 	}
 
 	public final Instruction encodeLeftNew(NewLeftLink p, Instruction next) {
-		if(this.enableASTConstruction) {
+		if(this.enableASTConstruction()) {
 			return new NodeLeftNew(p, this.encodeSequence(p, new NodeCapture(p, next)));
 		}
 		return this.encodeSequence(p, next);
 	}
 		
 	public final Instruction encodeTagging(Tagging p, Instruction next) {
-		if(this.enableASTConstruction) {
+		if(this.enableASTConstruction()) {
 			return new NodeTag(p, next);
 		}
 		return next;
 	}
 
 	public final Instruction encodeReplace(Replace p, Instruction next) {
-		if(this.enableASTConstruction) {
+		if(this.enableASTConstruction()) {
 			return new NodeReplace(p, next);
 		}
 		return next;

@@ -16,14 +16,16 @@ public class Recorder {
 	Recorder(String logFile) {
 		this.logFile = logFile;
 	}
+	
 	class DataPoint {
 		String key;
 		Object value;
 		DataPoint(String key, Object value) {
 			this.key = key;
+			this.value = value;
 		}
 	}
-
+	
 	private UList<DataPoint> dataPointList = new UList<DataPoint>(new DataPoint[64]);
 	private UMap<DataPoint> dataPointMap = new UMap<DataPoint>();
 
@@ -43,8 +45,20 @@ public class Recorder {
 		this.setDataPoint(key, value);
 	}
 
+	public final void setFile(String key, String file) {
+		int loc = file.lastIndexOf('/');
+		if(loc > 0) {
+			file = file.substring(loc+1);
+		}
+		this.setDataPoint(key, file);
+	}
+
 	public final void setCount(String key, long v) {
 		this.setDataPoint(key, new Long(v));
+	}
+
+	public final void setDouble(String key, double d) {
+		this.setDataPoint(key, d);
 	}
 
 	public final void setRatio(String key, long v, long v2) {
@@ -73,8 +87,8 @@ public class Recorder {
 	
 	public final void record() {
 		try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(this.logFile, true)))) {
-		    ConsoleUtils.println("writing .. " + this.logFile);
 			String csv = formatCommaSeparateValue();
+		    ConsoleUtils.println("writing .. " + this.logFile + " " + csv);
 			out.println(csv);
 //			double cf = 0;
 //			for(int i = 0; i < 16; i++) {
@@ -197,5 +211,29 @@ public class Recorder {
 //		// TODO Auto-generated method stub
 //		
 //	}
+	
+	public final static void recordLatencyMS(Recorder rec, String key, long nanoT1, long nanoT2) {
+		if(rec != null) {
+			long t = (nanoT2 - nanoT1) / 1000; // [micro second]
+			rec.setDouble(key + "[ms]", t / 1000.0);
+		}
+	}
+
+	public final static void recordLatencyS(Recorder rec, String key, long nanoT1, long nanoT2) {
+		if(rec != null) {
+			long t = (nanoT2 - nanoT1) / 1000; // [micro second]
+			rec.setDouble(key + "[s]", t / 10000000.0);
+		}
+	}
+
+	public final static void recordThroughputKPS(Recorder rec, String key, long length, long nanoT1, long nanoT2) {
+		if(rec != null) {
+			long micro = (nanoT2 - nanoT1) / 1000; // [micro second]
+			double sec = micro / 1000000.0;
+			double thr = length / sec / 1024;
+			rec.setDouble(key + "[KiB/s]", thr);
+		}
+	}
+
 
 }
