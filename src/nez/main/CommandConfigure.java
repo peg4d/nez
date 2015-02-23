@@ -187,6 +187,9 @@ public class CommandConfigure {
 				else if(argument.equals("--verbose:vm")) {
 					Verbose.VirtualMachine = true;
 				}
+				else if(argument.equals("--verbose:debug")) {
+					Verbose.Debug = true;
+				}
 				else if(argument.equals("--verbose:none")) {
 					Verbose.General = false;
 				}

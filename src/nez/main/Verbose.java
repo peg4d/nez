@@ -9,6 +9,7 @@ public class Verbose {
 	public static boolean Expression = false;
 	public static boolean VirtualMachine = false;
 	public static boolean PackratParsing = false;
+	public static boolean Debug = false;
 	
 	public static void setAll() {
 		General = true;
@@ -33,6 +34,12 @@ public class Verbose {
 	public static void noticeOptimize(String key, Expression p, Expression pp) {
 		if(Expression) {
 			ConsoleUtils.println("optimizing " + key + "\n\t" + p + "\n\t => " + pp);
+		}
+	}
+
+	public static void debug(Object s) {
+		if(Debug) {
+			ConsoleUtils.println("debug: " + s);
 		}
 	}
 

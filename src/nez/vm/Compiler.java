@@ -112,6 +112,9 @@ public class Compiler {
 		for(Rule r : ruleList) {
 			String uname = r.getUniqueName();
 			CodeBlock block = new CodeBlock();
+			if(Verbose.Debug) {
+				Verbose.debug("compiling .. " + r);
+			}
 			block.head = r.getExpression().encode(this, new Return(this, r));
 			block.start = codeList.size();
 			this.ruleMap.put(uname, block);
@@ -330,7 +333,7 @@ public class Compiler {
 				Expression inner = Factory.resolveNonTerminal(p.get(0));
 				MemoPoint m = this.issueMemoPoint(inner);
 				if(m != null) {
-					Instruction inside = inner.encode(this, newMemoizeNode(p, m, next));
+					Instruction inside = p.get(0).encode(this, newMemoizeNode(p, m, next));
 					return newLookupNode(p, m, inside, next, new MemoizeFail(p, m));
 				}
 			}
