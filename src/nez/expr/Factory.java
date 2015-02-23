@@ -408,7 +408,7 @@ public class Factory {
 	}
 
 	public final static Expression newIndent(SourcePosition s) {
-		return internImpl(s, new Indent(s));
+		return internImpl(s, new IsIndent(s));
 	}
 
 	// -----------------------------------------------------------------------

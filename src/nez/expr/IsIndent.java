@@ -4,8 +4,8 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 
-public class Indent extends Terminal implements ContextSensitive {
-	Indent(SourcePosition s) {
+public class IsIndent extends Terminal implements ContextSensitive {
+	IsIndent(SourcePosition s) {
 		super(s);
 	}
 	@Override
@@ -44,5 +44,4 @@ public class Indent extends Terminal implements ContextSensitive {
 		String token = gep.getSymbol(NezTag.Indent);
 		sb.append(token);
 	}
-
 }

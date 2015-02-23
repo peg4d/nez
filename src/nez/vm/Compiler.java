@@ -9,8 +9,13 @@ import nez.expr.ByteChar;
 import nez.expr.ByteMap;
 import nez.expr.Choice;
 import nez.expr.ContextSensitive;
+import nez.expr.DefIndent;
+import nez.expr.DefSymbol;
 import nez.expr.Expression;
 import nez.expr.Factory;
+import nez.expr.IsIndent;
+import nez.expr.IsSymbol;
+import nez.expr.IsaSymbol;
 import nez.expr.Link;
 import nez.expr.New;
 import nez.expr.NewLeftLink;
@@ -20,6 +25,7 @@ import nez.expr.Option;
 import nez.expr.Repetition;
 import nez.expr.Replace;
 import nez.expr.Rule;
+import nez.expr.Sequence;
 import nez.expr.Tagging;
 import nez.main.Verbose;
 import nez.util.FlagUtils;
@@ -162,12 +168,12 @@ public class Compiler {
 		return new MatchAny(p, next);
 	}
 
-	public final Instruction newMatchByte(ByteChar p, Instruction next) {
-		return new MatchByte(p, next);
+	public final Instruction encodeByteChar(ByteChar p, Instruction next) {
+		return new IByteChar(p, false, next);
 	}
 
-	public final Instruction encodeMatchByteMap(ByteMap p, Instruction next) {
-		return new MatchByteMap(p, next);
+	public final Instruction encodeByteMap(ByteMap p, Instruction next) {
+		return new IByteMap(p, false, next);
 	}
 
 	public Instruction encodeFail(Expression p) {
@@ -175,6 +181,17 @@ public class Compiler {
 	}
 
 	public final Instruction encodeRepetition(Repetition p, Instruction next) {
+		if(FlagUtils.is(option, Production.Specialization)) {
+			Expression inner = p.get(0).optimize(option);
+			if(inner instanceof ByteChar) {
+				Verbose.noticeOptimize("Specialization", p, inner);
+				return new RByteMap((ByteChar)inner, next);
+			}
+			if(inner instanceof ByteMap) {
+				Verbose.noticeOptimize("Specialization", p, inner);
+				return new RByteMap((ByteMap)inner, next);
+			}
+		}
 		FailSkip skip = new FailSkip(this, p);
 		Instruction start = p.get(0).encode(this, skip);
 		skip.next = start;
@@ -182,6 +199,17 @@ public class Compiler {
 	}
 
 	public final Instruction encodeOption(Option p, Instruction next) {
+		if(FlagUtils.is(option, Production.Specialization)) {
+			Expression inner = p.get(0).optimize(option);
+			if(inner instanceof ByteChar) {
+				Verbose.noticeOptimize("Specialization", p, inner);
+				return new IByteChar((ByteChar)inner, true, next);
+			}
+			if(inner instanceof ByteMap) {
+				Verbose.noticeOptimize("Specialization", p, inner);
+				return new IByteMap((ByteMap)inner, true, next);
+			}
+		}
 		Instruction pop = new FailPop(this, p, next);
 		return new FailPush(p, next, p.get(0).encode(this, pop));
 	}
@@ -192,6 +220,21 @@ public class Compiler {
 	}
 
 	public final Instruction encodeNot(Not p, Instruction next) {
+		if(FlagUtils.is(option, Production.Specialization)) {
+			Expression inn = p.get(0).optimize(option);
+			if(inn instanceof ByteMap) {
+				Verbose.noticeOptimize("Specilization", p);
+				return new NByteMap((ByteMap)inn, next);
+			}
+			if(inn instanceof ByteChar) {
+				Verbose.noticeOptimize("Specilization", p);
+				return new NByteMap((ByteChar)inn, next);
+			}
+			if(inn instanceof Sequence && ((Sequence)inn).isMultiChar()) {
+				Verbose.noticeOptimize("Specilization", p);
+				return new NMultiChar((Sequence)inn, next);
+			}
+		}
 		Instruction fail = new FailPop(this, p, new Fail(p));
 		return new FailPush(p, next, p.get(0).encode(this, fail));
 	}
@@ -201,7 +244,7 @@ public class Compiler {
 		if(pp != p) {
 			if(pp instanceof ByteMap) {
 				Verbose.noticeOptimize("ByteMap", p, pp);
-				return encodeMatchByteMap((ByteMap)pp, next);
+				return encodeByteMap((ByteMap)pp, next);
 			}
 		}
 		Instruction nextStart = next;
@@ -223,7 +266,7 @@ public class Compiler {
 		Expression pp = p.optimize(option);
 		if(pp instanceof ByteMap) {
 			Verbose.noticeOptimize("ByteMap", p, pp);
-			return encodeMatchByteMap((ByteMap)pp, next);
+			return encodeByteMap((ByteMap)pp, next);
 		}
 		return this.encodeUnoptimizedChoice(p, next);
 	}
@@ -238,6 +281,11 @@ public class Compiler {
 	}
 
 	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next) {
+		Expression pp = p.optimize(option);
+		if(pp instanceof ByteChar || pp instanceof ByteMap || pp instanceof AnyChar) {
+			Verbose.noticeOptimize("Inlining", p, pp);
+			return pp.encode(this, next);
+		}
 		if(this.enablePackratParsing()) {
 			Rule r = p.getRule();
 			if(r.isPurePEG()) {
@@ -333,7 +381,24 @@ public class Compiler {
 		}
 		return next;
 	}
-
-
+	
+	public final Instruction encodeDefSymbol(DefSymbol p, Instruction next) {
+		Instruction inner = p.get(0).encode(this, new IDefSymbol(p, next));
+		return new PosPush(p, inner);
+	}
+	public final Instruction encodeIsSymbol(IsSymbol p, Instruction next) {
+		Instruction inner = p.get(0).encode(this, new IIsSymbol(p, false, next));
+		return new PosPush(p, inner);
+	}
+	public final Instruction encodeIsaSymbol(IsaSymbol p, Instruction next) {
+		Instruction inner = p.get(0).encode(this, new IIsSymbol(p, true, next));
+		return new PosPush(p, inner);
+	}
+	public final Instruction encodeDefIndent(DefIndent p, Instruction next) {
+		return new IDefIndent(p, next);
+	}
+	public final Instruction encodeIsIndent(IsIndent p, Instruction next) {
+		return new IIsIndent(p, next);
+	}
 
 }

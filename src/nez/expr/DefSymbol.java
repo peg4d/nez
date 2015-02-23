@@ -78,7 +78,7 @@ public class DefSymbol extends Unary {
 			}
 			return false;
 		}
-		if(e instanceof Indent || e instanceof IsSymbol || e instanceof IsaSymbol) {
+		if(e instanceof IsIndent || e instanceof IsSymbol || e instanceof IsaSymbol) {
 			return true;
 		}
 		return false;

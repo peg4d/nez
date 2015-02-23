@@ -42,7 +42,7 @@ public class NezTag {
 	static final Tag Is          = Tag.tag("Is");
 	static final Tag Isa         = Tag.tag("Isa");
 	static final Tag DefIndent      = Tag.tag("DefIndent");
-	static final Tag Indent      = Tag.tag("Indent");
+	public static final Tag Indent      = Tag.tag("Indent");
 	
 	static final Tag Scan = Tag.tag("Scan");
 	static final Tag Repeat = Tag.tag("Repeat");

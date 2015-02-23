@@ -121,7 +121,7 @@ public class Production {
 	private Instruction compiledCode = null;
 	private int option;
 	
-	public final void setOption (int option) {
+	private void setOption (int option) {
 		if(this.option != option) {
 			this.compiledCode = null; // recompile
 		}
@@ -129,6 +129,14 @@ public class Production {
 			this.defaultMemoTable = MemoTable.newElasticTable(0, 0, 0);
 		}
 		this.option = option;
+	}
+
+	public final void enable(int option) {
+		setOption(this.option | option);
+	}
+
+	public final void disable(int option) {
+		setOption(FlagUtils.unsetFlag(this.option, option));
 	}
 
 	private MemoTable defaultMemoTable;
@@ -325,5 +333,6 @@ public class Production {
 		}
 		return s;
 	}
+
 
 }

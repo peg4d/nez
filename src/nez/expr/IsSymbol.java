@@ -4,9 +4,11 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.util.UList;
+import nez.util.UMap;
 
 public class IsSymbol extends Terminal implements ContextSensitive {
-	Tag table;
+	public Tag table;
+	Expression symbolExpression = null;
 	IsSymbol(SourcePosition s, Tag table) {
 		super(s);
 		this.table = table;
@@ -24,6 +26,20 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 		return true;
 	}
 	@Override
+	public int inferNodeTransition(UMap<String> visited) {
+		return NodeTransition.BooleanType;
+	}
+	@Override
+	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+		if(this.symbolExpression == null) {
+			this.symbolExpression = checker.getSymbolExpression(table.name);
+			if(this.symbolExpression == null) { 
+				checker.reportError(s, "undefined table " + table.name);
+			}
+		}
+		return this;
+	}
+	@Override
 	public short acceptByte(int ch) {
 		return Accept;
 	}
@@ -31,7 +47,6 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 	public boolean match(SourceContext context) {
 		return context.matchSymbolTableTop(table);
 	}
-
 	@Override
 	protected int pattern(GEP gep) {
 		return 1;
@@ -41,5 +56,4 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 		String token = gep.getSymbol(table);
 		sb.append(token);
 	}
-
 }

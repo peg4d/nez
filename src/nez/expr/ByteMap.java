@@ -1,7 +1,9 @@
 package nez.expr;
 
+import nez.Production;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.util.FlagUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
 import nez.vm.Compiler;
@@ -43,6 +45,14 @@ public class ByteMap extends Terminal {
 		}
 	}
 
+	public final static void reverse(boolean[] byteMap, int option) {
+		for(int i = 0; i < 256; i++) {
+			byteMap[i] = !byteMap[i];
+		}
+		if(!FlagUtils.is(option, Production.Binary)) {
+			byteMap[0] = false;
+		}
+	}
 	
 
 	@Override
@@ -72,7 +82,7 @@ public class ByteMap extends Terminal {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return bc.encodeMatchByteMap(this, next);
+		return bc.encodeByteMap(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

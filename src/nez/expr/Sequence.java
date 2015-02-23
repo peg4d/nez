@@ -77,6 +77,39 @@ public class Sequence extends ExpressionList {
 		}
 		return Unconsumed;
 	}
+
+	public final boolean isMultiChar() {
+		return this.isMultiChar(0, this.size());
+	}
+
+	public final boolean isMultiChar(int start, int end) {
+		for(int i = start; i < end; i++) {
+			Expression p = this.get(i);
+			if(!(p instanceof ByteChar)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public final byte[] extractMultiChar(int start, int end) {
+		for(int i = start; i < end; i++) {
+			Expression p = this.get(i);
+			if(!(p instanceof ByteChar)) {
+				end = i;
+				break;
+			}
+		}
+		byte[] b = new byte[end - start];
+		for(int i = start; i < end; i++) {
+			Expression p = this.get(i);
+			if(p instanceof ByteChar) {
+				b[i - start] = (byte)((ByteChar) p).byteChar;
+			}
+		}
+		return b;
+	}
+	
 	@Override
 	public Expression optimize(int option) {
 		//System.out.println("checking .. " + this);
@@ -111,12 +144,7 @@ public class Sequence extends ExpressionList {
 			}
 			return false;
 		}
-		for(int i = 0; i < 256; i++) {
-			byteMap[i] = !byteMap[i];
-		}
-		if(!FlagUtils.is(option, Production.Binary)) {
-			byteMap[0] = false;
-		}
+		ByteMap.reverse(byteMap, option);
 		return true;
 	}
 
@@ -132,12 +160,7 @@ public class Sequence extends ExpressionList {
 			}
 			return false;
 		}
-		for(int i = 0; i < 256; i++) {
-			byteMap[i] = !byteMap[i];
-		}
-		if(!FlagUtils.is(option, Production.Binary)) {
-			byteMap[0] = false;
-		}
+		ByteMap.reverse(byteMap, option);
 		return true;
 	}
 

@@ -4,8 +4,10 @@ import java.util.TreeMap;
 
 import nez.Grammar;
 import nez.ast.SourcePosition;
+import nez.main.Verbose;
 import nez.util.ConsoleUtils;
 import nez.util.UList;
+import nez.util.UMap;
 
 public class GrammarChecker {
 	
@@ -55,14 +57,13 @@ public class GrammarChecker {
 	}
 	
 	public void verify(Grammar grammar) {
-//		if(stats != null) {
-//			stats.setText("PEG", this.getName());
-//			stats.setCount("PEG.NonTerminal", definedNameList.size());
-//		}
 		UList<String> stack = new UList<String>(new String[64]);
 		for(Rule r: grammar.getDefinedRuleList()) {
 			r.checkAlwaysConsumed(this, null, stack);
-			ConsoleUtils.debug(r.getUniqueName() + " = " + r.getExpression());
+			if(Verbose.Grammar) {
+				ConsoleUtils.println(r.getUniqueName() + " = " + r.getExpression());
+			}
+			checkSymbolTable(r.getExpression());
 		}
 		if(this.foundError) {
 			ConsoleUtils.exit(1, "PegError found");
@@ -81,26 +82,6 @@ public class GrammarChecker {
 				r.removeExpressionFlag(undefedFlags);
 			}
 		}
-//		if(stats != null) {
-//			stats.setCount("PEG.NormalizedRules", definedNameList.size());
-//			int count = 0;
-//			UMap<String> flagMap = new UMap<String>();
-//			for(int i = 0; i < definedNameList.size(); i++) {
-//				ParsingRule rule = this.getRule(definedNameList.ArrayValues[i]);
-//				flagMap.clear();
-//				if(ParsingDef.checkContextSensitivity(rule.expr, flagMap)) {
-//					count+=1;
-//				}
-//			}
-//			stats.setCount("PEG.ContextSensitiveRules", count);
-//			stats.setRatio("PEG.ContextSensitivity", count, definedNameList.size());
-//		}
-//		try {
-//			new Optimizer().optimize(this, stats);
-//		}
-//		catch(Exception e) {
-//			System.out.println("Optimizer error: " + e);
-//		}
 //		ParsingContext context = new ParsingContext(null);
 //		for(int i = 0; i < definedNameList.size(); i++) {
 //			ParsingRule rule = this.getRule(definedNameList.ArrayValues[i]);
@@ -110,6 +91,27 @@ public class GrammarChecker {
 //		}
 		// TODO Auto-generated method stub
 		
+	}
+
+	private UMap<Expression> tableMap; 
+	private void checkSymbolTable(Expression p) {
+		if(p instanceof DefSymbol) {
+			DefSymbol def = (DefSymbol)p;
+			if(tableMap == null) {
+				tableMap = new UMap<Expression>();
+			}
+			tableMap.put(def.table.name, def.inner); 
+		}
+		for(Expression e: p) {
+			this.checkSymbolTable(e);
+		}
+	}
+	
+	public final Expression getSymbolExpression(String tableName) {
+		if(this.tableMap != null) {
+			return this.tableMap.get(tableName);
+		}
+		return null;
 	}
 	
 //	final void optimizeConstructor(Constructor holder) {

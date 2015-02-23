@@ -38,7 +38,7 @@ public class ByteChar extends Terminal {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		return bc.newMatchByte(this, next);
+		return bc.encodeByteChar(this, next);
 	}
 	
 	@Override

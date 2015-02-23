@@ -16,10 +16,10 @@ public abstract class Command {
 	public final static String  License = "BSD-Style Open Source";
 
 	public final static void main(String[] args) {
-		CommandConfigure opt = new CommandConfigure();
-		opt.parseCommandOption(args);
-		Command com = opt.getCommand();
-		com.exec(opt);
+		CommandConfigure config = new CommandConfigure();
+		config.parseCommandOption(args);
+		Command com = config.getCommand();
+		com.exec(config);
 	}
 
 	abstract void exec(CommandConfigure config);

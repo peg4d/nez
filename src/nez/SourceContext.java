@@ -298,6 +298,13 @@ class StringSourceContext extends SourceContext {
 	}
 
 	@Override
+	public final byte[] subbyte(long startIndex, long endIndex) {
+		byte[] b = new byte[(int)(endIndex - startIndex)];
+		System.arraycopy(this.utf8, (int)(startIndex), b, 0, b.length);
+		return b;
+	}
+
+	@Override
 	public final long linenum(long pos) {
 		long count = this.startLineNum;
 		int end = (int)pos;
@@ -445,6 +452,28 @@ class FileSourceContext extends SourceContext {
 		}
 		return "";
 	}
+	
+	@Override
+	public final byte[] subbyte(long startIndex, long endIndex) {
+		byte[] b = null;
+		if(endIndex > startIndex) {
+			long off_s = buffer_alignment(startIndex);
+			long off_e = buffer_alignment(endIndex);
+			b = new byte[(int)(endIndex - startIndex)];
+			if(off_s == off_e) {
+				if(this.buffer_offset != off_s) {
+					this.buffer_offset = off_s;
+					this.readMainBuffer(this.buffer_offset);
+				}
+				System.arraycopy(this.buffer, (int)(startIndex - this.buffer_offset), b, 0, b.length);
+			}
+			else {
+				this.readStringBuffer(startIndex, b);
+			}
+		}
+		return b;
+	}
+
 
 	private int lineIndex(long pos) {
 		return (int)(pos / PageSize);

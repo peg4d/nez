@@ -10,6 +10,7 @@ public interface Source {
 	public boolean match(long pos, byte[] text);
 
 	public String  substring(long startIndex, long endIndex);
+	public byte[]  subbyte(long startIndex, long endIndex);
 	public long    linenum(long pos);
 	
 	public String formatPositionLine(String messageType, long pos, String message);

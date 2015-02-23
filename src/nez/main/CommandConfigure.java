@@ -5,6 +5,8 @@ import java.io.IOException;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
+import nez.ast.ASTWriter;
+import nez.ast.Transformer;
 import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
 import nez.expr.NezParserCombinator;
@@ -179,6 +181,9 @@ public class CommandConfigure {
 				if(argument.equals("--verbose:memo")) {
 					Verbose.PackratParsing = true;
 				}
+				else if(argument.equals("--verbose:peg")) {
+					Verbose.Grammar = true;
+				}
 				else if(argument.equals("--verbose:vm")) {
 					Verbose.VirtualMachine = true;
 				}
@@ -216,8 +221,11 @@ public class CommandConfigure {
 	private static void addCommand(String name, Command com) {
 		commandTable.put(name, com);
 	}
+
 	static {
 		addCommand("parse", new ParseCommand());
+		addCommand("check", new CheckCommand());
+		addCommand("peg",   new CheckCommand());
 	}
 	
 	public final Command getCommand() {
@@ -300,6 +308,10 @@ public class CommandConfigure {
 			return rec;
 		}
 		return null;
+	}
+
+	public final Transformer getTransformer() {
+		return new ASTWriter();
 	}
 
 }

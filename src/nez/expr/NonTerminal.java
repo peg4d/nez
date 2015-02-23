@@ -128,7 +128,7 @@ public class NonTerminal extends Expression {
 		Expression e = this;
 		while(e instanceof NonTerminal) {
 			NonTerminal nterm = (NonTerminal) e;
-			e = nterm.deReference();
+			e = nterm.deReference().optimize(option);
 		}
 		return e;
 	}

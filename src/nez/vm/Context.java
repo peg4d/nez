@@ -4,6 +4,7 @@ import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.Source;
 import nez.ast.Tag;
+import nez.expr.NezTag;
 import nez.expr.NonTerminal;
 import nez.main.Recorder;
 import nez.util.UList;
@@ -196,11 +197,52 @@ public abstract class Context implements Source {
 	private class SymbolTableEntry {
 		Tag table;  // T in <def T e>
 		byte[] utf8;
+		int len;
 		SymbolTableEntry(Tag table, String indent) {
 			this.table = table;
 			this.utf8 = indent.getBytes();
+			this.len = utf8.length;
+		}
+		SymbolTableEntry(Tag table, byte[] b) {
+			this.table = table;
+			this.utf8 = b;
+			this.len = utf8.length;
+		}
+		final boolean match(byte[] b) {
+			if(this.len == b.length) {
+				for(int i = 0; i < this.len; i++) {
+					if(utf8[i] != b[i]) {
+						return false;
+					}
+				}
+			}
+			return true;
 		}
 	}
+
+	public final void pushSymbolTable(Tag table, byte[] s) {
+		this.stackedSymbolTable.add(new SymbolTableEntry(table, s));
+		this.stateCount += 1;
+		this.stateValue = stateCount;
+	}
+
+	public final void popSymbolTable(int stackTop) {
+		this.stackedSymbolTable.clear(stackTop);
+	}
+
+	public final boolean matchSymbolTable(Tag table, byte[] symbol, boolean onlyTop) {
+		for(int i = stackedSymbolTable.size() - 1; i >= 0; i--) {
+			SymbolTableEntry s = stackedSymbolTable.ArrayValues[i];
+			if(s.table == table) {
+				if(s.match(symbol)) {
+					return true;
+				}
+				if(onlyTop) break;
+			}
+		}
+		return true;
+	}
+
 	
 	public final int pushSymbolTable(Tag table, String s) {
 		int stackTop = this.stackedSymbolTable.size();
@@ -208,10 +250,6 @@ public abstract class Context implements Source {
 		this.stateCount += 1;
 		this.stateValue = stateCount;
 		return stackTop;
-	}
-
-	public final void popSymbolTable(int stackTop) {
-		this.stackedSymbolTable.clear(stackTop);
 	}
 
 	public final boolean matchSymbolTableTop(Tag table) {
@@ -465,22 +503,33 @@ public abstract class Context implements Source {
 		return this.opFail();
 	}
 
-	public final Instruction opMatchByte(MatchByte op) {
+	public final Instruction opIByteChar(IByteChar op) {
 		if(this.byteAt(this.pos) == op.byteChar) {
 			this.consume(1);
 			return op.next;
 		}
-		return this.opFail();
+		return op.optional ? op.next : this.opFail();
 	}
 
-	public final Instruction opMatchByteMap(MatchByteMap op) {
+	public final Instruction opIByteMap(IByteMap op) {
 		int byteChar = this.byteAt(this.pos);
 		if(op.byteMap[byteChar]) {
 			this.consume(1);
 			return op.next;
 		}
-		return this.opFail();
+		return op.optional ? op.next : this.opFail();
 	}
+
+//	public final Instruction opMatchByteMap(IByteMap op) {
+//		int byteChar = this.byteAt(this.pos);
+//		if(op.byteMap[byteChar]) {
+//			this.consume(1);
+//			return op.next;
+//		}
+//		return this.opFail();
+//	}
+
+	
 
 	private final static int LazyLink    = 0;
 	private final static int LazyCapture = 1;
@@ -789,13 +838,121 @@ public abstract class Context implements Source {
 	}
 
 
-	// symbol table
-
-	public Instruction opDefString(DefString op) {
-		ContextStack top = popLocalStack();
-		this.pushSymbolTable(op.tableName, this.substring(top.pos, this.pos));
+	// Specialization 
+	
+	public final Instruction opRByteMap(RByteMap op) {
+		while(true) {
+			int c = this.byteAt(this.pos);
+			if(!op.byteMap[c]) {
+				break;
+			}
+			this.consume(1);
+		}
 		return op.next;
 	}
 
+	public final Instruction opNByteMap(NByteMap op) {
+		int c = this.byteAt(this.pos);
+		if(!op.byteMap[c]) {
+			return op.next;
+		}
+		return this.opFail();
+	}
+
+	public final Instruction opNMultiChar(NMultiChar op) {
+		if(!this.match(this.pos, op.utf8)) {
+			return op.next;
+		}
+		return this.opFail();
+	}
+
+	public final Instruction opMultiChar(IMultiChar op) {
+		if(this.match(pos, op.utf8)) {
+			this.consume(op.len);
+			return op.next;
+		}
+		return op.optional ? op.next : this.opFail();
+	}
+
+	// symbol table
+
+	public final Instruction opIDefSymbol(IDefSymbol op) {
+		ContextStack top = popLocalStack();
+		this.pushSymbolTable(op.tableName, this.subbyte(top.pos, this.pos));
+		return op.next;
+	}
+
+	public final Instruction opIIsSymbol(IIsSymbol op) {
+		ContextStack top = popLocalStack();
+		if(this.matchSymbolTable(op.tableName, this.subbyte(top.pos, this.pos), op.onlyTop)) {
+			return op.next;
+		}
+		return opFail();
+	}
+
+	public final Instruction opIDefIndent(IDefIndent op) {
+		long spos = this.getLineStartPosition(this.pos);
+		byte[] b = this.subbyte(spos, this.pos);
+		for(int i = 0; i < b.length; i++) {
+			if(b[i] != '\t') {
+				b[i] = ' ';
+			}
+		}
+		this.pushSymbolTable(NezTag.Indent, b);
+		return op.next;
+	}
+
+	private final long getLineStartPosition(long fromPostion) {
+		long startIndex = fromPostion;
+		if(!(startIndex < this.length())) {
+			startIndex = this.length() - 1;
+		}
+		if(startIndex < 0) {
+			startIndex = 0;
+		}
+		while(startIndex > 0) {
+			int ch = byteAt(startIndex);
+			if(ch == '\n') {
+				startIndex = startIndex + 1;
+				break;
+			}
+			startIndex = startIndex - 1;
+		}
+		return startIndex;
+	}
+
+	public final Instruction opIIsIndent(IIsIndent op) {
+		for(int i = stackedSymbolTable.size() - 1; i >= 0; i--) {
+			SymbolTableEntry s = stackedSymbolTable.ArrayValues[i];
+			if(s.table == NezTag.Indent) {
+				if(this.match(this.pos, s.utf8)) {
+					consume(s.len);
+					return op.next;
+				}
+				return opFail();
+			}
+		}
+		// no indent (unconsumed)
+		return op.next;
+	}
+
+	public final Instruction opITablePush(ITablePush op) {
+		ContextStack top = this.newUnusedLocalStack();
+		top.pos = this.stackedSymbolTable.size();
+		top.prevFailTop = this.stateValue;
+		return op.next;
+	}
+
+	public final Instruction opITablePop(ITablePop op) {
+		ContextStack top = popLocalStack();
+		this.stateValue = top.prevFailTop;
+		this.popSymbolTable((int)top.pos);
+		return op.next;
+	}
+
+	//<scan T 0 e>
+	//<repeat T e>
+
+	
 
 }

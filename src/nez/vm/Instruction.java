@@ -4,10 +4,15 @@ import nez.SourceContext;
 import nez.ast.Tag;
 import nez.expr.ByteChar;
 import nez.expr.ByteMap;
+import nez.expr.DefIndent;
+import nez.expr.DefSymbol;
 import nez.expr.Expression;
+import nez.expr.IsIndent;
+import nez.expr.IsSymbol;
 import nez.expr.Link;
 import nez.expr.Replace;
 import nez.expr.Rule;
+import nez.expr.Sequence;
 import nez.expr.Tagging;
 import nez.util.StringUtils;
 
@@ -256,15 +261,17 @@ class MatchAny extends Instruction {
 	}
 }
 
-class MatchByte extends Instruction {
+class IByteChar extends Instruction {
+	public final boolean optional;
 	public final int byteChar;
-	MatchByte(ByteChar e, Instruction next) {
+	IByteChar(ByteChar e, boolean optional, Instruction next) {
 		super(e, next);
 		this.byteChar = e.byteChar;
+		this.optional = optional;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMatchByte(this);
+		return sc.opIByteChar(this);
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -273,16 +280,18 @@ class MatchByte extends Instruction {
 	}
 }
 
-class MatchByteMap extends Instruction {
+class IByteMap extends Instruction {
+	public final boolean optional;
 	public final boolean[] byteMap;
-	MatchByteMap(ByteMap e, Instruction next) {
+	IByteMap(ByteMap e, boolean optional, Instruction next) {
 		super(e, next);
 		this.byteMap = e.charMap;
+		this.optional = optional;
 	}
 
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMatchByteMap(this);
+		return sc.opIByteMap(this);
 	}
 
 	@Override
@@ -290,7 +299,6 @@ class MatchByteMap extends Instruction {
 		sb.append("mapmatch ");
 		sb.append(StringUtils.stringfyByteMap(byteMap));
 	}
-
 }
 
 interface Construction {
@@ -562,3 +570,179 @@ class MemoizeNode2 extends MemoizeNode {
 	}
 }
 
+/* Symbol */
+
+class IDefSymbol extends Instruction {
+	Tag tableName;
+	IDefSymbol(DefSymbol e, Instruction next) {
+		super(e, next);
+		this.tableName = e.table;
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("def ");
+		sb.append(tableName.name);
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opIDefSymbol(this);
+	}
+}
+
+class IIsSymbol extends Instruction {
+	Tag tableName;
+	boolean onlyTop;
+	IIsSymbol(IsSymbol e, boolean onlyTop, Instruction next) {
+		super(e, next);
+		this.tableName = e.table;
+		this.onlyTop = onlyTop;
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("is ");
+		sb.append(tableName.name);
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opIIsSymbol(this);
+	}
+}
+
+class IDefIndent extends Instruction {
+	IDefIndent(DefIndent e, Instruction next) {
+		super(e, next);
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("defindent");
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opIDefIndent(this);
+	}
+}
+
+class IIsIndent extends Instruction {
+	IIsIndent(IsIndent e, Instruction next) {
+		super(e, next);
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("indent");
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opIIsIndent(this);
+	}
+}
+
+class ITablePush extends Instruction {
+	ITablePush(Expression e, Instruction next) {
+		super(e, next);
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("tablepush");
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opITablePush(this);
+	}
+}
+
+class ITablePop extends FailPop {
+	public ITablePop(Compiler optimizer, Expression e, Instruction next) {
+		super(optimizer, e, next);
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("tablepop");
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opITablePop(this);
+	}
+}
+
+
+/* Specialization */
+
+class NByteMap extends Instruction {
+	public final boolean[] byteMap;
+	NByteMap(ByteMap e, Instruction next) {
+		super(e, next);
+		this.byteMap = e.charMap;
+	}
+	NByteMap(ByteChar e, Instruction next) {
+		super(e, next);
+		this.byteMap = ByteMap.newMap();
+		this.byteMap[e.byteChar] = true;
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opNByteMap(this);
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("not ");
+		sb.append(StringUtils.stringfyByteMap(byteMap));
+	}
+}
+
+class RByteMap extends Instruction {
+	public final boolean[] byteMap;
+	RByteMap(ByteMap e, Instruction next) {
+		super(e, next);
+		this.byteMap = e.charMap;
+	}
+	RByteMap(ByteChar e, Instruction next) {
+		super(e, next);
+		this.byteMap = ByteMap.newMap();
+		this.byteMap[e.byteChar] = true;
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opRByteMap(this);
+	}
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append("repeat ");
+		sb.append(StringUtils.stringfyByteMap(byteMap));
+	}
+}
+
+
+class IMultiChar extends Instruction {
+	boolean optional = false;
+	final byte[] utf8;
+	final int    len;
+	public IMultiChar(Sequence e, boolean optional, Instruction next) {
+		super(e, next);
+		this.utf8 = e.extractMultiChar(0, e.size());
+		this.len = this.utf8.length;
+		this.optional = optional;
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opMultiChar(this);
+	}
+
+	@Override
+	protected void stringfy(StringBuilder sb) {
+		sb.append(this.getName());
+		for(int i = 0; i < utf8.length; i++) {
+			sb.append(" ");
+			sb.append(StringUtils.stringfyByte(utf8[i] & 0xff));
+		}
+	}
+}
+
+class NMultiChar extends IMultiChar {
+	NMultiChar(Sequence e, Instruction next) {
+		super(e, false, next);
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opNMultiChar(this);
+	}
+}
