@@ -1,6 +1,5 @@
 package nez.main;
 
-import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.Node;
@@ -71,17 +70,17 @@ class CheckCommand extends Command {
 	}
 }
 
-class GrammarCommand extends Command {
-	@Override
-	void exec(CommandConfigure config) {
-		Recorder rec = config.getRecorder();
-		Grammar peg = config.getGrammar();
-		grammar.record(rec);
-		GrammarWriter w = getGrammarWriter(config.getOuputFileType());
-		w.write(peg, config.StartingPoint);
-		if(rec != null) {
-			rec.record();
-		}
-	}
-}
+//class GrammarCommand extends Command {
+//	@Override
+//	void exec(CommandConfigure config) {
+//		Recorder rec = config.getRecorder();
+//		Grammar peg = config.getGrammar();
+//		grammar.record(rec);
+//		GrammarWriter w = loadGrammarWriter(config.getOuputFileType());
+//		w.write(peg, config.StartingPoint);
+//		if(rec != null) {
+//			rec.record();
+//		}
+//	}
+//}
 

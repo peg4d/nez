@@ -3,6 +3,7 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.StringUtils;
+import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
@@ -19,6 +20,10 @@ public class Replace extends Unconsumed {
 	@Override
 	public String getInterningKey() {
 		return "`" + this.value;
+	}
+	@Override
+	public int inferNodeTransition(UMap<String> visited) {
+		return NodeTransition.OperationType;
 	}
 	@Override
 	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {

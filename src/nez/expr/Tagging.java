@@ -4,6 +4,7 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.util.StringUtils;
+import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
@@ -23,6 +24,10 @@ public class Tagging extends Unconsumed {
 	@Override
 	public String getInterningKey() {
 		return "#" + this.tag.toString();
+	}
+	@Override
+	public int inferNodeTransition(UMap<String> visited) {
+		return NodeTransition.OperationType;
 	}
 	@Override
 	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
