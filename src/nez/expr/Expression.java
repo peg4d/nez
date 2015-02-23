@@ -79,6 +79,10 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	final static short Reject = 2;
 	public abstract short acceptByte(int ch);
 	
+	public Expression optimize(int option) {
+		return this;
+	}
+	
 	public Recognizer matcher;
 		
 	@Override

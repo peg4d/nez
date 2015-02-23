@@ -124,6 +124,16 @@ public class NonTerminal extends Expression {
 	}
 
 	@Override
+	public Expression optimize(int option) {
+		Expression e = this;
+		while(e instanceof NonTerminal) {
+			NonTerminal nterm = (NonTerminal) e;
+			e = nterm.deReference();
+		}
+		return e;
+	}
+
+	@Override
 	public boolean match(SourceContext context) {
 		return context.matchNonTerminal(this);
 	}

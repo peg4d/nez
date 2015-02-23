@@ -21,6 +21,7 @@ import nez.expr.Repetition;
 import nez.expr.Replace;
 import nez.expr.Rule;
 import nez.expr.Tagging;
+import nez.main.Verbose;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -49,11 +50,11 @@ public class Compiler {
 	}
 	
 	private final boolean enablePackratParsing() {
-		return FlagUtils.hasFlag(this.option, Production.PackratParsing);
+		return FlagUtils.is(this.option, Production.PackratParsing);
 	}
 
 	private final boolean enableASTConstruction() {
-		return FlagUtils.hasFlag(this.option, Production.ASTConstruction);
+		return FlagUtils.is(this.option, Production.ASTConstruction);
 	}
 
 	MemoPoint issueMemoPoint(Expression e) {
@@ -69,6 +70,10 @@ public class Compiler {
 			return m;
 		}
 		return null;
+	}
+	
+	public final int getInstructionSize() {
+		return this.codeList.size();
 	}
 	
 	public final int getMemoPointSize() {
@@ -165,11 +170,6 @@ public class Compiler {
 		return new MatchByteMap(p, next);
 	}
 
-	public final Instruction encodeAnd(And p, Instruction next) {
-		Instruction inner = p.get(0).encode(this, new PosBack(p, next));
-		return new PosPush(p, inner);
-	}
-
 	public Instruction encodeFail(Expression p) {
 		return new Fail(p);
 	}
@@ -186,26 +186,55 @@ public class Compiler {
 		return new FailPush(p, next, p.get(0).encode(this, pop));
 	}
 
+	public final Instruction encodeAnd(And p, Instruction next) {
+		Instruction inner = p.get(0).encode(this, new PosBack(p, next));
+		return new PosPush(p, inner);
+	}
+
 	public final Instruction encodeNot(Not p, Instruction next) {
 		Instruction fail = new FailPop(this, p, new Fail(p));
 		return new FailPush(p, next, p.get(0).encode(this, fail));
 	}
 
+	public final Instruction encodeSequence(Expression p, Instruction next) {
+		Expression pp = p.optimize(option);
+		if(pp != p) {
+			if(pp instanceof ByteMap) {
+				Verbose.noticeOptimize("ByteMap", p, pp);
+				return encodeMatchByteMap((ByteMap)pp, next);
+			}
+		}
+		Instruction nextStart = next;
+		for(int i = p.size() -1; i >= 0; i--) {
+			Expression e = p.get(i);
+			nextStart = e.encode(this, nextStart);
+		}
+		if(pp != p) {
+			if(pp instanceof Choice) {
+				Verbose.noticeOptimize("Prediction", p, pp);
+				next = pp.get(0).encode(this, new FailPop(this, p, next));
+				return new FailPush(p, nextStart, next);
+			}
+		}
+		return nextStart;
+	}
+
 	public final Instruction encodeChoice(Choice p, Instruction next) {
+		Expression pp = p.optimize(option);
+		if(pp instanceof ByteMap) {
+			Verbose.noticeOptimize("ByteMap", p, pp);
+			return encodeMatchByteMap((ByteMap)pp, next);
+		}
+		return this.encodeUnoptimizedChoice(p, next);
+	}
+
+	public final Instruction encodeUnoptimizedChoice(Choice p, Instruction next) {
 		Instruction nextChoice = p.get(p.size()-1).encode(this, next);
 		for(int i = p.size() -2; i >= 0; i--) {
 			Expression e = p.get(i);
 			nextChoice = new FailPush(e, nextChoice, e.encode(this, new FailPop(this, e, next)));
 		}
 		return nextChoice;
-	}
-
-	public final Instruction encodeSequence(Expression p, Instruction next) {
-		for(int i = p.size() -1; i >= 0; i--) {
-			Expression e = p.get(i);
-			next = e.encode(this, next);
-		}
-		return next;
 	}
 
 	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next) {
@@ -304,6 +333,7 @@ public class Compiler {
 		}
 		return next;
 	}
+
 
 
 }

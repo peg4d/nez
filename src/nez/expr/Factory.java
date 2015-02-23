@@ -64,7 +64,7 @@ public class Factory {
 		return internImpl(s, new AnyChar(s));
 	}
 	
-	public static Recognizer newByteMap(SourcePosition s, boolean[] byteMap) {
+	public static Expression newByteMap(SourcePosition s, boolean[] byteMap) {
 		return internImpl(s, new ByteMap(s, byteMap));
 	}
 	
@@ -131,6 +131,18 @@ public class Factory {
 		return internImpl(s, new Choice(s, l));
 	}
 
+	public final static Expression newChoice(SourcePosition s, Expression p, Expression p2) {
+		UList<Expression> l = new UList<Expression>(new Expression[2]);
+		l.add(p);
+		l.add(p2);
+		if(s != null && isInterned(l)) {
+			s = null;
+		}
+		return internImpl(s, new Choice(s, l));
+	}
+
+	
+	
 	public final static void addChoice(UList<Expression> l, Expression e) {
 		if(e instanceof Choice) {
 			for(int i = 0; i < e.size(); i++) {

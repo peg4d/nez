@@ -125,7 +125,7 @@ public class Production {
 		if(this.option != option) {
 			this.compiledCode = null; // recompile
 		}
-		if(FlagUtils.hasFlag(option, PackratParsing) && this.defaultMemoTable == null) {
+		if(FlagUtils.is(option, PackratParsing) && this.defaultMemoTable == null) {
 			this.defaultMemoTable = MemoTable.newElasticTable(0, 0, 0);
 		}
 		this.option = option;
@@ -134,6 +134,7 @@ public class Production {
 	private MemoTable defaultMemoTable;
 	private int windowSize = 32;
 	private int memoPointSize;
+	private int InstructionSize;
 
 	public void config(MemoTable memoTable) {
 		this.defaultMemoTable = memoTable;
@@ -150,6 +151,7 @@ public class Production {
 		if(compiledCode == null) {
 			Compiler bc = new Compiler(this.option);
 			compiledCode = bc.encode(this.ruleList);
+			this.InstructionSize  = bc.getInstructionSize();
 			this.memoPointSize = bc.getMemoPointSize();
 			if(Verbose.VirtualMachine) {
 				bc.dump(this.ruleList);
@@ -159,7 +161,7 @@ public class Production {
 	}
 	
 	public final boolean match(SourceContext s) {
-		if(FlagUtils.hasFlag(this.option, Production.ClassicMode)) {
+		if(FlagUtils.is(this.option, Production.ClassicMode)) {
 			return this.start.match(s);
 		}
 		else {
@@ -269,8 +271,9 @@ public class Production {
 	public final void record(Recorder rec) {
 		if(rec != null) {
 			this.compile();
-			rec.setFile("G.File", this.start.getGrammar().name);
+			rec.setFile("G.File", this.start.getGrammar().getResourceName());
 			rec.setCount("G.NonTerminals", this.ruleMap.size());
+			rec.setCount("G.Instruction", this.InstructionSize);
 			rec.setCount("G.MemoPoint", this.memoPointSize);
 		}
 	}
@@ -281,24 +284,40 @@ public class Production {
 	public final static int ClassicMode = 1;
 	public final static int ASTConstruction = 1 << 1;
 	public final static int PackratParsing  = 1 << 2;
-	
-	public final static int DefaultOption = ASTConstruction | PackratParsing;
-	public final static int SafeOption = ASTConstruction ;
+	public final static int Optimization    = 1 << 3;
+	public final static int Specialization  = 1 << 4;
+	public final static int Prediction      = 1 << 5;
+	public final static int New             = 1 << 6;
+	public final static int Binary = 1 << 10;
 
+	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization | Specialization | Prediction ;
+	public final static int SafeOption = ASTConstruction | Optimization;
 	
 	public final static String stringfyOption(int option, String delim) {
 		StringBuilder sb = new StringBuilder();
-		if(FlagUtils.hasFlag(option, Production.ClassicMode)) {
+		if(FlagUtils.is(option, Production.ClassicMode)) {
 			sb.append(delim);
 			sb.append("classic");
 		}
-		if(FlagUtils.hasFlag(option, Production.ASTConstruction)) {
+		if(FlagUtils.is(option, Production.ASTConstruction)) {
 			sb.append(delim);
-			sb.append("AST");
+			sb.append("ast");
 		}
-		if(FlagUtils.hasFlag(option, Production.PackratParsing)) {
+		if(FlagUtils.is(option, Production.PackratParsing)) {
 			sb.append(delim);
 			sb.append("memo");
+		}
+		if(FlagUtils.is(option, Production.Optimization)) {
+			sb.append(delim);
+			sb.append("opt.");
+		}
+		if(FlagUtils.is(option, Production.Specialization)) {
+			sb.append(delim);
+			sb.append("spe.");
+		}
+		if(FlagUtils.is(option, Production.Prediction)) {
+			sb.append(delim);
+			sb.append("predict");
 		}
 		String s = sb.toString();
 		if(s.length() > 0) {

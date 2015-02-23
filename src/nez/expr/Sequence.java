@@ -2,12 +2,14 @@ package nez.expr;
 
 import java.util.TreeMap;
 
+import nez.Production;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
 import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class Sequence extends ExpressionList {
 	Sequence(SourcePosition s, UList<Expression> l) {
@@ -76,6 +78,97 @@ public class Sequence extends ExpressionList {
 		return Unconsumed;
 	}
 	@Override
+	public Expression optimize(int option) {
+		//System.out.println("checking .. " + this);
+		if(FlagUtils.is(option, Production.Optimization) && this.get(this.size() - 1) instanceof AnyChar) {
+			boolean byteMap[] = ByteMap.newMap();
+			if(isByteMap(option, byteMap)) {
+				return Factory.newByteMap(s, byteMap);
+			}
+			if(FlagUtils.is(option, Production.Prediction)) {
+				ByteMap.clear(byteMap);
+				if(isPredictedByteMap(0, this.size() - 1, byteMap, option)) {
+					return Factory.newChoice(s, Factory.newByteMap(s, byteMap), this);
+				}
+			}
+		}
+		return this;
+	}
+	
+	boolean isByteMap(int option, boolean[] byteMap) {
+		for(int i = 0; i < this.size() - 1; i++) {
+			Expression p = this.get(i).optimize(option);
+			if(p instanceof Not) {
+				p = p.get(i).optimize(option);
+				if(p instanceof ByteChar) {
+					byteMap[((ByteChar) p).byteChar] = true;
+					continue;
+				}
+				if(p instanceof ByteMap) {
+					ByteMap.appendBitMap(byteMap, ((ByteMap) p).charMap);
+					continue;
+				}
+			}
+			return false;
+		}
+		for(int i = 0; i < 256; i++) {
+			byteMap[i] = !byteMap[i];
+		}
+		if(!FlagUtils.is(option, Production.Binary)) {
+			byteMap[0] = false;
+		}
+		return true;
+	}
+
+	// (!'ab' !'ac' .) => !'a' / (!'ab' !'ac' .)
+	
+	boolean isPredictedByteMap(int start, int end, boolean[] byteMap, int option) {
+		for(int i = start; i < end; i++) {
+			Expression p = this.get(i); //.optimize(option);
+			if(p instanceof Not) {
+				p = p.get(i).optimize(option);
+				predictByte(p, byteMap);
+				continue;
+			}
+			return false;
+		}
+		for(int i = 0; i < 256; i++) {
+			byteMap[i] = !byteMap[i];
+		}
+		if(!FlagUtils.is(option, Production.Binary)) {
+			byteMap[0] = false;
+		}
+		return true;
+	}
+
+	void predictByte(Expression e, boolean[] byteMap) {
+		for(int c = 0; c < 256; c++) {
+			if(e.acceptByte(c) != Expression.Reject) {
+				byteMap[c] = true;
+			}
+		}
+	}
+	
+	
+	//			if(is(O_SpecString)) {
+//				byte[] u = new byte[holder.size()];
+//				for(int i = 0; i < holder.size(); i++) {
+//					ParsingExpression inner = resolveNonTerminal(holder.get(i));				
+//					if(inner instanceof ParsingByte) {
+//						u[i] = (byte)((ParsingByte) inner).byteChar;
+//						continue;
+//					}
+//					return;
+//				}
+//				holder.matcher = new StringMatcher(u);
+//				CountSpecString += 1;
+//				return;
+//			}
+//		}
+//
+//		return this;
+//	}
+	@Override
 	public boolean match(SourceContext context) {
 		long pos = context.getPosition();
 		int mark = context.startConstruction();
@@ -90,11 +183,7 @@ public class Sequence extends ExpressionList {
 	}
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
-		for(int i = this.size() -1; i >= 0; i--) {
-			Expression e = this.get(i);
-			next = e.encode(bc, next);
-		}
-		return next;
+		return bc.encodeSequence(this, next);
 	}
 	
 	@Override

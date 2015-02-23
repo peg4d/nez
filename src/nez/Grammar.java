@@ -7,18 +7,30 @@ import nez.util.UList;
 import nez.util.UMap;
 
 public class Grammar {
-	String               name;
+	String               resourceName;
+	String               ns;
 	UMap<Rule>           ruleMap;
-	UList<String> nameList;
+	UList<String>        nameList;
 
 	public Grammar(String name) {
-		this.name = name;
+		this.resourceName = name;
+		if(name != null) {
+			int loc = name.lastIndexOf('/');
+			if(loc != -1) {
+				name = name.substring(loc+1);
+			}
+			this.ns = name.replace(".nez", "");
+		}
 		this.ruleMap = new UMap<Rule>();
 		this.nameList = new UList<String>(new String[8]);
 	}
 
+	public String getResourceName() {
+		return this.resourceName;
+	}
+	
 	public String uniqueName(String rulename) {
-		return this.name + ":" + rulename;
+		return this.ns + ":" + rulename;
 	}
 	
 	public final Rule newRule(String name, Expression e) {

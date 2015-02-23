@@ -2,9 +2,11 @@ package nez.expr;
 
 import java.util.TreeMap;
 
+import nez.Production;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Compiler;
@@ -108,15 +110,15 @@ public class Choice extends ExpressionList {
 	boolean selfChoice = false;
 	int startIndex = -1;
 	int endIndex = 257;
-	final void optimize(int level) {
-		if(level > 0 && !(this.matcher instanceof ByteMap)) {
+	@Override
+	public final Expression optimize(int option) {
+		if(FlagUtils.is(option, Production.Optimization) && !(this.matcher instanceof ByteMap)) {
 			boolean byteMap[] = new boolean[257];
-			if(isByteMap(level, byteMap)) {
-				this.matcher = Factory.newByteMap(s, byteMap);
-				return;
+			if(isByteMap(option, byteMap)) {
+				return Factory.newByteMap(s, byteMap);
 			}
 		}
-		if(level > 0 && this.matchCase != null) {
+		if(FlagUtils.is(option, Production.Prediction) && this.matchCase != null) {
 			Expression[] matchCase = new Expression[257];
 			Expression fails = Factory.newFailure(s);
 			for(int ch = 0; ch <= 256; ch++) {
@@ -134,32 +136,28 @@ public class Choice extends ExpressionList {
 						this.selfChoice = true;
 					}
 					else {
-						((Choice)sub).optimize(level);
+						((Choice)sub).optimize(option);
 					}
 				}
 			}
 			this.matchCase = matchCase;
 		}
+		return this;
 	}
 	
-	private final boolean isByteMap(int level, boolean[] byteMap) {
+	private final boolean isByteMap(int option, boolean[] byteMap) {
 		for(Expression e : this) {
-			e = Factory.resolveNonTerminal(e);
-			if(e.matcher instanceof ByteChar) {
+			e = e.optimize(option);
+			if(e instanceof ByteChar) {
 				byteMap[((ByteChar) e).byteChar] = true;
 				continue;
 			}
-			if(e.matcher instanceof ByteMap) {
-				boolean[] bitMap = ((ByteMap)e).charMap;
-				for(int c1 = 0; c1 < byteMap.length; c1++) {
-					if(bitMap[c1]) {
-						byteMap[c1] = true;
-					}
-				}
+			if(e instanceof ByteMap) {
+				ByteMap.appendBitMap(byteMap, ((ByteMap)e).charMap);
 				continue;
 			}
 			if(e instanceof Choice) {
-				if(!((Choice)e).isByteMap(level, byteMap)) {
+				if(!((Choice)e).isByteMap(option, byteMap)) {
 					return false;
 				}
 				continue;
