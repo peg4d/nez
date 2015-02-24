@@ -136,22 +136,6 @@ public class NezParserCombinator extends ParserCombinator {
 		return Sequence(t("["), New(ZeroMore(Link(_CharChunk)), Tag(NezTag.Character)), t("]"));
 	}
 
-//	public Expression Constructor() {
-//		Expression ConstructorBegin = Choice(t("{"), t("<{"), t("<<"), t("8<"));
-//		Expression Connector  = Choice(t("@"), t("^"));
-//		Expression ConstructorEnd   = Choice(t("}>"), t("}"), t(">>"), t(">8"));
-//		return New(
-//			ConstructorBegin, 
-//			Choice(
-//				Sequence(Connector, P("S"), Tag(NezTag.LeftJoin)), 
-//				Tag(NezTag.Constructor)
-//			), 
-//			P("_"), 
-//			Option(Sequence(Link(P("Expr")), P("_"))),
-//			ConstructorEnd
-//		);
-//	}
-
 	public Expression Constructor() {
 		return New(
 			t("{"), 
@@ -160,14 +144,14 @@ public class NezParserCombinator extends ParserCombinator {
 				Tag(NezTag.Constructor)
 			), 
 			P("_"), 
-			/*Option(*/Link(P("Expr")), P("_") /*)*/,
+			Option(Link(P("Expr")), P("_")),
 			t("}")
 		);
 	}
 
 	public Expression Func() {
-		return Sequence(t("<"), New(
-		Choice(
+		return Sequence(t("<"), 
+			New(Choice(
 //			Sequence(t("debug"),   P("S"), Link(P("Expr")), Tag(NezTag.Debug)),
 //			Sequence(t("memo"),   P("S"), Link(P("Expr")), P("_"), t(">"), Tag(NezTag.Memo)),
 			Sequence(t("match"),   P("S"), Link(P("Expr")), P("_"), t(">"), Tag(NezTag.Match)),
@@ -182,16 +166,14 @@ public class NezParserCombinator extends ParserCombinator {
 //			Sequence(t("powerset"), P("S"), Link(P("Expr")), Tag(NezTag.PowerSet)),
 //			Sequence(t("permutation"), P("S"), Link(P("Expr")), Tag(NezTag.Permutation)),
 //			Sequence(t("perm"), P("S"), Link(P("Expr")), Tag(NezTag.PermutationExpr)),
-			Sequence(t("scan"), P("S"), Link(New(DIGIT(), ZeroMore(DIGIT()))), t(","), P("S"), Link(P("Expr")), t(","), P("S"), Link(P("Expr")), Tag(NezTag.Scan)),
-			Sequence(t("repeat"), P("S"), Link(P("Expr")), Tag(NezTag.Repeat)),
 			Sequence(t("is"), P("S"), Link(P("Name")), Tag(NezTag.Is)),
 			Sequence(t("isa"), P("S"), Link(P("Name")), Tag(NezTag.Isa)),
 			Sequence(t("def"),  P("S"), Link(P("Name")), P("S"), Link(P("Expr")), Tag(NezTag.Def)),
-			Sequence(t("name"),  P("S"), Link(P("Name")), P("S"), Link(P("Expr")), Tag(NezTag.Def)),
-			Sequence(Option(t("|")), t("append-choice"), Tag(NezTag.Choice))
-//			Sequence(Optional(t("|")), t("stringfy"), Tag(NezTag.Stringfy)),
-//			Sequence(Optional(t("|")), t("apply"), P("S"), Link(P("Expr")), Tag(NezTag.Apply))
-		)), P("_"), t(">")
+
+			Sequence(t("scan"), P("S"), Link(New(DIGIT(), ZeroMore(DIGIT()))), t(","), P("S"), Link(P("Expr")), t(","), P("S"), Link(P("Expr")), Tag(NezTag.Scan)),
+			Sequence(t("repeat"), P("S"), Link(P("Expr")), Tag(NezTag.Repeat))
+
+			)), P("_"), t(">")
 		);
 	}
 

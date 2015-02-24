@@ -1,21 +1,36 @@
 // Nez regex definition
-// author Tamuponji
+// author Kimio Kuramitsu
 
 
 File
-	= { ( ('#' _ @Comment BREAK? ) / @TopLevel / _ BREAK? )* #Source } !.
+	= Expr _ !.
 
 Chunk
-	= Statement _ BREAK?
+	= _ Expr _ 
 
-TopLevel
-	= _ Statement _ BREAK?
+Expr
+	= Sequence {@ ('|' @Sequence)+ #Choice }?
 
-Statement
-	= { (@LogOp)+ #Regex }
+Sequence
+	= Suffix {@ (@Suffix)+ #Sequence }?
+
+Suffix
+	= Term {@ &'' addQualifier }*
+
+addQualifier
+        = '*' #ZeroMore
+        / '+' #OneMore
+        / '?' #Option
+	/ '{' TODO '}' #Times
+
+Term
+	= { LETTER+ #Char }
+
 
 _
 	= [ \t]*
+
+
 
 Comment
 	= { (!BREAK .)* #Comment }

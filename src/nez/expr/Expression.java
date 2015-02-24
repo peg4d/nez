@@ -92,8 +92,13 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 
 	public final UList<Expression> toList() {
 		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
-		for(Expression e : this) {
-			l.add(e);
+		if(this.size() > 1) {
+			for(Expression e : this) {
+				l.add(e);
+			}
+		}
+		else {
+			l.add(this);
 		}
 		return l;
 	}
