@@ -34,6 +34,10 @@ public class Tag {
 		this.name = name;
 	}
 	
+	public final String getName() {
+		return name;
+	}
+	
 	@Override
 	public String toString() {
 		return this.name;

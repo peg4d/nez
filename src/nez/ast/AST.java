@@ -2,7 +2,7 @@ package nez.ast;
 
 import java.util.AbstractList;
 
-import org.peg4d.Utils;
+import nez.util.StringUtils;
 
 public class AST extends AbstractList<AST> implements Node, SourcePosition {
 	private Source    source;
@@ -220,7 +220,7 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 		sb.append(this.tag.name);
 		if(this.subTree == null) {
 			sb.append(" ");
-			Utils.formatQuoteString(sb, '\'', this.getText(), '\'');
+			StringUtils.formatQuoteString(sb, '\'', this.getText(), '\'');
 			sb.append(")");
 		}
 		else {
