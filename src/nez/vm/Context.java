@@ -7,6 +7,8 @@ import nez.ast.Tag;
 import nez.expr.NezTag;
 import nez.expr.NonTerminal;
 import nez.main.Recorder;
+import nez.main.Verbose;
+import nez.util.ConsoleUtils;
 import nez.util.UList;
 
 public abstract class Context implements Source {
@@ -438,14 +440,16 @@ public abstract class Context implements Source {
 		assert(stackTop.debugFailStackFlag);
 		usedStackTop = failStackTop - 1;
 		failStackTop = stackTop.prevFailTop;
+		if(this.prof != null) {
+			this.prof.statBacktrack(stackTop.pos, this.pos);
+		}
 		this.pos = stackTop.pos;
 		if(stackTop.lastLog != this.lastAppendedLog) {
 			this.logAbort(stackTop.lastLog, true);
-			//this.newPoint = stackTop.newPoint;
 		}
 		return stackTop.jump;
 	}
-
+	
 	private final ContextStack newUnusedLocalStack() {
 		ContextStack stackTop = newUnusedStack();
 		assert(this.failStackTop < this.usedStackTop);
@@ -943,5 +947,92 @@ public abstract class Context implements Source {
 	//<repeat T e>
 
 	
+	// Profiling
+	private Prof prof;
+	public final void start(Recorder rec) {
+		if(rec != null) {
+			rec.setFile("I.File",  this.getResourceName());
+			rec.setCount("I.Size", this.length());
+			this.prof = new Prof();
+			this.prof.init(this.getPosition());
+		}
+	}
 
+	public final void done(Recorder rec) {
+		if(rec != null) {
+			this.prof.parsed(rec, this.getPosition());
+		}
+	}
+
+	class Prof {
+		long startPosition = 0;
+		long startingNanoTime = 0;
+		long endingNanoTime   = 0;
+		
+		long FailureCount   = 0;
+		long BacktrackCount = 0;
+		long BacktrackLength = 0;
+		
+		long HeadPostion = 0;
+		long LongestBacktrack = 0;
+		int[] BacktrackHistgrams = null;
+		
+		public void init(long pos) {
+			this.startPosition = pos;
+			this.startingNanoTime = System.nanoTime();
+			this.endingNanoTime = startingNanoTime;
+			this.FailureCount = 0;
+			this.BacktrackCount = 0;
+			this.BacktrackLength = 0;
+			this.LongestBacktrack = 0;
+			this.HeadPostion = 0;
+			this.BacktrackHistgrams = new int[32];
+		}
+		
+		void parsed(Recorder rec, long consumed) {
+			consumed -= this.startPosition;
+			this.endingNanoTime = System.nanoTime();
+			Recorder.recordLatencyMS(rec, "P.Latency", startingNanoTime, endingNanoTime);
+			rec.setCount("P.Consumed", consumed);
+			Recorder.recordThroughputKPS(rec, "P.Throughput", consumed, startingNanoTime, endingNanoTime);
+			rec.setRatio("P.Failure", this.FailureCount, consumed);
+			rec.setRatio("P.Backtrack", this.BacktrackCount, consumed);
+			rec.setRatio("P.BacktrackLength", this.BacktrackLength, consumed);
+			rec.setCount("P.LongestBacktrack", LongestBacktrack);
+			if(Verbose.Backtrack) {
+				double cf = 0;
+				for(int i = 0; i < 16; i++) {
+					int n = 1 << i;
+					double f = (double)this.BacktrackHistgrams[i] / this.BacktrackCount;
+					cf += this.BacktrackHistgrams[i];
+					ConsoleUtils.println(String.format("%d\t%d\t%2.3f\t%2.3f", n, this.BacktrackHistgrams[i], f, (cf / this.BacktrackCount)));
+					if(n > this.LongestBacktrack) break;
+				}
+			}
+		}
+
+		public final void statBacktrack(long backed_pos, long current_pos) {
+			this.FailureCount ++;
+			long len = current_pos - backed_pos;
+			if(len > 0) {
+				this.BacktrackCount = this.BacktrackCount + 1;
+				this.BacktrackLength  = this.BacktrackLength + len;
+				if(this.HeadPostion < current_pos) {
+					this.HeadPostion = current_pos;
+				}
+				len = this.HeadPostion - backed_pos;
+				this.countBacktrackLength(len);
+				if(len > this.LongestBacktrack) {
+					this.LongestBacktrack = len;
+				}
+			}
+		}
+
+		private void countBacktrackLength(long len) {
+			int n = (int)(Math.log(len) / Math.log(2.0));
+			BacktrackHistgrams[n] += 1;
+		}
+
+	}
+	
 }

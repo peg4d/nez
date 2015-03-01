@@ -194,6 +194,9 @@ public class CommandConfigure {
 				else if(argument.equals("--verbose:debug")) {
 					Verbose.Debug = true;
 				}
+				else if(argument.equals("--verbose:backtrack")) {
+					Verbose.Backtrack = true;
+				}
 				else if(argument.equals("--verbose:none")) {
 					Verbose.General = false;
 				}

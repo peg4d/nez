@@ -5,11 +5,12 @@ import nez.util.ConsoleUtils;
 
 public class Verbose {
 	public static boolean General = true;
-	public static boolean Grammar    = false;
+	public static boolean Grammar = false;
 	public static boolean Expression = false;
 	public static boolean VirtualMachine = false;
 	public static boolean PackratParsing = false;
 	public static boolean Debug = false;
+	public static boolean Backtrack = false;
 	
 	public static void setAll() {
 		General = true;
@@ -17,11 +18,18 @@ public class Verbose {
 		Expression = true;
 		VirtualMachine = true;
 		PackratParsing = true;
+		Backtrack = true;
+	}
+
+	public final static void print(String msg) {
+		if(General) {
+			ConsoleUtils.println(msg);
+		}
 	}
 
 	public final static void println(String msg) {
 		if(General) {
-			ConsoleUtils.println("verbose: " + msg);
+			ConsoleUtils.println(msg);
 		}
 	}
 

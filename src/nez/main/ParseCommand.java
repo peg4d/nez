@@ -18,10 +18,10 @@ class ParseCommand extends Command {
 		p.record(rec);
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
-			file.record(rec);
 			Transformer trans = config.getTransformer();
-			long t1 = System.nanoTime();
+			file.start(rec);
 			Node node = p.parse(file, trans.newNode());
+			file.done(rec);
 			if(node == null) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
 				continue;
@@ -29,13 +29,10 @@ class ParseCommand extends Command {
 			if(file.hasUnconsumed()) {
 				ConsoleUtils.println(file.getUnconsumedMessage());
 			}
-			long t2 = System.nanoTime();
-			Recorder.recordLatencyMS(rec, "Latency", t1, t2);
-			Recorder.recordThroughputKPS(rec, "Throughput", file.length(), t1, t2);
-			trans.transform(config.getOutputFileName(file), node);
 			if(rec != null) {
 				rec.log();
 			}
+			trans.transform(config.getOutputFileName(file), node);
 		}
 	}
 }
@@ -53,9 +50,10 @@ class CheckCommand extends Command {
 		product.record(rec);
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
-			file.record(rec);
-			long t1 = System.nanoTime();
-			if(!product.match(file)) {
+			file.start(rec);
+			boolean result = product.match(file);
+			file.done(rec);
+			if(!result) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
 				failedInput.add(file.getResourceName());
 				continue;
@@ -64,9 +62,6 @@ class CheckCommand extends Command {
 				ConsoleUtils.println(file.getUnconsumedMessage());
 			}
 			if(rec != null) {
-				long t2 = System.nanoTime();
-				Recorder.recordLatencyMS(rec, "Latency", t1, t2);
-				Recorder.recordThroughputKPS(rec, "Throughput", file.length(), t1, t2);
 				rec.log();
 			}
 		}

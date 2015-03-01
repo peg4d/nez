@@ -169,18 +169,19 @@ public class Production {
 	}
 	
 	public final boolean match(SourceContext s) {
+		boolean matched;
 		if(FlagUtils.is(this.option, Production.ClassicMode)) {
-			return this.start.match(s);
+			matched = this.start.match(s);
 		}
 		else {
 			Instruction pc = this.compile();
 			s.initJumpStack(64, getMemoTable(s));
-			boolean matched = Instruction.run(pc, s);
+			matched = Instruction.run(pc, s);
 			if(matched) {
 				s.newTopLevelNode();
 			}
-			return matched;
 		}
+		return matched;
 	}
 
 	
