@@ -5,6 +5,7 @@ import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.Transformer;
 import nez.util.ConsoleUtils;
+import nez.util.UList;
 
 class ParseCommand extends Command {
 	@Override
@@ -33,7 +34,7 @@ class ParseCommand extends Command {
 			Recorder.recordThroughputKPS(rec, "Throughput", file.length(), t1, t2);
 			trans.transform(config.getOutputFileName(file), node);
 			if(rec != null) {
-				rec.record();
+				rec.log();
 			}
 		}
 	}
@@ -42,30 +43,35 @@ class ParseCommand extends Command {
 class CheckCommand extends Command {
 	@Override
 	void exec(CommandConfigure config) {
+		UList<String> failedInput = new UList<String>(new String[4]);
 		Recorder rec = config.getRecorder();
-		Production p = config.getProduction(config.StartingPoint);
-		if(p == null) {
+		Production product = config.getProduction(config.StartingPoint);
+		if(product == null) {
 			ConsoleUtils.exit(1, "undefined nonterminal: " + config.StartingPoint);
 		}
-		p.disable(Production.ASTConstruction);
-		p.record(rec);
+		product.disable(Production.ASTConstruction);
+		product.record(rec);
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
 			file.record(rec);
 			long t1 = System.nanoTime();
-			if(!p.match(file)) {
+			if(!product.match(file)) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
+				failedInput.add(file.getResourceName());
 				continue;
 			}
 			if(file.hasUnconsumed()) {
 				ConsoleUtils.println(file.getUnconsumedMessage());
 			}
-			long t2 = System.nanoTime();
-			Recorder.recordLatencyMS(rec, "Latency", t1, t2);
-			Recorder.recordThroughputKPS(rec, "Throughput", file.length(), t1, t2);
 			if(rec != null) {
-				rec.record();
+				long t2 = System.nanoTime();
+				Recorder.recordLatencyMS(rec, "Latency", t1, t2);
+				Recorder.recordThroughputKPS(rec, "Throughput", file.length(), t1, t2);
+				rec.log();
 			}
+		}
+		if(failedInput.size() > 0) {
+			ConsoleUtils.exit(1, "failed: " + failedInput);
 		}
 	}
 }

@@ -278,6 +278,7 @@ public class Production {
 
 	public final void record(Recorder rec) {
 		if(rec != null) {
+			this.enable(Production.Profiling);
 			this.compile();
 			rec.setFile("G.File", this.start.getGrammar().getResourceName());
 			rec.setCount("G.NonTerminals", this.ruleMap.size());
@@ -297,6 +298,7 @@ public class Production {
 	public final static int Prediction      = 1 << 5;
 	public final static int New             = 1 << 6;
 	public final static int Binary = 1 << 10;
+	public final static int Profiling = 1 << 11;
 
 	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization | Specialization | Prediction ;
 	public final static int SafeOption = ASTConstruction | Optimization;
@@ -326,6 +328,10 @@ public class Production {
 		if(FlagUtils.is(option, Production.Prediction)) {
 			sb.append(delim);
 			sb.append("predict");
+		}
+		if(FlagUtils.is(option, Production.Profiling)) {
+			sb.append(delim);
+			sb.append("prof");
 		}
 		String s = sb.toString();
 		if(s.length() > 0) {

@@ -85,7 +85,7 @@ public class Recorder {
 		return sb.toString();
 	}
 	
-	public final void record() {
+	public final void log() {
 		try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(this.logFile, true)))) {
 			String csv = formatCommaSeparateValue();
 		    Verbose.println("writing .. " + this.logFile + " " + csv);

@@ -31,8 +31,8 @@ public class CommandConfigure {
 	public String StartingPoint = "File";  // default
 	
 	// -i, --input
-	public String InputFileName = null;
-	public UList<String> InputFileLists = null;
+	private int InputFileIndex = -1;  // shell mode
+	public UList<String> InputFileLists = new UList<String>(new String[2]);
 
 	// -t, --text
 	public String InputText = null;
@@ -56,10 +56,9 @@ public class CommandConfigure {
 	void showUsage(String Message) {
 		ConsoleUtils.println("nez <command> optional files");
 		ConsoleUtils.println("  -p | --peg <filename>      Specify an PEGs grammar file");
-		ConsoleUtils.println("  -i | --input <filename>    Specify an input file");
-		ConsoleUtils.println("  -t | --text  <string>     Specify an input text");
+		ConsoleUtils.println("  -i | --input <filenames>   Specify input files");
+		ConsoleUtils.println("  -t | --text  <string>      Specify an input text");
 		ConsoleUtils.println("  -o | --output <filename>   Specify an output file");
-//		ConsoleUtils.println("  -t | --type <filename>     Specify an output type");
 		ConsoleUtils.println("  -s | --start <NAME>        Specify Non-Terminal as the starting point (default: File)");
 		ConsoleUtils.println("  -W<num>                    Warning Level (default:1)");
 		ConsoleUtils.println("  -O<num>                    Optimization Level (default:2)");
@@ -115,10 +114,15 @@ public class CommandConfigure {
 			else if ((argument.equals("-t") || argument.equals("--text")) && (index < args.length)) {
 				InputText = args[index];
 				index = index + 1;
+				InputFileIndex = 0;
 			}
 			else if ((argument.equals("-i") || argument.equals("--input")) && (index < args.length)) {
-				InputFileName = args[index];
-				index = index + 1;
+				InputFileLists = new UList<String>(new String[4]);
+				while(index < args.length && !args[index].startsWith("-")) {
+					InputFileLists.add(args[index]);
+					index = index + 1;
+					InputFileIndex = 0;
+				}
 			}
 			else if ((argument.equals("-o") || argument.equals("--output")) && (index < args.length)) {
 				OutputFileName = args[index];
@@ -268,15 +272,12 @@ public class CommandConfigure {
 		return getGrammar().getProduction(start, ProductionOption);
 	}
 
-	private boolean ShellMode = true;
-	
 	public final boolean hasInput() {
-		if(ShellMode && this.InputText == null && this.InputFileName == null) {
+		if(this.InputFileIndex == -1) {
 			this.InputText = Command.readMultiLine(">>> ", "... ");
 			return this.InputText != null;
 		}
-		ShellMode = false;
-		return this.InputText != null || this.InputFileName != null;
+		return this.InputText != null || this.InputFileIndex < this.InputFileLists.size();
 	}
 	
 	public final SourceContext getInputSourceContext() {
@@ -285,9 +286,9 @@ public class CommandConfigure {
 			this.InputText = null;
 			return SourceContext.newStringSourceContext(text);
 		}
-		if(this.InputFileName != null) {
-			String f = this.InputFileName;
-			this.InputFileName = null;
+		if(this.InputFileIndex < this.InputFileLists.size()) {
+			String f = this.InputFileLists.ArrayValues[this.InputFileIndex];
+			this.InputFileIndex ++;
 			try {
 				return SourceContext.loadSource(f);
 			} catch (IOException e) {
