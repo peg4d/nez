@@ -14,7 +14,7 @@ import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 import nez.vm.MemoTable;
-import nez.vm.PEG;
+import nez.x.PEG;
 
 public class Production {
 	Rule start;

@@ -252,7 +252,7 @@ public abstract class Context implements Source {
 		return stackTop;
 	}
 
-	public final boolean matchSymbolTableTop(Tag table) {
+	public final boolean matchSymbolTable(Tag table, boolean checkLastSymbolOnly) {
 		for(int i = stackedSymbolTable.size() - 1; i >= 0; i--) {
 			SymbolTableEntry s = stackedSymbolTable.ArrayValues[i];
 			if(s.table == table) {
@@ -260,19 +260,8 @@ public abstract class Context implements Source {
 					this.consume(s.utf8.length);
 					return true;
 				}
-				break;
-			}
-		}
-		return this.failure2(null);
-	}
-
-	public final boolean matchSymbolTable(Tag table) {
-		for(int i = stackedSymbolTable.size() - 1; i >= 0; i--) {
-			SymbolTableEntry s = stackedSymbolTable.ArrayValues[i];
-			if(s.table == table) {
-				if(this.match(this.pos, s.utf8)) {
-					this.consume(s.utf8.length);
-					return true;
+				if(checkLastSymbolOnly) {
+					break;
 				}
 			}
 		}
@@ -388,10 +377,10 @@ public abstract class Context implements Source {
 		for(int i = 0; i < n; i++) {
 			this.contextStacks[i] = new ContextStack();
 		}
-		this.contextStacks[0].jump = new Exit(false);
+		this.contextStacks[0].jump = new IExit(false);
 		this.contextStacks[0].debugFailStackFlag = true;
 		this.contextStacks[0].lastLog = this.lastAppendedLog;
-		this.contextStacks[1].jump = new Exit(true);  // for a point of the first called nonterminal
+		this.contextStacks[1].jump = new IExit(true);  // for a point of the first called nonterminal
 		this.failStackTop = 0;
 		this.usedStackTop = 1;
 		this.memoTable = memoTable;
@@ -414,7 +403,7 @@ public abstract class Context implements Source {
 		System.out.println(op + " F="+this.failStackTop +", T=" +usedStackTop);
 	}
 
-	public final Instruction opFailPush(FailPush op) {
+	public final Instruction opIFailPush(IFailPush op) {
 		ContextStack stackTop = newUnusedStack();
 		stackTop.prevFailTop   = failStackTop;
 		failStackTop = usedStackTop;
@@ -427,7 +416,7 @@ public abstract class Context implements Source {
 		return op.next;
 	}
 
-	public final Instruction opFailPop(Instruction op) {
+	public final Instruction opIFailPop(Instruction op) {
 		ContextStack stackTop = contextStacks[failStackTop];
 		assert(stackTop.debugFailStackFlag);
 		usedStackTop = failStackTop - 1;
@@ -435,7 +424,7 @@ public abstract class Context implements Source {
 		return op.next;
 	}
 	
-	public final Instruction opFailSkip(FailSkip op) {
+	public final Instruction opIFailSkip(IFailSkip op) {
 		ContextStack stackTop = contextStacks[failStackTop];
 		assert(stackTop.debugFailStackFlag);
 		stackTop.pos = this.pos;
@@ -444,7 +433,7 @@ public abstract class Context implements Source {
 		return op.next;
 	}
 
-	public final Instruction opFail() {
+	public final Instruction opIFail() {
 		ContextStack stackTop = contextStacks[failStackTop];
 		assert(stackTop.debugFailStackFlag);
 		usedStackTop = failStackTop - 1;
@@ -472,35 +461,35 @@ public abstract class Context implements Source {
 		return stackTop;
 	}
 
-	public final Instruction opCallPush(CallPush op) {
+	public final Instruction opICallPush(ICallPush op) {
 		ContextStack top = newUnusedLocalStack();
 		top.jump = op.jump;
 		return op.next;
 	}
 	
-	public final Instruction opReturn() {
+	public final Instruction opIRet() {
 		Instruction jump = popLocalStack().jump;
 		return jump;
 	}
 	
-	public final Instruction opPosPush(PosPush op) {
+	public final Instruction opIPosPush(IPosPush op) {
 		ContextStack top = newUnusedLocalStack();
 		top.pos = pos;
 		return op.next;
 	}
 
-	public final Instruction opPopBack(PosBack op) {
+	public final Instruction opIPopBack(IPosBack op) {
 		ContextStack top = popLocalStack();
 		this.pos = top.pos;
 		return op.next;
 	}
 
-	public final Instruction opMatchAny(MatchAny op) {
+	public final Instruction opIAnyChar(IAnyChar op) {
 		if(this.hasUnconsumed()) {
 			this.consume(1);
 			return op.next;
 		}
-		return this.opFail();
+		return this.opIFail();
 	}
 
 	public final Instruction opIByteChar(IByteChar op) {
@@ -508,7 +497,7 @@ public abstract class Context implements Source {
 			this.consume(1);
 			return op.next;
 		}
-		return op.optional ? op.next : this.opFail();
+		return op.optional ? op.next : this.opIFail();
 	}
 
 	public final Instruction opIByteMap(IByteMap op) {
@@ -517,7 +506,7 @@ public abstract class Context implements Source {
 			this.consume(1);
 			return op.next;
 		}
-		return op.optional ? op.next : this.opFail();
+		return op.optional ? op.next : this.opIFail();
 	}
 
 //	public final Instruction opMatchByteMap(IByteMap op) {
@@ -678,7 +667,7 @@ public abstract class Context implements Source {
 		return op.next;
 	}
 	
-	public final Instruction opNodeStore(NodeStore op) {
+	public final Instruction opNodeStore(INodeStore op) {
 		ContextStack top = popLocalStack();
 		if(top.lastLog.next != null) {
 			Node child = this.logCommit(top.lastLog.next);
@@ -692,12 +681,12 @@ public abstract class Context implements Source {
 		return op.next;
 	}
 
-	public final Instruction opNew(NodeNew op) {
+	public final Instruction opINew(INew op) {
 		pushDataLog(LazyNew, this.pos, null); //op.e);
 		return op.next;
 	}
 
-	public final Instruction opNodeLeftLink(NodeLeftNew op) {
+	public final Instruction opILeftNew(ILeftNew op) {
 		pushDataLog(LazyLeftNew, this.pos, null); // op.e);
 		return op.next;
 	}
@@ -713,17 +702,17 @@ public abstract class Context implements Source {
 		return null;
 	}
 	
-	public final Instruction opNodeTag(NodeTag op) {
+	public final Instruction opITag(ITag op) {
 		pushDataLog(LazyTag, 0, op.tag);
 		return op.next;
 	}
 
-	public final Instruction opReplace(NodeReplace op) {
+	public final Instruction opIReplace(IReplace op) {
 		pushDataLog(LazyReplace, 0, op.value);
 		return op.next;
 	}
 
-	public final Instruction opCapture(NodeCapture op) {
+	public final Instruction opICapture(ICapture op) {
 		pushDataLog(LazyCapture, this.pos, null);
 		return op.next;
 	}
@@ -731,78 +720,78 @@ public abstract class Context implements Source {
 	// Memoization
 	MemoTable memoTable;
 	
-	public final Instruction opLookup(Lookup op) {
+	public final Instruction opILookup(ILookup op) {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry m = memoTable.getMemo(pos, mp.id);
 		if(m != null) {
 			//this.memo.hit(m.consumed);
 			if(m.failed) {
-				return opFail();
+				return opIFail();
 			}
 			pos += m.consumed;
 			return op.skip;
 		}
-		return this.opFailPush(op);
+		return this.opIFailPush(op);
 	}
 
-	public final Instruction opLookup2(Lookup2 op) {
+	public final Instruction opIStateLookup(IStateLookup op) {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry m = memoTable.getMemo2(pos, mp.id, stateValue);
 		if(m != null) {
 			//this.memo.hit(m.consumed);
 			if(m.failed) {
-				return opFail();
+				return opIFail();
 			}
 			pos += m.consumed;
 			return op.skip;
 		}
-		return this.opFailPush(op);
+		return this.opIFailPush(op);
 	}
 
-	public final Instruction opLookupNode(LookupNode op) {
+	public final Instruction opLookupNode(ILookupNode op) {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry entry = memoTable.getMemo(pos, mp.id);
 		if(entry != null) {
 			if(entry.failed) {
-				return opFail();
+				return opIFail();
 			}
 			pos += entry.consumed;
 			pushDataLog(LazyLink, op.index, entry.result);
 			return op.skip;
 		}
-		this.opFailPush(op);
+		this.opIFailPush(op);
 		return this.opNodePush(op);
 	}
 
-	public final Instruction opLookupNode2(LookupNode op) {
+	public final Instruction opLookupNode2(ILookupNode op) {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry me = memoTable.getMemo2(pos, mp.id, stateValue);
 		if(me != null) {
 			if(me.failed) {
-				return opFail();
+				return opIFail();
 			}
 			pos += me.consumed;
 			pushDataLog(LazyLink, op.index, me.result);
 			return op.skip;
 		}
-		this.opFailPush(op);
+		this.opIFailPush(op);
 		return this.opNodePush(op);
 	}
 
-	public final Instruction opMemoize(Memoize op) {
+	public final Instruction opIMemoize(IMemoize op) {
 		MemoPoint mp = op.memoPoint;
 		ContextStack stackTop = contextStacks[this.usedStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, null, length, 0);
-		return this.opFailPop(op);
+		return this.opIFailPop(op);
 	}
 
-	public final Instruction opMemoize2(Memoize op) {
+	public final Instruction opIStateMemoize(IMemoize op) {
 		MemoPoint mp = op.memoPoint;
 		ContextStack stackTop = contextStacks[this.usedStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, null, length, stateValue);
-		return this.opFailPop(op);
+		return this.opIFailPop(op);
 	}
 
 	public final Instruction opMemoizeNode(MemoizeNode op) {
@@ -812,7 +801,7 @@ public abstract class Context implements Source {
 		ContextStack stackTop = contextStacks[this.failStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, this.left, length, 0);
-		return this.opFailPop(op);
+		return this.opIFailPop(op);
 	}
 
 	public Instruction opMemoizeNode2(MemoizeNode op) {
@@ -822,19 +811,19 @@ public abstract class Context implements Source {
 		ContextStack stackTop = contextStacks[this.failStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, this.left, length, stateValue);
-		return this.opFailPop(op);
+		return this.opIFailPop(op);
 	}
 
-	public final Instruction opMemoizeFail(MemoizeFail op) {
+	public final Instruction opIMemoizeFail(IMemoizeFail op) {
 		MemoPoint mp = op.memoPoint;
 		memoTable.setMemo(pos, mp.id, true, null, 0, 0);
-		return opFail();
+		return opIFail();
 	}
 
-	public final Instruction opMemoizeFail2(MemoizeFail op) {
+	public final Instruction opIStateMemoizeFail(IMemoizeFail op) {
 		MemoPoint mp = op.memoPoint;
 		memoTable.setMemo(pos, mp.id, true, null, 0, stateValue);
-		return opFail();
+		return opIFail();
 	}
 
 
@@ -856,14 +845,14 @@ public abstract class Context implements Source {
 		if(!op.byteMap[c]) {
 			return op.next;
 		}
-		return this.opFail();
+		return this.opIFail();
 	}
 
 	public final Instruction opNMultiChar(NMultiChar op) {
 		if(!this.match(this.pos, op.utf8)) {
 			return op.next;
 		}
-		return this.opFail();
+		return this.opIFail();
 	}
 
 	public final Instruction opMultiChar(IMultiChar op) {
@@ -871,7 +860,7 @@ public abstract class Context implements Source {
 			this.consume(op.len);
 			return op.next;
 		}
-		return op.optional ? op.next : this.opFail();
+		return op.optional ? op.next : this.opIFail();
 	}
 
 	// symbol table
@@ -884,10 +873,10 @@ public abstract class Context implements Source {
 
 	public final Instruction opIIsSymbol(IIsSymbol op) {
 		ContextStack top = popLocalStack();
-		if(this.matchSymbolTable(op.tableName, this.subbyte(top.pos, this.pos), op.onlyTop)) {
+		if(this.matchSymbolTable(op.tableName, this.subbyte(top.pos, this.pos), op.checkLastSymbolOnly)) {
 			return op.next;
 		}
-		return opFail();
+		return opIFail();
 	}
 
 	public final Instruction opIDefIndent(IDefIndent op) {
@@ -929,7 +918,7 @@ public abstract class Context implements Source {
 					consume(s.len);
 					return op.next;
 				}
-				return opFail();
+				return opIFail();
 			}
 		}
 		// no indent (unconsumed)

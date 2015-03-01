@@ -103,11 +103,11 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		return l;
 	}
 	
-//	public abstract Instruction encode(Instruction next);
-	public Instruction encode(Compiler bc, Instruction next) {
-		// todo
-		return next;
-	}
+	public abstract Instruction encode(Compiler bc, Instruction next);
+//	public Instruction encode(Compiler bc, Instruction next) {
+//		// todo
+//		return next;
+//	}
 
 	protected abstract int pattern(GEP gep);
 	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);

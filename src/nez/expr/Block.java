@@ -4,6 +4,8 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
+import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class Block extends Unary {
 	Block(SourcePosition s, Expression e) {
@@ -43,6 +45,11 @@ public class Block extends Unary {
 		context.popSymbolTable(stackTop);
 		context.stateValue = stateValue;
 		return b;
+	}
+	
+	@Override
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeBlock(this, next);
 	}
 	
 	@Override

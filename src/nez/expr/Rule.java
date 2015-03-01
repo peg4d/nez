@@ -8,6 +8,8 @@ import nez.ast.AST;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
+import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class Rule extends Expression {
 	Grammar    grammar;
@@ -218,7 +220,11 @@ public class Rule extends Expression {
 
 	public void addAnotation(String textAt, AST ast) {
 		// TODO Auto-generated method stub
-		
+	}
+
+	@Override
+	public Instruction encode(Compiler bc, Instruction next) {
+		return this.getExpression().encode(bc, next);
 	}
 
 	@Override
@@ -230,6 +236,7 @@ public class Rule extends Expression {
 	protected void examplfy(GEP gep, StringBuilder sb, int p) {
 		body.examplfy(gep, sb, p);
 	}
+
 
 
 }

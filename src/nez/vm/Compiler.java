@@ -5,6 +5,7 @@ import java.util.HashMap;
 import nez.Production;
 import nez.expr.And;
 import nez.expr.AnyChar;
+import nez.expr.Block;
 import nez.expr.ByteChar;
 import nez.expr.ByteMap;
 import nez.expr.Choice;
@@ -15,7 +16,6 @@ import nez.expr.Expression;
 import nez.expr.Factory;
 import nez.expr.IsIndent;
 import nez.expr.IsSymbol;
-import nez.expr.IsaSymbol;
 import nez.expr.Link;
 import nez.expr.New;
 import nez.expr.NewLeftLink;
@@ -115,16 +115,16 @@ public class Compiler {
 			if(Verbose.Debug) {
 				Verbose.debug("compiling .. " + r);
 			}
-			block.head = r.getExpression().encode(this, new Return(this, r));
+			block.head = r.getExpression().encode(this, new IRet(r));
 			block.start = codeList.size();
 			this.ruleMap.put(uname, block);
 			encode(block.head);
 			block.end = codeList.size();
 		}
 		for(Instruction inst : codeList) {
-			if(inst instanceof CallPush) {
-				CodeBlock deref = this.ruleMap.get(((CallPush) inst).rule.getUniqueName());
-				((CallPush) inst).setResolvedJump(deref.head);
+			if(inst instanceof ICallPush) {
+				CodeBlock deref = this.ruleMap.get(((ICallPush) inst).rule.getUniqueName());
+				((ICallPush) inst).setResolvedJump(deref.head);
 			}
 		}
 		return this.codeList.ArrayValues[0];
@@ -168,7 +168,7 @@ public class Compiler {
 	// encoding 
 
 	public final Instruction encodeMatchAny(AnyChar p, Instruction next) {
-		return new MatchAny(p, next);
+		return new IAnyChar(p, next);
 	}
 
 	public final Instruction encodeByteChar(ByteChar p, Instruction next) {
@@ -180,7 +180,7 @@ public class Compiler {
 	}
 
 	public Instruction encodeFail(Expression p) {
-		return new Fail(p);
+		return new IFail(p);
 	}
 
 	public final Instruction encodeRepetition(Repetition p, Instruction next) {
@@ -195,10 +195,10 @@ public class Compiler {
 				return new RByteMap((ByteMap)inner, next);
 			}
 		}
-		FailSkip skip = new FailSkip(this, p);
+		IFailSkip skip = new IFailSkip(p);
 		Instruction start = p.get(0).encode(this, skip);
 		skip.next = start;
-		return new FailPush(p, next, start);
+		return new IFailPush(p, next, start);
 	}
 
 	public final Instruction encodeOption(Option p, Instruction next) {
@@ -213,13 +213,13 @@ public class Compiler {
 				return new IByteMap((ByteMap)inner, true, next);
 			}
 		}
-		Instruction pop = new FailPop(this, p, next);
-		return new FailPush(p, next, p.get(0).encode(this, pop));
+		Instruction pop = new IFailPop(p, next);
+		return new IFailPush(p, next, p.get(0).encode(this, pop));
 	}
 
 	public final Instruction encodeAnd(And p, Instruction next) {
-		Instruction inner = p.get(0).encode(this, new PosBack(p, next));
-		return new PosPush(p, inner);
+		Instruction inner = p.get(0).encode(this, new IPosBack(p, next));
+		return new IPosPush(p, inner);
 	}
 
 	public final Instruction encodeNot(Not p, Instruction next) {
@@ -238,8 +238,8 @@ public class Compiler {
 				return new NMultiChar((Sequence)inn, next);
 			}
 		}
-		Instruction fail = new FailPop(this, p, new Fail(p));
-		return new FailPush(p, next, p.get(0).encode(this, fail));
+		Instruction fail = new IFailPop(p, new IFail(p));
+		return new IFailPush(p, next, p.get(0).encode(this, fail));
 	}
 
 	public final Instruction encodeSequence(Expression p, Instruction next) {
@@ -258,8 +258,8 @@ public class Compiler {
 		if(pp != p) {
 			if(pp instanceof Choice) {
 				Verbose.noticeOptimize("Prediction", p, pp);
-				next = pp.get(0).encode(this, new FailPop(this, p, next));
-				return new FailPush(p, nextStart, next);
+				next = pp.get(0).encode(this, new IFailPop(p, next));
+				return new IFailPush(p, nextStart, next);
 			}
 		}
 		return nextStart;
@@ -278,7 +278,7 @@ public class Compiler {
 		Instruction nextChoice = p.get(p.size()-1).encode(this, next);
 		for(int i = p.size() -2; i >= 0; i--) {
 			Expression e = p.get(i);
-			nextChoice = new FailPush(e, nextChoice, e.encode(this, new FailPop(this, e, next)));
+			nextChoice = new IFailPush(e, nextChoice, e.encode(this, new IFailPop(e, next)));
 		}
 		return nextChoice;
 	}
@@ -295,33 +295,33 @@ public class Compiler {
 				Expression ref = Factory.resolveNonTerminal(r.getExpression());
 				MemoPoint m = this.issueMemoPoint(ref);
 				if(m != null) {
-					Instruction inside = new CallPush(this, r, newMemoize(p, m, next));
+					Instruction inside = new ICallPush(r, newMemoize(p, m, next));
 					return newLookup(p, m, inside, next, newMemoizeFail(p, m));
 				}
 			}
 		}	
-		return new CallPush(this, p.getRule(), next);
+		return new ICallPush(p.getRule(), next);
 	}
 	
 	private Instruction newLookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		if(m.contextSensitive) {
-			return new Lookup2(e, m, next, skip, failjump);
+			return new IStateLookup(e, m, next, skip, failjump);
 		}
-		return new Lookup(e, m, next, skip, failjump);
+		return new ILookup(e, m, next, skip, failjump);
 	}
 
 	private Instruction newMemoize(Expression e, MemoPoint m, Instruction next) {
 		if(m.contextSensitive) {
-			return new Memoize2(e, m, next);
+			return new IStateMemoize(e, m, next);
 		}
-		return new Memoize(e, m, next);
+		return new IMemoize(e, m, next);
 	}
 
 	private Instruction newMemoizeFail(Expression e, MemoPoint m) {
 		if(m.contextSensitive) {
-			return new MemoizeFail2(e, m);
+			return new IStateMemoizeFail(e, m);
 		}
-		return new MemoizeFail2(e, m);
+		return new IStateMemoizeFail(e, m);
 	}
 
 	
@@ -334,10 +334,10 @@ public class Compiler {
 				MemoPoint m = this.issueMemoPoint(inner);
 				if(m != null) {
 					Instruction inside = p.get(0).encode(this, newMemoizeNode(p, m, next));
-					return newLookupNode(p, m, inside, next, new MemoizeFail(p, m));
+					return newLookupNode(p, m, inside, next, new IMemoizeFail(p, m));
 				}
 			}
-			return new NodePush(p, p.get(0).encode(this, new NodeStore(p, next)));
+			return new INodePush(p, p.get(0).encode(this, new INodeStore(p, next)));
 		}
 		return p.get(0).encode(this, next);
 	}
@@ -346,7 +346,7 @@ public class Compiler {
 		if(m.contextSensitive) {
 			return new LookupNode2(e, m, next, skip, failjump);
 		}
-		return new LookupNode(e, m, next, skip, failjump);
+		return new ILookupNode(e, m, next, skip, failjump);
 	}
 
 	private Instruction newMemoizeNode(Link e, MemoPoint m, Instruction next) {
@@ -359,43 +359,45 @@ public class Compiler {
 	
 	public final Instruction encodeNew(New p, Instruction next) {
 		if(this.enableASTConstruction()) {
-			return new NodeNew(p, this.encodeSequence(p, new NodeCapture(p, next)));
+			return new INew(p, this.encodeSequence(p, new ICapture(p, next)));
 		}
 		return this.encodeSequence(p, next);
 	}
 
 	public final Instruction encodeLeftNew(NewLeftLink p, Instruction next) {
 		if(this.enableASTConstruction()) {
-			return new NodeLeftNew(p, this.encodeSequence(p, new NodeCapture(p, next)));
+			return new ILeftNew(p, this.encodeSequence(p, new ICapture(p, next)));
 		}
 		return this.encodeSequence(p, next);
 	}
 		
 	public final Instruction encodeTagging(Tagging p, Instruction next) {
 		if(this.enableASTConstruction()) {
-			return new NodeTag(p, next);
+			return new ITag(p, next);
 		}
 		return next;
 	}
 
 	public final Instruction encodeReplace(Replace p, Instruction next) {
 		if(this.enableASTConstruction()) {
-			return new NodeReplace(p, next);
+			return new IReplace(p, next);
 		}
 		return next;
 	}
 	
+	public final Instruction encodeBlock(Block p, Instruction next) {
+		Instruction failed = new ITablePop(p, new IFail(p));
+		Instruction inner = p.get(0).encode(this, new ITablePop(p, next));
+		return new ITablePush(p, new IFailPush(p, failed, inner));
+	}
+
 	public final Instruction encodeDefSymbol(DefSymbol p, Instruction next) {
 		Instruction inner = p.get(0).encode(this, new IDefSymbol(p, next));
-		return new PosPush(p, inner);
+		return new IPosPush(p, inner);
 	}
 	public final Instruction encodeIsSymbol(IsSymbol p, Instruction next) {
-		Instruction inner = p.get(0).encode(this, new IIsSymbol(p, false, next));
-		return new PosPush(p, inner);
-	}
-	public final Instruction encodeIsaSymbol(IsaSymbol p, Instruction next) {
-		Instruction inner = p.get(0).encode(this, new IIsSymbol(p, true, next));
-		return new PosPush(p, inner);
+		Instruction inner = p.get(0).encode(this, new IIsSymbol(p, p.checkLastSymbolOnly, next));
+		return new IPosPush(p, inner);
 	}
 	public final Instruction encodeDefIndent(DefIndent p, Instruction next) {
 		return new IDefIndent(p, next);

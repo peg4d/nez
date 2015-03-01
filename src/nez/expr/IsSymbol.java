@@ -5,21 +5,25 @@ import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.util.UList;
 import nez.util.UMap;
+import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class IsSymbol extends Terminal implements ContextSensitive {
 	public Tag table;
 	Expression symbolExpression = null;
-	IsSymbol(SourcePosition s, Tag table) {
+	public boolean checkLastSymbolOnly = false;
+	IsSymbol(SourcePosition s, boolean checkLastSymbolOnly, Tag table) {
 		super(s);
 		this.table = table;
+		this.checkLastSymbolOnly = false;
 	}
 	@Override
 	public String getPredicate() {
-		return "is " + table.name;
+		return (checkLastSymbolOnly ? "is " : "isa ") + table.name;
 	}
 	@Override
 	public String getInterningKey() {
-		return "is " + table.name;
+		return this.getPredicate();
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
@@ -45,7 +49,11 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		return context.matchSymbolTableTop(table);
+		return context.matchSymbolTable(table, this.checkLastSymbolOnly);
+	}
+	@Override
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeIsSymbol(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

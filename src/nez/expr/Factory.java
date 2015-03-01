@@ -396,11 +396,11 @@ public class Factory {
 	}
 
 	public static Expression newIsSymbol(SourcePosition s, Tag table) {
-		return internImpl(s, new IsSymbol(s, table));
+		return internImpl(s, new IsSymbol(s, /*checkLastSymbolOnly*/true, table));
 	}
 	
 	public static Expression newIsaSymbol(SourcePosition s, Tag table) {
-		return internImpl(s, new IsaSymbol(s, table));
+		return internImpl(s, new IsSymbol(s, /*checkLastSymbolOnly*/false, table));
 	}
 
 	public static Expression newDefIndent(SourcePosition s) {

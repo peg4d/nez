@@ -5,6 +5,8 @@ import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.util.UList;
 import nez.util.UMap;
+import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class DefSymbol extends Unary {
 	public final Tag table;
@@ -78,12 +80,17 @@ public class DefSymbol extends Unary {
 			}
 			return false;
 		}
-		if(e instanceof IsIndent || e instanceof IsSymbol || e instanceof IsaSymbol) {
+		if(e instanceof IsIndent || e instanceof IsSymbol) {
 			return true;
 		}
 		return false;
 	}
 	
+	@Override
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeDefSymbol(this, next);
+	}
+
 	@Override
 	protected int pattern(GEP gep) {
 		return 1;

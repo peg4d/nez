@@ -3,6 +3,8 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
+import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class IsIndent extends Terminal implements ContextSensitive {
 	IsIndent(SourcePosition s) {
@@ -33,7 +35,11 @@ public class IsIndent extends Terminal implements ContextSensitive {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		return context.matchSymbolTableTop(NezTag.Indent);
+		return context.matchSymbolTable(NezTag.Indent, true);
+	}
+	@Override
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeIsIndent(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

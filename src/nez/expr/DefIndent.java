@@ -2,6 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.vm.Compiler;
+import nez.vm.Instruction;
 
 public class DefIndent extends Unconsumed {
 	DefIndent(SourcePosition s) {
@@ -17,7 +19,10 @@ public class DefIndent extends Unconsumed {
 		context.pushSymbolTable(NezTag.Indent, indent);
 		return true;
 	}
-
+	@Override
+	public Instruction encode(Compiler bc, Instruction next) {
+		return bc.encodeDefIndent(this, next);
+	}
 	@Override
 	protected int pattern(GEP gep) {
 		return 1;

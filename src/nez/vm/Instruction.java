@@ -30,9 +30,6 @@ public abstract class Instruction {
 	Instruction branch() {
 		return null;
 	}
-	Instruction branch2() {
-		return null;
-	}
 	
 	protected static Instruction labeling(Instruction inst) {
 		if(inst != null) {
@@ -45,17 +42,19 @@ public abstract class Instruction {
 		return "L"+inst.id;
 	}
 
-	protected abstract void stringfy(StringBuilder sb);
+	public final String getName() {
+		return this.getClass().getSimpleName();
+	}
+
+	protected void stringfy(StringBuilder sb) {
+		sb.append(this.getName());
+	}
 	
 	@Override
 	public final String toString() {
 		StringBuilder sb = new StringBuilder();
 		stringfy(sb);
 		return sb.toString();
-	}
-	
-	public final String getName() {
-		return this.getClass().getSimpleName();
 	}
 	
 	boolean debug() {
@@ -91,23 +90,19 @@ public abstract class Instruction {
 	}
 }
 
-class Fail extends Instruction implements StackOperation {
-	Fail(Expression e) {
+class IFail extends Instruction implements StackOperation {
+	IFail(Expression e) {
 		super(e, null);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opFail();
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("fail");
+		return sc.opIFail();
 	}
 }
 
-class FailPush extends Instruction implements StackOperation {
+class IFailPush extends Instruction implements StackOperation {
 	public final Instruction failjump;
-	FailPush(Expression e, Instruction failjump, Instruction next) {
+	IFailPush(Expression e, Instruction failjump, Instruction next) {
 		super(e, next);
 		this.failjump = labeling(failjump);
 	}
@@ -117,147 +112,114 @@ class FailPush extends Instruction implements StackOperation {
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opFailPush(this);
+		return sc.opIFailPush(this);
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("failpush ");
+		super.stringfy(sb);
+		sb.append(" ");
 		sb.append(label(this.failjump));
 		sb.append("  ## " + e);
 	}
 }
 
-class FailPop extends Instruction implements StackOperation {
-	public FailPop(Compiler optimizer, Expression e, Instruction next) {
+class IFailPop extends Instruction implements StackOperation {
+	IFailPop(Expression e, Instruction next) {
 		super(e, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opFailPop(this);
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("failpop");
+		return sc.opIFailPop(this);
 	}
 }
 
-class FailSkip extends Instruction {
-	FailSkip(Compiler optimizer, Expression e) {
+class IFailSkip extends Instruction {
+	IFailSkip(Expression e) {
 		super(e, null);
 	}
 	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("skip");
-	}
-	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opFailSkip(this);
+		return sc.opIFailSkip(this);
 	}
 }
 
-class CallPush extends Instruction implements StackOperation {
+class ICallPush extends Instruction implements StackOperation {
 	Rule rule;
 	public Instruction jump = null;
-	CallPush(Compiler optimizer, Rule rule, Instruction next) {
+	ICallPush(Rule rule, Instruction next) {
 		super(rule, next);
 		this.rule = rule;
 	}
-
 	void setResolvedJump(Instruction jump) {
 		assert(this.jump == null);
 		this.jump = labeling(this.next);
 		this.next = labeling(jump);
 	}
-	
-	
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opCallPush(this);
+		return sc.opICallPush(this);
 	}
-
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("callpush " + label(jump) + "   ## " + rule.getLocalName());
+		super.stringfy(sb);
+		sb.append(" " + label(jump) + "   ## " + rule.getLocalName());
 	}
-
 }
 
-class Return extends Instruction implements StackOperation {
-	public Return(Compiler optimizer, Rule e) {
+class IRet extends Instruction implements StackOperation {
+	IRet(Rule e) {
 		super(e, null);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opReturn();
+		return sc.opIRet();
 	}
-
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("ret  ## " + ((Rule)e).getLocalName());
+		super.stringfy(sb);
+		sb.append("  ## " + ((Rule)e).getLocalName());
 	}
-
 }
 
-class PosPush extends Instruction {
-	PosPush(Expression e, Instruction next) {
+class IPosPush extends Instruction {
+	IPosPush(Expression e, Instruction next) {
 		super(e, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opPosPush(this);
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("pospush");
+		return sc.opIPosPush(this);
 	}
 }
 
-class PosBack extends Instruction {
-	public PosBack(Expression e, Instruction next) {
+class IPosBack extends Instruction {
+	public IPosBack(Expression e, Instruction next) {
 		super(e, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opPopBack(this);
+		return sc.opIPopBack(this);
 	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("back");
-	}
-
 }
 
-
-class Exit extends Instruction {
+class IExit extends Instruction {
 	boolean status;
-	public Exit(boolean status) {
+	IExit(boolean status) {
 		super(null, null);
 		this.status = status;
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("exit");
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		throw new TerminationException(status);
 	}
-
 }
 
-
-
-class MatchAny extends Instruction {
-	MatchAny(Expression e, Instruction next) {
+class IAnyChar extends Instruction {
+	IAnyChar(Expression e, Instruction next) {
 		super(e, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMatchAny(this);
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("matchany");
+		return sc.opIAnyChar(this);
 	}
 }
 
@@ -275,7 +237,8 @@ class IByteChar extends Instruction {
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("bytematch ");
+		super.stringfy(sb);
+		sb.append(" ");
 		sb.append(StringUtils.stringfyByte(byteChar));
 	}
 }
@@ -296,7 +259,8 @@ class IByteMap extends Instruction {
 
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("mapmatch ");
+		super.stringfy(sb);
+		sb.append(" ");
 		sb.append(StringUtils.stringfyByteMap(byteMap));
 	}
 }
@@ -305,27 +269,19 @@ interface Construction {
 	
 }
 
-class NodePush extends Instruction {
-	NodePush(Link e, Instruction next) {
+class INodePush extends Instruction {
+	INodePush(Link e, Instruction next) {
 		super(e, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opNodePush(this);
 	}
-	@Override
-	boolean debug() {
-		return true;
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("nodepush");
-	}
 }
 
-class NodeStore extends Instruction {
+class INodeStore extends Instruction {
 	public final int index;
-	NodeStore(Link e, Instruction next) {
+	INodeStore(Link e, Instruction next) {
 		super(e, next);
 		this.index = e.index;
 	}
@@ -335,142 +291,118 @@ class NodeStore extends Instruction {
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("nodestore " + index);
+		super.stringfy(sb);
+		sb.append(" " + index);
 	}
 }
 
-
-class NodeNew extends Instruction {
+class INew extends Instruction {
 	int shift;
-	NodeNew(Expression e, Instruction next) {
+	INew(Expression e, Instruction next) {
 		super(e, next);
 		this.shift = 0;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opNew(this);
-	}
-	@Override
-	boolean debug() {
-		return true;
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("new");
+		return sc.opINew(this);
 	}
 }
 
-class NodeLeftNew extends Instruction {
+class ILeftNew extends Instruction {
 	int shift;
-	NodeLeftNew(Expression e, Instruction next) {
-		super(e, next);
-	}
-	@Override
-	Instruction exec(Context sc) throws TerminationException {
-		return sc.opNodeLeftLink(this);
-	}
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("leftnew");
-	}
-}
-
-
-class NodeCapture extends Instruction {
-	int shift;
-	NodeCapture(Expression e, Instruction next) {
+	ILeftNew(Expression e, Instruction next) {
 		super(e, next);
 		this.shift = 0;
 	}
-
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opCapture(this);
+		return sc.opILeftNew(this);
 	}
-
-	@Override
-	protected void stringfy(StringBuilder sb) {
-		sb.append("capture");
-	}
-	
 }
 
-class NodeReplace extends Instruction {
+
+class ICapture extends Instruction {
+	int shift;
+	ICapture(Expression e, Instruction next) {
+		super(e, next);
+		this.shift = 0;
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opICapture(this);
+	}
+}
+
+class IReplace extends Instruction {
 	public final String value;
-	NodeReplace(Replace e, Instruction next) {
+	IReplace(Replace e, Instruction next) {
 		super(e, next);
 		this.value = e.value;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opReplace(this);
+		return sc.opIReplace(this);
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("replace " + StringUtils.quoteString('"', value, '"'));
+		super.stringfy(sb);
+		sb.append(" " + StringUtils.quoteString('"', value, '"'));
 	}
 }
 
-class NodeTag extends Instruction {
+class ITag extends Instruction {
 	public final Tag tag;
-	NodeTag(Tagging e, Instruction next) {
+	ITag(Tagging e, Instruction next) {
 		super(e, next);
 		this.tag = e.tag;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opNodeTag(this);
-	}	
-	@Override
-	boolean debug() {
-		return true;
+		return sc.opITag(this);
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append("tag " + StringUtils.quoteString('"', tag.name, '"'));
+		super.stringfy(sb);
+		sb.append(" " + StringUtils.quoteString('"', tag.name, '"'));
 	}
 }
-
 
 interface Memoization {
 
 }
 
-class Lookup extends FailPush implements Memoization {
+class ILookup extends IFailPush implements Memoization {
 	final MemoPoint memoPoint;
 	final Instruction skip;
-	Lookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+	ILookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		super(e, failjump, next);
 		this.memoPoint = m;
 		this.skip = labeling(skip);
 	}
 	@Override
-	Instruction branch2() {
-		return this.skip;
-	}
-	@Override
 	protected void stringfy(StringBuilder sb) {
-		sb.append(this.getName() + " " + this.memoPoint.id);
+		super.stringfy(sb);
+		sb.append(" " + this.memoPoint.id);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opLookup(this);
+		return sc.opILookup(this);
 	}
 }
 
-class Lookup2 extends Lookup {
-	Lookup2(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+class IStateLookup extends ILookup {
+	IStateLookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		super(e, m, next, skip, failjump);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opLookup2(this);
+		return sc.opIStateLookup(this);
 	}
 }
 
-class Memoize extends Instruction implements Memoization {
+class IMemoize extends Instruction implements Memoization {
 	final MemoPoint memoPoint;
-	Memoize(Expression e, MemoPoint m, Instruction next) {
+	IMemoize(Expression e, MemoPoint m, Instruction next) {
 		super(e, next);
 		this.memoPoint = m;
 	}
@@ -480,23 +412,23 @@ class Memoize extends Instruction implements Memoization {
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoize(this);
+		return sc.opIMemoize(this);
 	}
 }
 
-class Memoize2 extends Memoize {
-	Memoize2(Expression e, MemoPoint m, Instruction next) {
+class IStateMemoize extends IMemoize {
+	IStateMemoize(Expression e, MemoPoint m, Instruction next) {
 		super(e, m, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoize2(this);
+		return sc.opIStateMemoize(this);
 	}
 }
 
-class MemoizeFail extends Fail implements Memoization {
+class IMemoizeFail extends IFail implements Memoization {
 	MemoPoint memoPoint;
-	MemoizeFail(Expression e, MemoPoint m) {
+	IMemoizeFail(Expression e, MemoPoint m) {
 		super(e);
 		this.memoPoint = m;
 	}
@@ -506,23 +438,23 @@ class MemoizeFail extends Fail implements Memoization {
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoizeFail(this);
+		return sc.opIMemoizeFail(this);
 	}
 }
 
-class MemoizeFail2 extends MemoizeFail {
-	MemoizeFail2(Expression e, MemoPoint m) {
+class IStateMemoizeFail extends IMemoizeFail {
+	IStateMemoizeFail(Expression e, MemoPoint m) {
 		super(e, m);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoizeFail2(this);
+		return sc.opIStateMemoizeFail(this);
 	}
 }
 
-class LookupNode extends Lookup {
+class ILookupNode extends ILookup {
 	final int index;
-	LookupNode(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+	ILookupNode(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		super(e, m, next, skip, failjump);
 		this.index = e.index;
 	}
@@ -532,7 +464,7 @@ class LookupNode extends Lookup {
 	}
 }
 
-class LookupNode2 extends LookupNode {
+class LookupNode2 extends ILookupNode {
 	final int index;
 	LookupNode2(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		super(e, m, next, skip, failjump);
@@ -544,7 +476,7 @@ class LookupNode2 extends LookupNode {
 	}
 }
 
-class MemoizeNode extends NodeStore implements Memoization {
+class MemoizeNode extends INodeStore implements Memoization {
 	final MemoPoint memoPoint;
 	MemoizeNode(Link e, MemoPoint m, Instruction next) {
 		super(e, next);
@@ -591,11 +523,11 @@ class IDefSymbol extends Instruction {
 
 class IIsSymbol extends Instruction {
 	Tag tableName;
-	boolean onlyTop;
-	IIsSymbol(IsSymbol e, boolean onlyTop, Instruction next) {
+	boolean checkLastSymbolOnly;
+	IIsSymbol(IsSymbol e, boolean checkLastSymbolOnly, Instruction next) {
 		super(e, next);
 		this.tableName = e.table;
-		this.onlyTop = onlyTop;
+		this.checkLastSymbolOnly = checkLastSymbolOnly;
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -650,9 +582,9 @@ class ITablePush extends Instruction {
 	}
 }
 
-class ITablePop extends FailPop {
-	public ITablePop(Compiler optimizer, Expression e, Instruction next) {
-		super(optimizer, e, next);
+class ITablePop extends Instruction {
+	public ITablePop(Expression e, Instruction next) {
+		super(e, next);
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
