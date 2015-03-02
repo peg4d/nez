@@ -1,6 +1,9 @@
 // XML Document Type Declaration
 // author Shinya Yamaguchi
 
+TopLevel
+    = Document
+    
 Chunk 
     = Document
     
@@ -8,98 +11,163 @@ File
     = Document
 
 Document
-    = MISC* DocType MISC* 
+    = { (PROLOG)? (MISC* (@Dtd)*  MISC* )+ #doc}
     
     
-DocType
-    = '<!DOCTYPE' _* {@DocTypeName '[' (@Dtd)* #doctype } ']>'
+PROLOG
+    =  '<?xml' (_* NAME '=' STRING)*  _* '?>' 
+//DocType
+//    = '<!DOCTYPE' _* {@DocTypeName '[' (@Dtd)* #doctype } ']>'
     
 
 Dtd
-    =  _*  '<!' (Element/Entity/Attlist) '>'  _*
-    
+    = ( ( '<!' (element/attlist/entity/condsect) '>') / MISC*)  _*
 
-Element
-	= _* 'ELEMENT' _* {@ElementName _*  ( '(' @Model (VS @Model)* ')' (@Regex)? / @OtherMember ) #element} _*
+IGNORESECT
+	= ( '<!' (![>] .)* '>' _*)/ (_* '%' NAME ';' _*) / ( (!']' .)*) / MISC
+
+condsect
+	= IGNORE / include
+	
+include	
+	= '[' _* ('INCLUDE'/NAME) _* '[' _* (@Dtd) _*  NAME? _* MISC*  ']]' _*
+	
+IGNORE
+	= '[' _* 'IGNORE' _* '[' _* IGNORESECT _* ']]' _*
+
+element
+	= 'ELEMENT' _* {@ElementName _* contentSpec _* #element} _*
+
+contentSpec
+	=  (@{('EMPTY' / 'ANY') #others } / @TopMember )
 	
 
-Attlist
-	= _* 'ATTLIST' _* {@AttElementName _* (@AttParameter)* #attlist} _*
-	
-	
-Entity
-	= _* 'ENTITY' _* {@EntityName _* @String #entity} _*
-	
-
-
-//for Element
-Model
-	=  _* Member _* 
+TopMember
+	= { ( ('(' _* @Data _* ')') / @MemberName / @Choice / @Seq) (@Regex)? #member}
 	
 Member
-	= { (@Data/@MemberName) (@Or)? ((VS)? (@Data/@MemberName) (@Or)?)* #member} 
-	
+	= {  (@Data / @MemberName / @Choice / @Seq) (@Regex)? #member}
+
+Choice 
+	= { '(' _* @Member (_* @Or _* @Member)+ _* ')' (@Regex)? #choice}
+
+Seq 
+	= { '(' _* @Member (_* VS _* @Member)* _* ')' (@Regex)? #seq}
+
 Data
-	= { '#PCDATA'  #data}
+	= { '#PCDATA' #data}
 	
 Regex
 	= { ( '*' / '+' / '?') #regex}
 	
 Or
-	= { _* '|'  _* #or}
+	= { _* '|' `/` _* #or}
 	
 OtherMember
 	= { ('EMPTY' / 'ANY') #others}
 	
 	
-//for Attlist
-AttParameter
-	= { _* @AttName _* @DataType _* @Default _* #attParameter}
+attlist
+	= 'ATTLIST' _* {@AttElementName _* (@AttDef)* #attlist} _*
+
+AttDef
+	= { @AttName _* @AttType _* @DefaultDecl _* #attDef}
 	 
-DataType
-	= { ('CDATA'/'IDREF'/'ID'/'ENTITY'/'ENTITIES'/'NMTOKENS'/'NMTOKEN'/'Enumerated') #dataType}
+AttType
+	= { (@{'CDATA' #CDATA} / tokenized / @Enumerated) #attType }
+
+ATTVAL
+	=('"' (![<&"].)* '"') /  ("\'" (![<&'] .)* "\'")
+
+tokenized
+	= 
+		  @{'IDREFS' #IDREFS}		
+		/ @{'IDREF' #IDREF}
+		/ @{'ID' #ID}  
+		/ @{'ENTITY' #ENTITY} 
+		/ @{'ENTITIES' #ENTITIES} 
+		/ @{'NMTOKENS' #NMTOKENS} 
+		/ @{'NMTOKEN' #NMTOKEN} 
+
+Enumerated
+	= { '(' _* @{ [-A-Za-z0-9:._%;]* #enumMember } _* ( @Or  @{ [-A-Za-z0-9:._%;]* #enumMember } )*   _* ')'  _* #enum }
 	
-Default
-	= { @DefaultType  _* (@DefaultValue)* #default}
-	
-DefaultType
-	= {('#REQUIRED' / '#IMPLIED' / '#FIXED' ) #defaultType}	
+DefaultDecl
+	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #default}
 	
 DefaultValue
-	= { @String #defaultValue}
+	= {ATTVAL #defaultValue}
 	
 
+entity
+	= 'ENTITY' _*  (gedecl/pedecl) _*
+
+gedecl
+	= { @EntityName _* entitydef _* #entity}
+
+pedecl
+	= '%' _* @EntityName _* PEDEF _*
+
+entitydef
+	=  @EntityValue / (EXID NDATADECL?)
+
+PEDEF
+	= STRING / EXID
+
+EntityValue
+	= {'"' (![	"].)* '"'#entityValue}
+
+EXID 
+	= ('SYSTEM' _* SLITERAL)
+		/ ('PUBLIC' _* PUBIDLITERAL _* SLITERAL)
+
+NDATADECL
+	= 'NDATA' _* NAME
+	
+SLITERAL
+	= (  '\'' ( !'\'' . )* '\'') / ( '"' ( !'"' . )* '"')
+
+PUBIDLITERAL
+	= '"' PUBLICCHAR* '"'
+	
+PUBLICCHAR
+	=  [a-zA-Z0-9] / [-'()+,./:=?;!*#@$_% ]  / [\xD] / [\xA] 
 
 //Name
 AttName
-	= {@Name #attName}
+	= {NAME #attName}
 	
 ElementName
-	= {@Name #elementName}
+	= {NAME #elementName}
 	
 AttElementName
-	= {@Name #attElementName}
+	= {NAME #attElementName}
 	
 MemberName
-	= {@Name (@Regex)? #memberName}
+	= {NAME #memberName}
 	
 EntityName
-	= {@Name #entityName}
+	= {NAME #entityName}
 	
 DocTypeName
-	= {@Name #docTypeName}
+	= {NAME #docTypeName}
 	
 
 Name
-    = { [A-Za-z:] ( '-' / [A-Za-z0-9:._])*  #name }
-    
+	= { [A-Za-z:%_] ([-A-Za-z0-9:._%;])*  #name }
+
+NAME
+	=  [A-Za-z:%_] ([-A-Za-z0-9:._%;])*
 
 String
-    = { '"' ( !'"' . )* '"' #string }
+    =  '"' { ( !'"' . )*  #string } '"'
+    
+STRING
+	=  '"' ( !'"' . )* '"'
     
 
 
-//Reference //TODO
+//Spacing etc
 
 
 MISC
