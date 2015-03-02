@@ -59,6 +59,7 @@ public class GrammarChecker {
 	public void verify(Grammar grammar) {
 		UList<String> stack = new UList<String>(new String[64]);
 		for(Rule r: grammar.getDefinedRuleList()) {
+			r.minlen = -1;  // reset for all checking
 			r.checkAlwaysConsumed(this, null, stack);
 			if(Verbose.Grammar) {
 				ConsoleUtils.println(r.getUniqueName() + " = " + r.getExpression());
@@ -66,7 +67,7 @@ public class GrammarChecker {
 			checkSymbolTable(r.getExpression());
 		}
 		if(this.foundError) {
-			ConsoleUtils.exit(1, "PegError found");
+			ConsoleUtils.exit(1, "FatalGrammarError");
 		}
 		// type check
 		for(Rule r: grammar.getRuleList()) {
