@@ -21,10 +21,10 @@ PROLOG
     
 
 Dtd
-    = ( ( '<!' (element/attlist/entity/condsect) '>') / MISC*)  _*
+    = ( ( '<!' (element/attlist/entity/condsect) '>') / MISC)  _*
 
 IGNORESECT
-	= ( '<!' (![>] .)* '>' _*)/ (_* '%' NAME ';' _*) / ( (!']' .)*) / MISC
+	= ( '<!' (![>] .)* '>' _*)/ (_* '%' NAME ';' _*) / ( (!']' .)+) / MISC
 
 condsect
 	= IGNORE / include
@@ -106,7 +106,7 @@ gedecl
 	= { @EntityName _* entitydef _* #entity}
 
 pedecl
-	= '%' _* @EntityName _* PEDEF _*
+	= { '%' _* @EntityName _* PEDEF _* #pedecl}
 
 entitydef
 	=  @EntityValue / (EXID NDATADECL?)
