@@ -255,13 +255,13 @@ public class Compiler {
 			Expression e = p.get(i);
 			nextStart = e.encode(this, nextStart);
 		}
-		if(pp != p) {
-			if(pp instanceof Choice) {
-				Verbose.noticeOptimize("Prediction", p, pp);
-				next = pp.get(0).encode(this, new IFailPop(p, next));
-				return new IFailPush(p, nextStart, next);
-			}
-		}
+//		if(pp != p) {
+//			if(pp instanceof Choice) {
+//				Verbose.noticeOptimize("Prediction", p, pp);
+//				next = pp.get(0).encode(this, new IFailPop(p, next));
+//				return new IFailPush(p, nextStart, next);
+//			}
+//		}
 		return nextStart;
 	}
 
