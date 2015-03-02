@@ -40,7 +40,7 @@ public class Repetition extends Unary {
 	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
 		int required = c.required;
 		if(!this.inner.checkAlwaysConsumed(checker, null, null)) {
-			checker.reportWarning(s, "empty repetition");
+			checker.reportError(s, "empty repetition");
 		}
 		Expression inn = this.inner.checkNodeTransition(checker, c);
 		if(required != NodeTransition.OperationType && c.required == NodeTransition.OperationType) {
