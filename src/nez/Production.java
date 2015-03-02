@@ -303,7 +303,8 @@ public class Production {
 	public final static int Binary = 1 << 10;
 	public final static int Profiling = 1 << 11;
 
-	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization | Specialization | Prediction ;
+//	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization | Specialization | Prediction ;
+	public final static int DefaultOption = ASTConstruction | PackratParsing ;
 	public final static int SafeOption = ASTConstruction | Optimization;
 	
 	public final static String stringfyOption(int option, String delim) {
