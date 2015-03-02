@@ -159,6 +159,11 @@ class IFailSkip extends Instruction {
 	}
 }
 
+/*
+ * IFailCheckSkip
+ * Check unconsumed repetition
+ */
+
 class IFailCheckSkip extends IFailSkip {
 	IFailCheckSkip(Expression e) {
 		super(e);
