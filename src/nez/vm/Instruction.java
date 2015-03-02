@@ -159,6 +159,16 @@ class IFailSkip extends Instruction {
 	}
 }
 
+class IFailCheckSkip extends IFailSkip {
+	IFailCheckSkip(Expression e) {
+		super(e);
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return sc.opIFailSkip_(this);
+	}
+}
+
 class ICallPush extends Instruction implements StackOperation {
 	Rule rule;
 	public Instruction jump = null;

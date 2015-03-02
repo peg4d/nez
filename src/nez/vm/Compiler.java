@@ -16,9 +16,9 @@ import nez.expr.Expression;
 import nez.expr.Factory;
 import nez.expr.IsIndent;
 import nez.expr.IsSymbol;
+import nez.expr.LeftNew;
 import nez.expr.Link;
 import nez.expr.New;
-import nez.expr.LeftNew;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -195,7 +195,7 @@ public class Compiler {
 				return new RByteMap((ByteMap)inner, next);
 			}
 		}
-		IFailSkip skip = new IFailSkip(p);
+		IFailSkip skip = p.possibleInfiniteLoop ? new IFailCheckSkip(p) : new IFailSkip(p);
 		Instruction start = p.get(0).encode(this, skip);
 		skip.next = start;
 		return new IFailPush(p, next, start);

@@ -9,6 +9,7 @@ import nez.vm.Compiler;
 import nez.vm.Instruction;
 
 public class Repetition extends Unary {
+	public boolean possibleInfiniteLoop = false;
 	Repetition(SourcePosition s, Expression e) {
 		super(s, e);
 	}
@@ -41,6 +42,7 @@ public class Repetition extends Unary {
 		int required = c.required;
 		if(!this.inner.checkAlwaysConsumed(checker, null, null)) {
 			checker.reportError(s, "empty repetition");
+			this.possibleInfiniteLoop = true;
 		}
 		Expression inn = this.inner.checkNodeTransition(checker, c);
 		if(required != NodeTransition.OperationType && c.required == NodeTransition.OperationType) {
