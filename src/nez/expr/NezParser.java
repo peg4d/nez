@@ -4,13 +4,13 @@ import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.AST;
-import nez.ast.Converter;
+import nez.ast.NodeVisitor;
 import nez.ast.Tag;
 import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
 
-public class NezParser extends Converter {
+public class NezParser extends NodeVisitor {
 
 	Grammar loaded;
 	Production product;
@@ -95,7 +95,7 @@ public class NezParser extends Converter {
 //	}
 
 	Expression toExpression(AST po) {
-		return (Expression)this.build(po);
+		return (Expression)this.visit(po);
 	}
 
 	public Expression toNonTerminal(AST ast) {
