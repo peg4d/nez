@@ -114,7 +114,7 @@ public class Choice extends ExpressionList {
 	public final Expression optimize(int option) {
 		if(FlagUtils.is(option, Production.Optimization) && !(this.matcher instanceof ByteMap)) {
 			boolean byteMap[] = new boolean[257];
-			if(isByteMap(option, byteMap)) {
+			if(isByteMap(option, byteMap, 0)) {
 				return Factory.newByteMap(s, byteMap);
 			}
 		}
@@ -145,7 +145,7 @@ public class Choice extends ExpressionList {
 		return this;
 	}
 	
-	private final boolean isByteMap(int option, boolean[] byteMap) {
+	private final boolean isByteMap(int option, boolean[] byteMap, int level) {
 		for(Expression e : this) {
 			e = e.optimize(option);
 			if(e instanceof ByteChar) {
@@ -157,12 +157,12 @@ public class Choice extends ExpressionList {
 				continue;
 			}
 			if(e instanceof Choice) {
-				if(e != this) {
-					if(!((Choice)e).isByteMap(option, byteMap)) {
+				if(level < 8) {
+					if(!((Choice)e).isByteMap(option, byteMap, level+1)) {
 						return false;
 					}
+					continue;
 				}
-				continue;
 			}
 			return false;
 		}
