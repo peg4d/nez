@@ -157,8 +157,10 @@ public class Choice extends ExpressionList {
 				continue;
 			}
 			if(e instanceof Choice) {
-				if(!((Choice)e).isByteMap(option, byteMap)) {
-					return false;
+				if(e != this) {
+					if(!((Choice)e).isByteMap(option, byteMap)) {
+						return false;
+					}
 				}
 				continue;
 			}
