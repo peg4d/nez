@@ -11,7 +11,7 @@ File
     = Document
 
 Document
-    = { (PROLOG)? (MISC* (@Dtd)*  MISC* )+ #doc}
+    = { (PROLOG)? (MISC* (@Dtd)+  MISC* )+ #Doc}
     
     
 PROLOG
@@ -36,48 +36,51 @@ IGNORE
 	= '[' _* 'IGNORE' _* '[' _* IGNORESECT* _* ']]' _*
 
 element
-	= 'ELEMENT' _* {@ElementName _* contentSpec _* #element} _*
+	= 'ELEMENT' _* {@Name _* contentSpec _* #Element} _*
 
 contentSpec
-	=  (@{('EMPTY' / 'ANY') #others } / @TopMember )
+	=  @SpContent / topMember 
 	
+SpContent
+	= {'EMPTY' #Empty} / {'ANY' #Any}
 
-TopMember
-	= { ( ('(' _* @Data _* ')') / @MemberName / @Choice / @Seq) (@Regex)? #member}
+topMember
+	=   ('(' _* @Data _* ')' {@ &'' addQualifier}? ) / @Name / @Choice / @Seq
 	
-Member
-	= {  (@Data / @MemberName / @Choice / @Seq) (@Regex)? #member}
+member
+	=   (@Data / @Name / @Choice / @Seq) 
 
 Choice 
-	= { '(' _* @Member (_* @Or _* @Member)+ _* ')' (@Regex)? #choice}
+	= { '(' _* member (_* OR _* member)+ _* ')'  #Choice}{@ &'' addQualifier}?
 
 Seq 
-	= { '(' _* @Member (_* VS _* @Member)* _* ')' (@Regex)? #seq}
+	= { '(' _* member (_* VS _* member)* _* ')' #Seq} {@ &'' addQualifier}?
+
+addQualifier
+	= 	'+' #OneMore
+		/ '*' #ZeroMore
+		/ '?' #Option 
 
 Data
-	= { '#PCDATA' #data}
+	= { '#PCDATA' #Data}
 	
-Regex
-	= { ( '*' / '+' / '?') #regex}
+
 	
-Or
-	= { _* '|' `/` _* #or}
+OR
+	= _* '|' _* 
 	
-OtherMember
-	= { ('EMPTY' / 'ANY') #others}
-	
-	
+
 attlist
-	= 'ATTLIST' _* {@AttElementName _* (@AttDef)* #attlist} _*
+	= 'ATTLIST' _* {@Name _* (@AttDef)* #Attlist} _*
 
 AttDef
-	= { @AttName _* @AttType _* @DefaultDecl _* #attDef}
+	= { @Name _* @AttType _* @DefaultDecl _* #Def}
 	 
 AttType
-	= { (@{'CDATA' #CDATA} / tokenized / @Enumerated) #attType }
+	= { (@{'CDATA' #CDATA} / tokenized / @Enumerated) #Type }
 
 ATTVAL
-	=('"' (![<&"].)* '"') /  ("\'" (![<&'] .)* "\'")
+	= (![<&"].)*
 
 tokenized
 	= 
@@ -90,23 +93,23 @@ tokenized
 		/ @{'NMTOKEN' #NMTOKEN} 
 
 Enumerated
-	= { '(' _* @{ [-A-Za-z0-9:._%;]* #enumMember } _* ( @Or  @{ [-A-Za-z0-9:._%;]* #enumMember } )*   _* ')'  _* #enum }
+	= { '(' _* @{ [-A-Za-z0-9:._%;]* #enumMember } _* ( OR  @{ [-A-Za-z0-9:._%;]* #EnumMember } )*   _* ')'  _* #Enum }
 	
 DefaultDecl
-	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #default}
+	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #Default}
 	
 DefaultValue
-	= {ATTVAL #defaultValue}
+	= ('"'{ (![<&"].)*#Value} '"') / ('\''{ (![<&"].)*#Value} '\'')
 	
 
 entity
 	= 'ENTITY' _*  (gedecl/pedecl) _*
 
 gedecl
-	= { @EntityName _* entitydef _* #entity}
+	= { @Name _* entitydef _* #Entity}
 
 pedecl
-	= { '%' _* @EntityName _* PEDEF _* #pedecl}
+	= { '%' _* @Name _* PEDEF _* #Pedecl}
 
 entitydef
 	=  @EntityValue / (EXID NDATADECL?)
@@ -115,7 +118,7 @@ PEDEF
 	= STRING / EXID
 
 EntityValue
-	= {'"' (![	"].)* '"'#entityValue}
+	= {'"' (!["].)* '"'#Value}
 
 EXID 
 	= ('SYSTEM' _* SLITERAL)
@@ -133,34 +136,15 @@ PUBIDLITERAL
 PUBLICCHAR
 	=  [a-zA-Z0-9] / [-'()+,./:=?;!*#@$_% ]  / [\xD] / [\xA] 
 
-//Name
-AttName
-	= {NAME #attName}
-	
-ElementName
-	= {NAME #elementName}
-	
-AttElementName
-	= {NAME #attElementName}
-	
-MemberName
-	= {NAME #memberName}
-	
-EntityName
-	= {NAME #entityName}
-	
-DocTypeName
-	= {NAME #docTypeName}
-	
 
 Name
-	= { [A-Za-z:%_] ([-A-Za-z0-9:._%;])*  #name }
+	= { [A-Za-z:%_] ([-A-Za-z0-9:._%;])* #Name } {@ &'' addQualifier}?
 
 NAME
 	=  [A-Za-z:%_] ([-A-Za-z0-9:._%;])*
 
 String
-    =  '"' { ( !'"' . )*  #string } '"'
+    =  '"' { ( !'"' . )*  #String } '"'
     
 STRING
 	=  '"' ( !'"' . )* '"'
