@@ -14,6 +14,7 @@ import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
 import nez.util.UMap;
+import nez.x.RelationCommand;
 
 public class CommandConfigure {
 //	// -X specified
@@ -228,7 +229,7 @@ public class CommandConfigure {
 	}
 
 	private static UMap<Command> commandTable = new UMap<Command>();
-	private static void addCommand(String name, Command com) {
+	public static void addCommand(String name, Command com) {
 		commandTable.put(name, com);
 	}
 
@@ -236,6 +237,7 @@ public class CommandConfigure {
 		addCommand("parse", new ParseCommand());
 		addCommand("check", new CheckCommand());
 		addCommand("peg",   new CheckCommand());
+		addCommand("rel",   new RelationCommand());
 	}
 	
 	public final Command getCommand() {

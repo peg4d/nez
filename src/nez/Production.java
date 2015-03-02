@@ -14,7 +14,7 @@ import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 import nez.vm.MemoTable;
-import nez.x.PEG;
+//import nez.x.PEG;
 
 public class Production {
 	Rule start;
@@ -214,12 +214,12 @@ public class Production {
 
 	}
 
-	public final static void test1() {
-		Grammar peg = PEG.newGrammar();
-		Production p = null;
-		AST node = null;
-		p = peg.getProduction("DIGIT");
-		assert(p.match("1"));
+//	public final static void test1() {
+//		Grammar peg = PEG.newGrammar();
+//		Production p = null;
+//		AST node = null;
+//		p = peg.getProduction("DIGIT");
+//		assert(p.match("1"));
 //		p = peg.getProduction("INT");
 //		assert(p.match("12"));
 //		p = peg.getProduction("EOL");
@@ -238,11 +238,11 @@ public class Production {
 //		p = peg.getProduction("Name");
 //		AST ast = p.parseAST("Uzumaki Naruto");
 //		System.out.println(ast);
-		p = peg.getProduction("Oab");
-		node = p.parseAST("ab");
-		System.out.println(node);
-
-	}
+//		p = peg.getProduction("Oab");
+//		node = p.parseAST("ab");
+//		System.out.println(node);
+//
+//	}
 
 	/* --------------------------------------------------------------------- */
 		

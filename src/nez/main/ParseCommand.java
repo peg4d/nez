@@ -9,6 +9,7 @@ import nez.util.UList;
 
 class ParseCommand extends Command {
 	@Override
+	public
 	void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();
 		Production p = config.getProduction(config.StartingPoint);
@@ -39,6 +40,7 @@ class ParseCommand extends Command {
 
 class CheckCommand extends Command {
 	@Override
+	public
 	void exec(CommandConfigure config) {
 		UList<String> failedInput = new UList<String>(new String[4]);
 		Recorder rec = config.getRecorder();

@@ -22,7 +22,7 @@ public abstract class Command {
 		com.exec(config);
 	}
 
-	abstract void exec(CommandConfigure config);
+	public abstract void exec(CommandConfigure config);
 	
 	public final static void displayVersion() {
 		ConsoleUtils.println(ProgName + "-" + Version + " (" + CodeName + ") on Java JVM-" + System.getProperty("java.version"));
