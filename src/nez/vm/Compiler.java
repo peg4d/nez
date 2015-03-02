@@ -321,7 +321,7 @@ public class Compiler {
 		if(m.contextSensitive) {
 			return new IStateMemoizeFail(e, m);
 		}
-		return new IStateMemoizeFail(e, m);
+		return new IMemoizeFail(e, m);
 	}
 
 	
