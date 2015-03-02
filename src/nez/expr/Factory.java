@@ -313,7 +313,7 @@ public class Factory {
 		if(s != null && isInterned(l)) {
 			s = null;
 		}
-		return internImpl(s, new NewLeftLink(s, l));
+		return internImpl(s, new LeftNew(s, l));
 	}
 	
 	public final static UList<Expression> toSequenceList(Expression e) {

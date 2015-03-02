@@ -51,6 +51,9 @@ public class New extends ExpressionList {
 			return this.removeNodeOperator();
 		}
 		c.required = NodeTransition.OperationType;
+		for(Expression p: this) {
+			p.checkNodeTransition(checker, c);
+		}
 		return this;
 	}
 	@Override

@@ -9,13 +9,13 @@ import nez.util.UList;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class NewLeftLink extends New {
-	NewLeftLink(SourcePosition s, UList<Expression> list) {
+public class LeftNew extends New {
+	LeftNew(SourcePosition s, UList<Expression> list) {
 		super(s, list);
 	}
 	@Override
 	public String getPredicate() { 
-		return "new-left-link";
+		return "leftnew";
 	}
 	@Override
 	public String getInterningKey() {
@@ -28,6 +28,9 @@ public class NewLeftLink extends New {
 			return this.removeNodeOperator();
 		}
 		c.required = NodeTransition.OperationType;
+		for(Expression p: this) {
+			p.checkNodeTransition(checker, c);
+		}
 		return this;
 	}
 	@Override

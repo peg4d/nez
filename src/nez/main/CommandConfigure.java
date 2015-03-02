@@ -25,6 +25,9 @@ public class CommandConfigure {
 	// -p konoha.nez
 	public String GrammarFile = null; // default
 
+	// -e "peg rule"
+	public String GrammarText = null;
+
 	// -e, --expr regular expression
 	public String Expression = null;
 
@@ -57,6 +60,7 @@ public class CommandConfigure {
 	void showUsage(String Message) {
 		ConsoleUtils.println("nez <command> optional files");
 		ConsoleUtils.println("  -p | --peg <filename>      Specify an PEGs grammar file");
+		ConsoleUtils.println("  -e                         Specify an PEGs grammar text");
 		ConsoleUtils.println("  -i | --input <filenames>   Specify input files");
 		ConsoleUtils.println("  -t | --text  <string>      Specify an input text");
 		ConsoleUtils.println("  -o | --output <filename>   Specify an output file");
@@ -83,7 +87,7 @@ public class CommandConfigure {
 		ConsoleUtils.exit(0, Message);
 	}
 	
-	void parseCommandOption(String[] args) {
+	public void parseCommandOption(String[] args) {
 		int index = 0;
 		if(args.length > 0) {
 			if(!args[0].startsWith("-")) {
@@ -110,6 +114,10 @@ public class CommandConfigure {
 			}
 			else if ((argument.equals("-p") || argument.equals("--peg")) && (index < args.length)) {
 				GrammarFile = args[index];
+				index = index + 1;
+			}
+			else if (argument.equals("-e") && (index < args.length)) {
+				GrammarText = args[index];
 				index = index + 1;
 			}
 			else if ((argument.equals("-t") || argument.equals("--text")) && (index < args.length)) {
@@ -256,6 +264,10 @@ public class CommandConfigure {
 			} catch (IOException e) {
 				ConsoleUtils.exit(1, "cannot open " + GrammarFile + "; " + e.getMessage());
 			}
+		}
+		if(GrammarText != null) {
+			NezParser p = new NezParser();
+			return p.load(SourceContext.newStringSourceContext(GrammarText), new GrammarChecker(this.OptimizationLevel));
 		}
 		ConsoleUtils.println("unspecifed grammar");
 		return NezParserCombinator.newGrammar();

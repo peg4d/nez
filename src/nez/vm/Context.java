@@ -428,7 +428,20 @@ public abstract class Context implements Source {
 	
 	public final Instruction opIFailSkip(IFailSkip op) {
 		ContextStack stackTop = contextStacks[failStackTop];
+		if(this.pos == stackTop.pos) {
+			return opIFail();
+		}
+		stackTop.pos = this.pos;
+		stackTop.lastLog = this.lastAppendedLog;
+		return op.next;
+	}
+
+	public final Instruction opIFailSkip_(IFailSkip op) {
+		ContextStack stackTop = contextStacks[failStackTop];
 		assert(stackTop.debugFailStackFlag);
+		if(this.pos == stackTop.pos) {
+			return opIFail();
+		}
 		stackTop.pos = this.pos;
 		stackTop.lastLog = this.lastAppendedLog;
 		assert(stackTop.lastLog != null);

@@ -117,7 +117,7 @@ public class Rule extends Expression {
 		if(t != NodeTransition.Undefined && c.required != t) {
 			checker.reportNotice(s, "invalid naming convention: " + this.name);
 		}
-		this.body = this.body.checkNodeTransition(checker, c);
+		this.body = this.getExpression().checkNodeTransition(checker, c);
 		return this;
 	}
 

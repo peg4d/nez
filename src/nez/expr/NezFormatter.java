@@ -177,7 +177,7 @@ public class NezFormatter extends ExpressionVisitor {
 		sb.append(" }");
 	}
 
-	public void visitNewLeftLink(NewLeftLink e) {
+	public void visitNewLeftLink(LeftNew e) {
 		sb.append("{@ ");
 		this.appendSequence(e);
 		sb.append(" }");
