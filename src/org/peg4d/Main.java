@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import nez.Production;
 import nez.util.ConsoleUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -484,12 +483,6 @@ public class Main {
 		return startPoint;
 	}
 	
-	public final static void nez() {
-		Production.test();
-
-		//peg.dump();
-	}
-
 	private static jline.ConsoleReader ConsoleReader = null;
 
 	private final static String readMultiLine(String prompt, String prompt2) {

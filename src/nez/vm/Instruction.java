@@ -14,6 +14,7 @@ import nez.expr.Replace;
 import nez.expr.Rule;
 import nez.expr.Sequence;
 import nez.expr.Tagging;
+import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 
 public abstract class Instruction {
@@ -88,6 +89,21 @@ public abstract class Instruction {
 		}
 		return result;
 	}
+
+	public static boolean debug(Instruction code, SourceContext sc) {
+		boolean result = false;
+		try {
+			while(true) {
+				ConsoleUtils.println("" + code.id + " " + code);
+				code = code.exec(sc);
+			}
+		}
+		catch (TerminationException e) {
+			result = e.status;
+		}
+		return result;
+	}
+
 }
 
 class IFail extends Instruction implements StackOperation {

@@ -3,7 +3,6 @@ package nez;
 import nez.ast.AST;
 import nez.ast.Node;
 import nez.expr.Expression;
-import nez.expr.NezParserCombinator;
 import nez.expr.NonTerminal;
 import nez.expr.Rule;
 import nez.main.Recorder;
@@ -176,7 +175,12 @@ public class Production {
 		else {
 			Instruction pc = this.compile();
 			s.initJumpStack(64, getMemoTable(s));
-			matched = Instruction.run(pc, s);
+			if(Verbose.Debug) {
+				matched = Instruction.debug(pc, s);
+			}
+			else {
+				matched = Instruction.run(pc, s);
+			}
 			if(matched) {
 				s.newTopLevelNode();
 			}
@@ -184,12 +188,11 @@ public class Production {
 		return matched;
 	}
 
-	
-	public final static void test() {
-		nez.Grammar peg = NezParserCombinator.newGrammar();
-		Production p = null;
-		p = peg.getProduction("DIGIT");
-		assert(p.match("1"));
+//	public final static void test() {
+//		nez.Grammar peg = NezParserCombinator.newGrammar();
+//		Production p = null;
+//		p = peg.getProduction("DIGIT");
+//		assert(p.match("1"));
 //		p = peg.getProduction("INT");
 //		assert(p.match("12"));
 //		p = peg.getProduction("EOL");
@@ -208,11 +211,10 @@ public class Production {
 //		p = peg.getProduction("Name");
 //		AST ast = p.parseAST("Uzumaki Naruto");
 //		System.out.println(ast);
-		p = peg.getProduction("Expr");
-		AST ast = p.parseAST("'a' 'b'");
-		System.out.println(ast);
-
-	}
+//		p = peg.getProduction("Expr");
+//		AST ast = p.parseAST("'a' 'b'");
+//		System.out.println(ast);
+//	}
 
 //	public final static void test1() {
 //		Grammar peg = PEG.newGrammar();
