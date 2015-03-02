@@ -74,9 +74,9 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		return hasReachableFlag(e, flagName, new UMap<String>());
 	}
 
-	final static short Unconsumed = 0;
-	final static short Accept = 1;
-	final static short Reject = 2;
+	public final static short Unconsumed = 0;
+	public final static short Accept = 1;
+	public final static short Reject = 2;
 	public abstract short acceptByte(int ch);
 	
 	public Expression optimize(int option) {
@@ -111,5 +111,9 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 
 	protected abstract int pattern(GEP gep);
 	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);
+
+	public final void visit(ExpressionVisitor visitor) {
+		visitor.visit(this);
+	}
 	
 }

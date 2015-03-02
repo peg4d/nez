@@ -18,7 +18,7 @@ import nez.expr.IsIndent;
 import nez.expr.IsSymbol;
 import nez.expr.Link;
 import nez.expr.New;
-import nez.expr.NewLeftLink;
+import nez.expr.LeftNew;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -364,7 +364,7 @@ public class Compiler {
 		return this.encodeSequence(p, next);
 	}
 
-	public final Instruction encodeLeftNew(NewLeftLink p, Instruction next) {
+	public final Instruction encodeLeftNew(LeftNew p, Instruction next) {
 		if(this.enableASTConstruction()) {
 			return new ILeftNew(p, this.encodeSequence(p, new ICapture(p, next)));
 		}
