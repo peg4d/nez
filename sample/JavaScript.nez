@@ -345,7 +345,7 @@ addPostfixOperator
 
 UnaryExpression
     [example: ++i]
-    = PostfixExpression / { addUnaryOperator _ @UnaryExpression }
+    = PostfixExpression / { addUnaryOperator __ @UnaryExpression }
 
 addUnaryOperator
     = "++"     #PrefixInc
