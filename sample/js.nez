@@ -74,12 +74,18 @@ W
   = [a-zA-Z0-9_]
   / UCHAR
 
+HEX
+    = [A-Fa-f0-9]
+
+DIGIT
+    = [0-9]
+
 UCHAR
-  = '\\u' HEX4
-  / '\\U' HEX4 HEX4
+    = '\\u' HEX4
+    / '\\U' HEX4 HEX4
 
 HEX4
-  = HEX HEX HEX HEX
+    = HEX HEX HEX HEX
 
 //DIGIT
 //  = [0-9]
