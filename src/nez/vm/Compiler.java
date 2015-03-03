@@ -292,7 +292,7 @@ public class Compiler {
 		}
 		if(this.enablePackratParsing()) {
 			Rule r = p.getRule();
-			if(r.isPurePEG()) {
+			if(!this.enableASTConstruction() || r.isPurePEG()) {
 				Expression ref = Factory.resolveNonTerminal(r.getExpression());
 				MemoPoint m = this.issueMemoPoint(ref);
 				if(m != null) {

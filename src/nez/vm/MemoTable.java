@@ -3,6 +3,7 @@ package nez.vm;
 import java.util.HashMap;
 
 import nez.ast.Node;
+import nez.main.Recorder;
 
 public abstract class MemoTable {
 	public abstract MemoTable newMemoTable(long len, int w, int n);
@@ -19,16 +20,6 @@ public abstract class MemoTable {
 		this.CountUsed = 0;
 		this.CountInvalidated = 0;
 	}
-
-//	protected void stat(NezLogger stat) {
-//		stat.setText("Memo", this.getClass().getSimpleName());
-//		stat.setCount("MemoUsed",    this.MemoUsed);
-//		stat.setCount("MemoConflicted",  this.MemoStateConflicted);
-//		stat.setCount("MemoStored",  this.MemoStored);
-//		stat.setRatio("Used/Stored", this.MemoUsed, this.MemoStored);
-//		stat.setRatio("Conflicted/Stored", this.MemoStateConflicted, this.MemoStored);
-//		stat.setRatio("HitRatio",    this.MemoUsed, this.MemoMissed);
-//	}
 	
 	public static MemoTable newNullTable(long len, int w, int n) {
 		return new NullTable(len, w, n);
@@ -40,6 +31,12 @@ public abstract class MemoTable {
 
 	public static MemoTable newPackratHashTable(int len, int w, int n) {
 		return new PackratHashTable(len, w, n);
+	}
+	public void record(Recorder rec) {
+		rec.setText("M.TableType", this.getClass().getSimpleName());
+		rec.setCount("M.MemoStored", this.CountStored);
+		rec.setRatio("M.MemoHit", this.CountUsed, this.CountStored);
+		rec.setCount("M.Invalidated", this.CountInvalidated);
 	}
 	
 }
@@ -97,6 +94,7 @@ class ElasticTable extends MemoTable {
 		long key = longkey(pos, memoPoint, shift);
 		int hash =  (int)(key % memoArray.length);
 		MemoEntryKey m = this.memoArray[hash];
+		m.key = key;
 		m.failed = failed;
 		m.result = result;
 		m.consumed = consumed;

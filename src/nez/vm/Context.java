@@ -277,7 +277,6 @@ public abstract class Context implements Source {
 		Instruction jump;
 		long pos;
 		int  prevFailTop;
-		//DataLog newPoint;
 		DataLog lastLog;
 	}
 	
@@ -298,6 +297,7 @@ public abstract class Context implements Source {
 		this.failStackTop = 0;
 		this.usedStackTop = 1;
 		this.memoTable = memoTable;
+		//Verbose.println("MemoTable: " + this.memoTable.getClass().getSimpleName());
 	}
 
 	private ContextStack newUnusedStack() {
@@ -745,6 +745,7 @@ public abstract class Context implements Source {
 	public final void done(Recorder rec) {
 		if(rec != null) {
 			this.prof.parsed(rec, this.getPosition());
+			this.memoTable.record(rec);
 		}
 	}
 
