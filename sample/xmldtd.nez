@@ -45,10 +45,10 @@ SpContent
 	= {'EMPTY' #Empty} / {'ANY' #Any}
 
 topMember
-	=   ('(' _* @Data _* ')' {@ &'' addQualifier}? ) / @Name / @Choice / @Seq
+	=   ('(' _* @Data _* ')' {@ &'' addQualifier}? ) / @ElName / @Choice / @Seq
 	
 member
-	=   (@Data / @Name / @Choice / @Seq) 
+	=   (@Data / @ElName / @Choice / @Seq) 
 
 Choice 
 	= { '(' _* member (_* OR _* member)+ _* ')'  #Choice}{@ &'' addQualifier}?
@@ -74,10 +74,10 @@ attlist
 	= 'ATTLIST' _* {@Name _* (@AttDef)* #Attlist} _*
 
 AttDef
-	= { @Name _* @AttType _* @DefaultDecl _* #Def}
+	= { @Name _* attType _* defaultDecl _* #Def}
 	 
-AttType
-	= { (@{'CDATA' #CDATA} / tokenized / @Enumerated) #Type }
+attType
+	=  @{'CDATA' #CDATA} / tokenized / @Enumerated
 
 ATTVAL
 	= (![<&"].)*
@@ -95,8 +95,8 @@ tokenized
 Enumerated
 	= { '(' _* @{ [-A-Za-z0-9:._%;]* #enumMember } _* ( OR  @{ [-A-Za-z0-9:._%;]* #EnumMember } )*   _* ')'  _* #Enum }
 	
-DefaultDecl
-	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #Default}
+defaultDecl
+	=  @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} /  @{'#FIXED' _* @DefaultValue #FIXED} / @DefaultValue 
 	
 DefaultValue
 	= ('"'{ (![<&"].)*#Value} '"') / ('\''{ (![<&"].)*#Value} '\'')
@@ -109,7 +109,7 @@ gedecl
 	= { @Name _* entitydef _* #Entity}
 
 pedecl
-	= { '%' _* @Name _* PEDEF _* #Pedecl}
+	= { '%' _* NAME _* PEDEF _* #Pedecl}
 
 entitydef
 	=  @EntityValue / (EXID NDATADECL?)
@@ -118,7 +118,7 @@ PEDEF
 	= STRING / EXID
 
 EntityValue
-	= {'"' (!["].)* '"'#Value}
+	= {'"' (!["].)* '"'#EntValue}
 
 EXID 
 	= ('SYSTEM' _* SLITERAL)
@@ -137,9 +137,12 @@ PUBLICCHAR
 	=  [a-zA-Z0-9] / [-'()+,./:=?;!*#@$_% ]  / [\xD] / [\xA] 
 
 
-Name
-	= { [A-Za-z:%_] ([-A-Za-z0-9:._%;])* #Name } {@ &'' addQualifier}?
+ElName
+	= { [A-Za-z:%_] ([-A-Za-z0-9:._%;])* #ElName } {@ &'' addQualifier}?
 
+Name
+	= { [A-Za-z:%_] ([-A-Za-z0-9:._%;])* #Name }
+	
 NAME
 	=  [A-Za-z:%_] ([-A-Za-z0-9:._%;])*
 

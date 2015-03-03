@@ -8,7 +8,10 @@ import nez.expr.Factory;
 import nez.util.UList;
 
 public class DTDConverter extends NodeVisitor {
+	//	int AttID = 0;
+	//	int DefCount = 0;
 	
+
 	Grammar grammar;
 	DTDConverter(Grammar grammar) {
 		this.grammar = grammar;
@@ -23,33 +26,35 @@ public class DTDConverter extends NodeVisitor {
 
 	public void visitElement(AST node) {
 		System.out.println("DEBUG? " + node);
-		String name = node.textAt(0, "");
+		String name = "El_" + node.textAt(0, "");
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
-
 
 	public void visitAttlist(AST node) {
 		System.out.println("DEBUG? " + node);
 		String name = node.textAt(0, "");
+		//		AttID++;
+		//		DefCount = 0;
 		for (AST subnode : node) {
 			this.visit("visit", subnode);
 		}
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
+	//attlist = 'ATTLIST' _* {@Name _* (@Def)* #Attlist} _*
 
 	public void visitDef(AST node) {
 		System.out.println("DEBUG? " + node);
-		String name = node.textAt(0, "");
-		grammar.defineRule(node, name, toExpression(node.get(1)));
+		//		String name = "AD_" + AttID + "_" + DefCount++;
+		//		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
-
+	//Def = { @Name _* @Type _* @DefaultDecl _* #Def}
 
 	public void visitEntity(AST node) {
 		System.out.println("DEBUG? " + node);
 		String name = node.textAt(0, "");
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
-
+	//Entity = { @Name @EntityValue #Entity}
 	
 	private Expression toExpression(AST node) {
 		return (Expression)this.visit("to", node);
@@ -70,12 +75,24 @@ public class DTDConverter extends NodeVisitor {
 		return Factory.newSequence(node, l);
 	}
 
+	public Expression toZeroMore(AST node) {
+		return Factory.newRepetition(node, toExpression(node.get(0)));
+	}
+
 	public Expression toChoice(AST node) {
-		return null;
+		UList<Expression> l = new UList<Expression>(new Expression[node.size()]);
+		for (AST subnode : node) {
+			Factory.addChoice(l, toExpression(subnode));
+		}
+		return Factory.newChoice(node, l);
 	}
 
 	public Expression toSeq(AST node) {
-		return null;
+		UList<Expression> l = new UList<Expression>(new Expression[node.size()]);
+		for (AST subnode : node) {
+			Factory.addSequence(l, toExpression(subnode));
+		}
+		return Factory.newSequence(node, l);
 	}
 
 	public Expression toID(AST node) {
@@ -122,8 +139,21 @@ public class DTDConverter extends NodeVisitor {
 		return null;
 	}
 
+	public Expression toEntValue(AST node) {
+		String replaceString = "&" + node.textAt(0, "") + ";";
+		return Factory.newString(node, replaceString);
+	}
+
 	public Expression toName(AST node) {
 		return null;
+	}
+
+	public Expression toElName(AST node) {
+		String elementName = "El_" + node.textAt(0, "");
+		return Factory.newNonTerminal(node, grammar, elementName);
+	}
+	public Expression toData(AST node) {
+		return Factory.newNonTerminal(node, grammar, "PCdata");
 	}
 
 }
