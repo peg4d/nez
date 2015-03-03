@@ -16,6 +16,7 @@ import nez.expr.Sequence;
 import nez.expr.Tagging;
 import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
+import nez.util.UList;
 
 public abstract class Instruction {
 	protected Expression  e;
@@ -92,9 +93,20 @@ public abstract class Instruction {
 
 	public static boolean debug(Instruction code, SourceContext sc) {
 		boolean result = false;
+		String u = "Start";
+		UList<String> stack = new UList<String>(new String[128]);
+		stack.add("Start");
 		try {
 			while(true) {
-				ConsoleUtils.println("" + code.id + " " + code);
+				if(code instanceof ICallPush) {
+					stack.add(u);
+					u = ((ICallPush)code).rule.getLocalName();
+				}
+				if(code instanceof IRet) {
+					u = stack.ArrayValues[stack.size()-1];
+					stack.clear(stack.size()-1);
+				}
+				ConsoleUtils.println(u + "(" + sc.getPosition() + ")  " + code.id + " " + code);
 				code = code.exec(sc);
 			}
 		}
