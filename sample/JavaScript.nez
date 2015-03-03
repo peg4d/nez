@@ -1,0 +1,650 @@
+/*
+
+  Nez JavaScript Grammar
+
+  Based on grammar from ECMA-262[1] and javascript.pegjs[2]
+
+  [1] http://www.ecma-international.org/publications/standards/Ecma-262.htm
+  [2] https://github.com/dmajda/pegjs/blob/master/examples/javascript.pegjs
+
+  Authors:
+    Tetsuro Matsumura (https://github.com/tetsurom/)
+    Sudo Takeru (https://github.com/takerusu)
+    Kensuke Tamura (https://github.com/kensuketamura)
+
+*/
+
+File
+    = { (__ @SourceElement)* __ #Source }
+
+Chunk
+    = { (__ @SourceElement)* __ #Source }
+
+SPACE
+    = [\t\v\f \u00A0\uFEFF]
+
+// Space including line terminator
+__
+    [example: /* comment*/]
+    [example: //comment
+]
+    = (SPACE / LINE_TERMINATOR_SEQUENCE / COMMENT)*
+
+// Space without line terminator
+_
+    = (SPACE / MULTI_LINE_COMMENT_SINGLE_LINE)*
+
+LINE_TERMINATOR
+    = [\n\r\u2028\u2029]
+
+LINE_TERMINATOR_SEQUENCE
+    = '\n' / '\r\n' / '\r'
+
+COMMENT
+    = MULTI_LINE_COMMENT / SINGLE_LINE_COMMENT
+
+MULTI_LINE_COMMENT
+    = '/*' (!'*/' .)* '*/'
+
+MULTI_LINE_COMMENT_SINGLE_LINE
+    = '/*' (!('*/' / LINE_TERMINATOR) .)* '*/'
+
+SINGLE_LINE_COMMENT
+    = '//' (!LINE_TERMINATOR .)*
+
+Identifier
+    = !KEYWORD IdentifierName
+
+IdentifierName
+    = { IDENTIFIER_START IDENTIFIER_PART* #Name }
+
+IDENTIFIER_START
+    = [a-zA-Z$_]
+    / UCHAR
+
+IDENTIFIER_PART
+    = IDENTIFIER_START
+//    / UnicodeCombiningMark
+    / DIGIT
+//    / UnicodeConnectorPunctuation
+//    / "\u200C"
+//    / "\u200D"
+
+W
+  = [a-zA-Z0-9_]
+  / UCHAR
+
+HEX
+    = [A-Fa-f0-9]
+
+DIGIT
+    = [0-9]
+
+UCHAR
+    = '\\u' HEX4
+    / '\\U' HEX4 HEX4
+
+HEX4
+    = HEX HEX HEX HEX
+
+//DIGIT
+//  = [0-9]
+
+//Automatic Semicolon Insertion
+
+EOS
+    = __ ';'
+    / _ SINGLE_LINE_COMMENT? LINE_TERMINATOR_SEQUENCE
+    / _ &'}'
+    / __ EOF
+
+EOF
+    = !.
+
+//Operator
+//==========
+
+"&"   = '&' !'&'
+"*"   = '*' !'='
+"+"   = '+' ![+=]
+"-"   = '-' ![-=>]
+"!"   = '!' !'='
+":"    = ':' ![>]
+"/"    = '/' !'='
+"%"    = '%' ![=>]
+"<<"  = '<<' !'='
+">>"  = '>>' ![=>]
+"<"    = '<' ![=]
+">"    = '>' ![=]
+"=="  = '==' ![=]
+"!="  = '!=' ![=]
+"^"    = '^' ![=]
+"|"    = '|' ![=]
+"="    = '=' ![=]
+"break" = 'break' !W
+"case" = 'case' !W
+"catch" = 'catch' !W
+"continue" = 'continue' !W
+"debugger" = 'debugger' !W
+"default" = 'default' !W
+"delete" = 'delete' !W
+"do" = 'do' !W
+"else" = 'else' !W
+"finally" = 'finally' !W
+"for" = 'for' !W
+"function" = 'function' !W
+"if" = 'if' !W
+"in" = 'in' !W
+"instanceof" = 'instanceof' !W
+"new" = 'new' !W
+"return" = 'return' !W
+"switch" = 'switch' !W
+"this" = 'this' !W
+"throw" = 'throw' !W
+"try" = 'try' !W
+"typeof" = 'typeof' !W
+"var" = 'var' !W
+"void" = 'void' !W
+"while" = 'while' !W
+"with" = 'with' !W
+"class" = 'class' !W
+"enum" = 'enum' !W
+"export" = 'export' !W
+"extends" = 'extends' !W
+"import" = 'import' !W
+"super" = 'super' !W
+"implements" = 'implements' !W
+"interface" = 'interface' !W
+"let" = 'let' !W
+"package" = 'package' !W
+"private" = 'private' !W
+"protected" = 'protected' !W
+"public" = 'public' !W
+"static" = 'static' !W
+"yield" = 'yield' !W
+"get" = 'get' !W
+"set" = 'set' !W
+"undefined" = 'undefined' !W
+"null" = 'null' !W
+"true" = 'true' !W
+"false" = 'false' !W
+
+KEYWORD
+    = "break" / "case" / "catch" / "continue" / "debugger" / "default" / "delete" / "do"
+    / "else" / "finally" / "for" / "function" / "if" / "in" / "instanceof" / "new"
+    / "return" / "switch" / "this" / "throw" / "try" / "typeof" / "var" / "void"
+    / "while" / "with" / "class" / "enum" / "export" / "extends" / "import" / "super"
+    / "implements" / "interface" / "let" / "package" / "private" / "protected" / "public"
+    / "static" / "yield" / "null" / "true" / "false"
+
+//Expression
+//==========
+
+Untyped
+    = { `Untyped` #Untyped }
+
+ThisExpression
+    = { "this" #This }
+
+PrimaryExpression
+    = ThisExpression
+    / Identifier
+    / Literal
+    / ArrayLiteral
+    / ObjectLiteral
+    / '(' __ Expression __ ')'
+
+ArrayLiteral
+    [example:[]]
+    [example:[,,,]]
+    [example:[1,2,3]]
+    [example:[1,2,3,]]
+    [example:[,1,2,3,]]
+    [example:[, 1 , 2 , 3 ,]]
+    = {'[' __ ( (addElisionList __)? ']'  
+       / addElementList addArrayDelimitor? __ ']' ) #Array }
+
+addArrayDelimitor
+    = __ ',' __ (addElisionList __)?
+
+addElementList
+    = (addElisionList __)? @AssignmentExpression ( addArrayDelimitor @AssignmentExpression )*
+
+addElisionList
+    = @ElisionExpression (__ @ElisionExpression)*
+
+ElisionExpression
+    = ',' { #Undefined }
+
+ObjectLiteral
+    [example:{}]
+    [example:{ a: 1, b: 2}]
+    = { '{' __ ( addPropertyList __ (',' __)? )? '}' #Object }
+
+addPropertyList
+    = @PropertyAssignment (__ ',' __ @PropertyAssignment)*
+
+PropertyAssignment
+    [example: a: 1]
+    [example: count: function(){ return n; }]
+    [example: get a(){ return _a; }]
+    [example: set a(val){ _a = val; }]
+    = { @PropertyName __ ':' __ @AssignmentExpression #Property }
+    / { "get" __ @PropertyName __ '(' __ ')' __ @FunctionBody #Getter }
+    / { "set" __ @PropertyName __ '(' __ @Identifier __ ')' __ @FunctionBody #Setter }
+
+PropertyName
+    = IdentifierName
+    / StringLiteral
+    / NumericLiteral
+
+NewExpressionWithArgs
+    [example: new Klass()]
+    [example: new Klass(1)]
+    = { "new" __ @MemberExpression __ @Arguments #New }
+
+ReceiverExpression
+    [example: new Klass()]
+    = PrimaryExpression / FunctionExpression / NewExpressionWithArgs
+
+MemberExpression
+    [example:a.b.c.d]
+    [example:a.b[0]]
+    [example:a.b[0][0]]
+    = ReceiverExpression {@ __ addMemberOperator }*
+
+addMemberOperator
+    = '.' __ @IdentifierName #Field
+    / '[' __ @Expression __ ']' #Index
+
+NewExpression
+    [example: new Klass]
+    = MemberExpression / { "new" __ @NewExpression #New }
+
+CallExpression
+    [example:func()]
+    [example:func(1)]
+    [example:func(1,2,3)]
+    [example:func(1,2,3).a]
+    [example:func(1,2,3)[0]]
+    [example:func(1,2,3).a.b.c(2)[1].s]
+    = MemberExpression {@ __ addCallOrMemberOperator }*
+
+addCallOrMemberOperator
+    = '.' __ @IdentifierName #Field
+    / @Arguments #Apply
+    / '[' __ @Expression __ ']' #Index
+
+Arguments
+    = { '(' __ (addArgumentList __)? ')' #List }
+
+addArgumentList
+    = @AssignmentExpression (__ ',' __ @AssignmentExpression)*
+
+LeftHandSideExpression
+    = CallExpression
+    / NewExpression
+ 
+PostfixExpression
+    = { @LeftHandSideExpression _ addPostfixOperator }
+    / LeftHandSideExpression
+
+addPostfixOperator
+    = "++" #SuffixInc / "--" #SuffixDec
+
+UnaryExpression
+    [example: ++i]
+    = PostfixExpression / { addUnaryOperator _ @UnaryExpression }
+
+addUnaryOperator
+    = "++"     #PrefixInc
+    / "--"     #PrefixDec
+    / "+"      #Plus
+    / "-"      #Minus
+    / "~"      #BitwiseNot
+    / "!"      #LogicalNot
+    / "delete" #DeleteProperty
+    / "void"   #VoidExpression
+    / "typeof" #TypeOf
+
+MultiplicativeExpression
+    = UnaryExpression {@ __ ( "*" #Mul / "/" #Div / "%" #Mod ) __ @UnaryExpression }*
+
+AdditiveExpression
+    = MultiplicativeExpression {@ __ ( "+" #Add / "-" #Sub ) __ @MultiplicativeExpression }*
+  
+ShiftExpression
+    = <with InOperator AdditiveExpression {@ __ addShiftOperator __ @AdditiveExpression }* >
+
+addShiftOperator
+    = "<<" #LeftShift 
+    / '>>' ('>' #LogicalRightShift / !'=' #RightShift)
+
+RelationalExpression
+    = ShiftExpression {@ __ addRelationalOperator __ @ShiftExpression }*
+
+addRelationalOperator
+    = '<' ('=' #LessThanEquals / #LessThan)
+    / '>' ('=' #GreaterThanEquals / #GreaterThan)
+    / "instanceof" #StringInstanceOf
+    / <if InOperator> "in" #HashIn
+  
+EqualityExpression
+    = RelationalExpression {@ __ addEqualityOperator __ @RelationalExpression }*
+
+addEqualityOperator
+    = '==' ('=' #StrictEquals / #Equals)
+    / '!=' ('=' #StrictNotEquals / #NotEquals)
+
+BitwiseANDExpression
+    = EqualityExpression {@ __ "&" __ @EqualityExpression #BitwiseAnd }*
+
+BitwiseXORExpression
+    = BitwiseANDExpression {@ __ "^" __ @BitwiseANDExpression #BitwiseXor }*
+
+BitwiseORExpression
+    = BitwiseXORExpression {@ __ "|" __ @BitwiseXORExpression #BitwiseOr }*
+
+LogicalANDExpression
+    = BitwiseORExpression {@ __ "&&" __ @BitwiseORExpression #LogicalAnd }*
+
+LogicalORExpression
+    = LogicalANDExpression {@ __ "||" __ @LogicalANDExpression #LogicalOr }*
+  
+ConditionalExpression
+    = LogicalORExpression {@ __ '?' __ <with InOperator @AssignmentExpression> __ ':' __ @AssignmentExpression #Conditional }*
+
+AssignmentExpression
+    = { <with InOperator @LeftHandSideExpression> __ addAssignmentOperator __ @AssignmentExpression }
+    / ConditionalExpression
+
+addAssignmentOperator
+    = '='   #Assign
+    / '*='  #AssignMul
+    / '/='  #AssignDiv
+    / '%='  #AssignMod
+    / '+='  #AssignAdd
+    / '-='  #AssignSub
+    / '<<=' #AssignLeftShift
+    / '>>' ('=' #AssignRightShift / '>=' #AssignLogicalRightShift)
+    / '&='  #AssignBitwiseAnd
+    / '^='  #AssignBitwiseXOr 
+    / '|='  #AssignBitwiseOr
+
+Expression
+    = AssignmentExpression {@ __ ',' __ @AssignmentExpression #Comma }*
+
+//Statement
+//==========
+
+Statement
+    = Block
+    / EmptyStatement
+    / VariableStatement
+    / IfStatement
+    / DoWhileStatement
+    / WhileStatement
+    / ForStatement
+    / ForEachStatement
+    / ContinueStatement
+    / BreakStatement
+    / ReturnStatement
+    / WithStatement
+    / LabelledStatement
+    / SwitchStatement
+    / ThrowStatement
+    / TryStatement
+    / DebuggerStatement
+    / ExpressionStatement
+
+Block
+    [example:{}]
+    [example:{;}]
+    = FunctionBody
+
+VariableStatement
+    [example: var a = 0, b, c = 1 + 3;]
+    = { "var" __ @[2]VariableDeclarationList EOS #VarDeclStmt }
+
+VariableDeclarationList
+    = { @VariableDeclaration (__ ',' __ @VariableDeclaration)* #List }
+
+VariableDeclaration
+    = { @Identifier (__ addInitialiser)? #VarDecl }
+
+addInitialiser
+    = '=' __ @AssignmentExpression
+
+EmptyStatement
+    = { ';' #Empty }
+
+ExpressionStatement
+    [example: (function(){})();]
+    = !('{' / "function") Expression EOS
+
+IfStatement
+    [example:if(1 + 1){;}]
+    = { 'if' __ addCondition __ @Statement (__ "else" __ @Statement)? #If }
+
+DoWhileStatement
+    [example:do{;}while(2 > 1)]
+    = { "do" __ @Statement __ 'while' __ addCondition EOS #DoWhile }
+
+WhileStatement
+    [example:while(1){;}]
+    = { 'while' __ addCondition __ @Statement #While }
+
+addCondition
+    = '(' __ @Expression __ ')'
+
+ForStatement
+    [example:for(;;);]
+    [example:for(i=0;i<5;);]
+    [example:for(;i<5;);]
+    [example:for(i=0;i<5;i++);]
+    [example:for(var i=0;i<5;i++);]
+    = { 'for' __ '(' __ addForStatementPart __ ')' __ @[3]Statement #For }
+
+addForStatementPart
+    = "var" __ <without InOperator @[0]VariableDeclarationList > __ ';' __ (@[1]Expression)? __ ';' __ (@[2]Expression)?
+    / <without InOperator @[0]Expression >? __ ';' __ (@[1]Expression)? __ ';' __ (@[2]Expression)?
+
+ForEachStatement
+    [example:for(k in array);]
+    [example:for(var k in array){ i += 1;}]
+    = { 'for' __ '(' __ addForEachPart __ ')' __ @Statement #JSForeach }
+
+addForEachPart
+    = "var" __ <without InOperator @VariableDeclarationList> __ "in" __ @Expression
+    / @LeftHandSideExpression __ "in" __ @Expression
+
+ContinueStatement
+    [example: continue;]
+    [example: continue label;]
+    = { "continue" (_ @Identifier)? EOS #Continue }
+
+BreakStatement
+    [example: break;]
+    [example: break label;]
+    = { "break" (_ @Identifier)? EOS #Break }
+
+ReturnStatement
+    [example: return;]
+    [example: return 1;]
+    = { "return" (_ @Expression)? EOS #Return }
+
+WithStatement
+    [example: with(a) { a.f(); }]
+    = { 'with' __ addCondition __ @Statement #With }
+
+SwitchStatement
+    [example: switch(n) { case 0: break; case 1: return 0; default: throw 0; }]
+    = { 'switch' __ addCondition __ @CaseBlock #Switch }
+
+CaseBlock
+    = { '{' __ addCaseClauses? __ '}' #CaseBlock }
+
+addCaseClauses
+    = @CaseClause (__ @CaseClause)*
+
+CaseClause
+    [example: case 2: break;]
+    [example: default: break;]
+    = { "case" __ @Expression __ ':' __ (@Statement __)* #Case }
+    / { 'default' __ ':' __ (@Statement __)* #Default }
+
+LabelledStatement
+    [example: label: var a = 1;]
+    = { @Identifier __ ':' __ @Statement #Label }
+
+ThrowStatement
+    [example: throw new Error()]
+    = { "throw" _ @Expression EOS #Throw }
+
+TryStatement
+    [example: try{}finally{}]
+    [example: try{}catch(e){}]
+    [example: try{}catch(e){}finally{}]
+    = { "try" __ @[0]Block __ ( @[1]Catch (__ addFinally)?
+                              / addFinally ) #Try }
+
+Catch
+    [example: catch(e){}]
+    = { @{ 'catch' __ '(' __ @Identifier __ ')' __ @Block #Catch } #List }
+
+addFinally
+    [example: finally{}]
+    = "finally" __ @[2]Block
+
+DebuggerStatement
+    = "debugger" EOS { #Debugger }
+
+//Program
+//==========
+
+FunctionDeclaration
+    [example: function func(){}]
+    [example: function func(n){ return n+1; }]
+    = { "function" __ @[2]Identifier __ @[4]FormalParameterList __ @[6]FunctionBody #FuncDecl }
+
+FunctionExpression
+    [example: function func(){}]
+    [example: function (){}]
+    = { "function" __ (@[2]Identifier __)? @[4]FormalParameterList __ @[6]FunctionBody #FuncDecl }
+
+FormalParameterList
+    = '(' __ { ( @Identifier (__ ',' __ @Identifier)* )? #List } __ ')'
+
+FunctionBody
+    = '{' { (__ @SourceElement)* #Block } __ '}'
+
+SourceElement
+    = Statement
+    / FunctionDeclaration
+
+//Literal
+//==========
+Literal
+    = NullLiteral / BooleanLiteral / NumericLiteral / StringLiteral / RegularExpressionLiteral
+
+NullLiteral
+    [example: null]
+    = { "null" #Null }
+
+BooleanLiteral
+    [example: true]
+    = { "true" #True }
+    / { "false" #False }
+
+NumericLiteral
+    [example: 0x1F]
+    [example: 0123]
+    [example: 0.12]
+    [example: 1234]
+    = HexIntegerLiteral / FloatingPointLiteral / OctaIntegerLiteral / DecimalIntegerLiteral
+
+DecimalIntegerLiteral
+    [example: 123]
+    = { DECIMAL_INTEGER #Integer }
+
+OctaIntegerLiteral
+    [example: 0]
+    [example: 012]
+    = { '0' OCT* #OctalInteger }
+
+HexIntegerLiteral
+    [example: 0xa12]
+    = { '0' [xX] HEX* #HexInteger }
+
+FloatingPointLiteral
+    [example: 12.456]
+    [example: 12.456e-78]
+    [example: 0.12]
+    [example: .12]
+    [example: .12]
+    [example: .12e3]
+    [example: 5e3]
+    = { DECIMAL_INTEGER? '.' DIGIT+ EXPONENT_PART? #Double }
+    / { DECIMAL_INTEGER EXPONENT_PART #Double }
+
+DECIMAL_INTEGER
+    = [1-9] DIGIT* / '0'
+
+EXPONENT_PART
+    = [eE] SIGN? DECIMAL_INTEGER
+
+OCT
+    = [0-7]
+
+SIGN
+    = ( '+' / '-' )
+
+StringLiteral
+    = ["] { DOUBLE_STRING_CHARACTER* #String } ["]
+    / ['] { SINGLE_STRING_CHARACTER* #String } [']
+
+DOUBLE_STRING_CHARACTER
+    = !( ["] / '\\' / LINE_TERMINATOR ) . / '\\' ESCAPE_SEQUENCE
+
+SINGLE_STRING_CHARACTER
+    = !( ['] / '\\' / LINE_TERMINATOR ) . / '\\' ESCAPE_SEQUENCE
+
+ESCAPE_SEQUENCE
+    = '\\' / ["'bfnrtv] / OCTA_ESCAPE_SEQUENCE / HEX_ESCAPE_SEQUENCE / UNICODE_ESCAPE_SEQUUENCE / LINE_TERMINATOR_SEQUENCE / .
+
+OCTA_ESCAPE_SEQUENCE
+    = OCT OCT OCT
+
+HEX_ESCAPE_SEQUENCE
+    = [xX] HEX HEX
+
+UNICODE_ESCAPE_SEQUUENCE
+    = [uU] HEX4
+
+RegularExpressionLiteral
+    [example: /.*(?=#[^\s]*$)/]
+    = { '/' REGEX_BODY '/' REGEX_FLAGS #RegularExp }
+
+REGEX_BODY
+    = REGEX_FIRST_CHAR REGEX_CHAR*
+
+REGEX_FIRST_CHAR
+    = REGEX_BACKSLASH_SEQUENCE / ![*\\/\x5b] REGEX_NON_TERMINATOR / REGEX_CLASS
+
+REGEX_CHAR
+    = '*' / REGEX_FIRST_CHAR
+
+REGEX_BACKSLASH_SEQUENCE
+    = '\\' REGEX_NON_TERMINATOR
+
+REGEX_NON_TERMINATOR
+    = !LINE_TERMINATOR .
+
+REGEX_CLASS
+    = '[' REGEX_CLASS_CHAR* ']'
+
+REGEX_CLASS_CHAR
+    = ![\x5d\\] REGEX_NON_TERMINATOR / REGEX_BACKSLASH_SEQUENCE
+
+REGEX_FLAGS
+    = [gimsy]*
