@@ -106,6 +106,10 @@ public abstract class Instruction {
 
 }
 
+interface StackOperation {
+
+}
+
 class IFail extends Instruction implements StackOperation {
 	IFail(Expression e) {
 		super(e, null);
