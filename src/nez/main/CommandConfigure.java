@@ -287,6 +287,10 @@ public class CommandConfigure {
 		return null;
 	}
 
+	public final String getOutputFileName() {
+		return this.OutputFileName;
+	}
+
 	public String RecorderFileName = null;
 
 	public final Recorder getRecorder() {

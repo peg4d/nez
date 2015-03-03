@@ -9,11 +9,10 @@ import nez.expr.Expression;
 import nez.expr.Rule;
 import nez.util.FileBuilder;
 import nez.util.UList;
-import nez.vm.Instruction;
 
 public class GrammarGenerator {
 	final protected FileBuilder file;
-	GrammarGenerator(String fileName) {
+	public GrammarGenerator(String fileName) {
 		this.file = new FileBuilder(fileName);
 	}
 	HashMap<Class<?>, Method> methodMap = new HashMap<Class<?>, Method>();
@@ -44,7 +43,7 @@ public class GrammarGenerator {
 		if(m == null) {
 			String name = method + c.getSimpleName();
 			try {
-				m = this.getClass().getMethod(name, Instruction.class);
+				m = this.getClass().getMethod(name, c);
 			} catch (NoSuchMethodException e) {
 				return null;
 			} catch (SecurityException e) {
@@ -56,11 +55,26 @@ public class GrammarGenerator {
 	}
 	
 	public void generate(Grammar grammar) {
-		UList<Rule> list = grammar.getRuleList();
+		makeHeader();
+		UList<Rule> list = grammar.getDefinedRuleList();
 		for(Rule r: list) {
-			file.writeIndent(r.toString());
+			visitRule(r);
 		}
+		makeFooter();
 		file.writeNewLine();
 		file.flush();
 	}
+
+	public void makeHeader() {
+		file.write("// Nez File");
+	}
+	
+	public void visitRule(Rule r) {
+		file.writeIndent(r.toString());
+	}
+
+	public void makeFooter() {
+
+	}
+
 }
