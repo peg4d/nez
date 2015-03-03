@@ -2,42 +2,58 @@ package nez.vm;
 
 import nez.expr.Expression;
 
-public class MemoPoint {
-	final int id;
-	final Expression e;
+public final class MemoPoint {
+	public final int id;
+	public final String label;
+	public final Expression e;
 	final boolean contextSensitive;
 
-	int memoHit = 0;
+	int  memoHit = 0;
+	int  memoFailHit = 0;
 	long hitLength = 0;
 	int  maxLength = 0;
-	int memoMiss = 0;
+	int  memoMiss = 0;
 	
-	MemoPoint(int id, Expression e, boolean contextSensitive) {
+	MemoPoint(int id, String label, Expression e, boolean contextSensitive) {
 		this.id = id;
+		this.label = label;
 		this.e = e;
 		this.contextSensitive = contextSensitive;
 	}
 	
-	void hit(int consumed) {
+	void memoHit(int consumed) {
 		this.memoHit += 1;
 		this.hitLength += consumed;
 		if(this.maxLength < consumed) {
 			this.maxLength = consumed;
 		}
 	}
+
+	void failHit() {
+		this.memoFailHit += 1;
+	}
+
+	void miss() {
+		this.memoMiss ++;
+	}
 	
-	final double ratio() {
-		if(this.memoMiss == 0.0) return 0.0;
+	public final double hitRatio() {
+		if(this.memoMiss == 0) return 0.0;
 		return (double)this.memoHit / this.memoMiss;
 	}
 
-	final double length() {
+	public final double failHitRatio() {
+		if(this.memoMiss == 0) return 0.0;
+		return (double)this.memoFailHit / this.memoMiss;
+	}
+
+	public final double meanLength() {
 		if(this.memoHit == 0) return 0.0;
 		return (double)this.hitLength / this.memoHit;
 	}
 
-	final int count() {
-		return this.memoMiss + this.memoHit;
+	public final int count() {
+		return this.memoMiss + this.memoFailHit + this.memoHit;
 	}
 
 	protected final boolean checkUseless() {
@@ -61,6 +77,5 @@ public class MemoPoint {
 		}
 		return false;
 	}
-
 
 }

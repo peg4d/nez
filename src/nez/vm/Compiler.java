@@ -1,6 +1,7 @@
 package nez.vm;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import nez.Production;
 import nez.expr.And;
@@ -64,13 +65,13 @@ public class Compiler {
 		return FlagUtils.is(this.option, Production.ASTConstruction);
 	}
 
-	MemoPoint issueMemoPoint(Expression e) {
+	MemoPoint issueMemoPoint(String label, Expression e) {
 		if(this.enablePackratParsing()) {
 			Integer key = e.internId;
 			assert(e.internId != 0);
 			MemoPoint m = this.memoMap.get(key);
 			if(m == null) {
-				m = new MemoPoint(this.memoMap.size(), e, this.isContextSensitive(e));
+				m = new MemoPoint(this.memoMap.size(), label, e, this.isContextSensitive(e));
 				this.visitedMap.clear();
 				this.memoMap.put(key, m);
 			}
@@ -78,18 +79,7 @@ public class Compiler {
 		}
 		return null;
 	}
-	
-	public final int getInstructionSize() {
-		return this.codeList.size();
-	}
-	
-	public final int getMemoPointSize() {
-		if(this.enablePackratParsing()) {
-			return this.memoMap.size();
-		}
-		return 0;
-	}
-	
+
 	private UMap<String> visitedMap = null;
 
 	private boolean isContextSensitive(Expression e) {
@@ -107,6 +97,28 @@ public class Compiler {
 			}
 		}
 		return (e instanceof ContextSensitive);
+	}
+	
+	public final int getInstructionSize() {
+		return this.codeList.size();
+	}
+	
+	public final int getMemoPointSize() {
+		if(this.enablePackratParsing()) {
+			return this.memoMap.size();
+		}
+		return 0;
+	}
+	
+	public final UList<MemoPoint> getMemoPointList() {
+		if(this.memoMap != null) {
+			UList<MemoPoint> l = new UList<MemoPoint>(new MemoPoint[this.memoMap.size()]);
+			for(Entry<Integer,MemoPoint> e : memoMap.entrySet()) {
+				l.add(e.getValue());
+			}
+			return l;
+		}
+		return null;
 	}
 	
 	public final Instruction encode(UList<Rule> ruleList) {
@@ -145,6 +157,8 @@ public class Compiler {
 			}
 		}
 	}
+	
+
 	
 	public void dump(UList<Rule> ruleList) {
 		for(Rule r : ruleList) {
@@ -294,7 +308,7 @@ public class Compiler {
 			Rule r = p.getRule();
 			if(!this.enableASTConstruction() || r.isPurePEG()) {
 				Expression ref = Factory.resolveNonTerminal(r.getExpression());
-				MemoPoint m = this.issueMemoPoint(ref);
+				MemoPoint m = this.issueMemoPoint(r.getUniqueName(), ref);
 				if(m != null) {
 					Instruction inside = new ICallPush(r, newMemoize(p, m, next));
 					return newLookup(p, m, inside, next, newMemoizeFail(p, m));
@@ -332,7 +346,7 @@ public class Compiler {
 		if(this.enableASTConstruction()) {
 			if(this.enablePackratParsing()) {
 				Expression inner = Factory.resolveNonTerminal(p.get(0));
-				MemoPoint m = this.issueMemoPoint(inner);
+				MemoPoint m = this.issueMemoPoint(p.toString(), inner);
 				if(m != null) {
 					Instruction inside = p.get(0).encode(this, newMemoizeNode(p, m, next));
 					return newLookupNode(p, m, inside, next, new IMemoizeFail(p, m));

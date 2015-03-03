@@ -7,11 +7,13 @@ import nez.expr.NonTerminal;
 import nez.expr.Rule;
 import nez.main.Recorder;
 import nez.main.Verbose;
+import nez.util.ConsoleUtils;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
+import nez.vm.MemoPoint;
 import nez.vm.MemoTable;
 //import nez.x.PEG;
 
@@ -142,8 +144,10 @@ public class Production {
 	private int windowSize = 32;
 	private int memoPointSize;
 	private int InstructionSize;
+	private UList<MemoPoint> memoPointList = null;
 
-	public void config(MemoTable memoTable) {
+	public void config(MemoTable memoTable, int windowSize) {
+		this.windowSize = windowSize;
 		this.defaultMemoTable = memoTable;
 	}
 	
@@ -154,12 +158,15 @@ public class Production {
 		return this.defaultMemoTable.newMemoTable(sc.length(), this.windowSize, this.memoPointSize);
 	}
 
-	public Instruction compile() {
+	public final Instruction compile() {
 		if(compiledCode == null) {
 			Compiler bc = new Compiler(this.option);
 			compiledCode = bc.encode(this.ruleList);
 			this.InstructionSize  = bc.getInstructionSize();
 			this.memoPointSize = bc.getMemoPointSize();
+			if(Verbose.PackratParsing) {
+				this.memoPointList = bc.getMemoPointList();
+			}
 			if(Verbose.VirtualMachine) {
 				bc.dump(this.ruleList);
 			}
@@ -172,7 +179,7 @@ public class Production {
 		bc.encode(ruleList);
 		return bc;
 	}
-	
+		
 	public final boolean match(SourceContext s) {
 		boolean matched;
 		if(FlagUtils.is(this.option, Production.ClassicMode)) {
@@ -296,6 +303,17 @@ public class Production {
 		}
 	}
 
+	public final void verboseMemo() {
+		if(Verbose.PackratParsing && this.memoPointList != null) {
+			ConsoleUtils.println("ID\tPEG\tCount\tHit\tFail\tMean");
+			for(MemoPoint p: this.memoPointList) {
+				String s = String.format("%d\t%s\t%d\t%f\t%f\t%f", p.id, p.label, p.count(), p.hitRatio(), p.failHitRatio(), p.meanLength());
+				ConsoleUtils.println(s);
+			}
+			ConsoleUtils.println("");
+		}
+	}
+	
 	/* --------------------------------------------------------------------- */
 	/* Production Option */
 	

@@ -11,8 +11,10 @@ import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
 import nez.expr.NezParserCombinator;
 import nez.util.ConsoleUtils;
+import nez.util.FlagUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
+import nez.vm.MemoTable;
 
 public class CommandConfigure {
 //	// -X specified
@@ -54,11 +56,10 @@ public class CommandConfigure {
 	// -O
 	public int OptimizationLevel = 2;
 
-	
 	void showUsage(String Message) {
 		ConsoleUtils.println("nez <command> optional files");
-		ConsoleUtils.println("  -p | --peg <filename>      Specify an PEGs grammar file");
-		ConsoleUtils.println("  -e                         Specify an PEGs grammar text");
+		ConsoleUtils.println("  -p | --peg <filename>      Specify an Nez grammar file");
+		ConsoleUtils.println("  -e | --expr  <text>        Specify an Nez grammar text");
 		ConsoleUtils.println("  -i | --input <filenames>   Specify input files");
 		ConsoleUtils.println("  -t | --text  <string>      Specify an input text");
 		ConsoleUtils.println("  -o | --output <filename>   Specify an output file");
@@ -84,6 +85,9 @@ public class CommandConfigure {
 		ConsoleUtils.println("  find         Search nonterminals that can match inputs");
 		ConsoleUtils.exit(0, Message);
 	}
+	
+	private int WindowSize = 32;
+	private MemoTable defaultTable = MemoTable.newElasticTable(0, 0, 0);
 	
 	public void parseCommandOption(String[] args) {
 		int index = 0;
@@ -114,7 +118,7 @@ public class CommandConfigure {
 				GrammarFile = args[index];
 				index = index + 1;
 			}
-			else if (argument.equals("-e") && (index < args.length)) {
+			else if ((argument.equals("-e") || argument.equals("--expr")) && (index < args.length)) {
 				GrammarText = args[index];
 				index = index + 1;
 			}
@@ -139,44 +143,32 @@ public class CommandConfigure {
 				StartingPoint = args[index];
 				index = index + 1;
 			}
-			else if (argument.startsWith("-O")) {
-				OptimizationLevel = StringUtils.parseInt(argument.substring(2), 2);
-			}
-			else if (argument.startsWith("-W")) {
-				WarningLevel = StringUtils.parseInt(argument.substring(2), 2);
-			}
-			else if (argument.startsWith("-g")) {
-				DebugLevel = StringUtils.parseInt(argument.substring(2), 1);
-			}
-			else if (argument.startsWith("-g")) {
-				DebugLevel = StringUtils.parseInt(argument.substring(2), 1);
-			}
-//			else if(argument.startsWith("--memo")) {
-//				if(argument.equals("--memo:none")) {
-//					MemoizationManager.NoMemo = true;
-//				}
-//				else if(argument.equals("--memo:packrat")) {
-//					MemoizationManager.PackratParsing = true;
-//				}
-//				else if(argument.equals("--memo:window")) {
-//					MemoizationManager.SlidingWindowParsing = true;
-//				}
-//				else if(argument.equals("--memo:slide")) {
-//					MemoizationManager.SlidingLinkedParsing = true;
-//				}
-//				else if(argument.equals("--memo:notrace")) {
-//					MemoizationManager.Tracing = false;
-//				}
-//				else {
-//					int distance = Utils.parseInt(argument.substring(7), -1);
-//					if(distance >= 0) {
-//						MemoizationManager.BacktrackBufferSize  = distance;
-//					}
-//					else {
-//						showUsage("unknown option: " + argument);
-//					}
-//				}
+//			else if (argument.startsWith("-O")) {
+//				OptimizationLevel = StringUtils.parseInt(argument.substring(2), 2);
 //			}
+//			else if (argument.startsWith("-W")) {
+//				WarningLevel = StringUtils.parseInt(argument.substring(2), 2);
+//			}
+//			else if (argument.startsWith("-g")) {
+//				DebugLevel = StringUtils.parseInt(argument.substring(2), 1);
+//			}
+			else if(argument.startsWith("--memo")) {
+				if(argument.equals("--memo:none")) {
+					ProductionOption = FlagUtils.unsetFlag(ProductionOption, Production.PackratParsing);
+				}
+				else if(argument.equals("--memo:packrat")) {
+					defaultTable = MemoTable.newPackratHashTable(0, 0, 0);
+				}
+				else {
+					int w = StringUtils.parseInt(argument.substring(7), -1);
+					if(w >= 0) {
+						WindowSize  = w;
+					}
+					else {
+						showUsage("unknown option: " + argument);
+					}
+				}
+			}
 			else if(argument.startsWith("-Xconfig")) {
 				ProductionOption = StringUtils.parseInt(argument.substring(9), Production.DefaultOption);
 				Verbose.println("configuration: " + Production.stringfyOption(ProductionOption, ", "));
@@ -216,22 +208,6 @@ public class CommandConfigure {
 				this.showUsage("unknown option: " + argument);
 			}
 		}
-//		if(index < args.length) {
-//			FileList = new String[args.length - index];
-//			System.arraycopy(args, index, FileList, 0, FileList.length);
-//		}
-//		if(GrammarFile == null) {
-//			if(InputFileName != null) {
-//				GrammarFile = guessGrammarFile(InputFileName);
-//			}
-//		}
-//		if(InputFileName == null && InputString == null && !PegVMByteCodeGeneration) {
-//			System.out.println("unspecified inputs: invoking interactive shell");
-//			Command = "shell";
-//		}
-//		if(OutputWriterClass == null) {
-//			OutputWriterClass = ParsingObjectWriter.class;
-//		}
 	}
 
 	public final Command getCommand() {
@@ -273,6 +249,7 @@ public class CommandConfigure {
 		if(p == null) {
 			ConsoleUtils.exit(1, "undefined nonterminal: " + start);
 		}
+		p.config(this.defaultTable, WindowSize);
 		return p;
 	}
 

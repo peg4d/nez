@@ -512,13 +512,15 @@ public abstract class Context implements Source {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry m = memoTable.getMemo(pos, mp.id);
 		if(m != null) {
-			//this.memo.hit(m.consumed);
 			if(m.failed) {
+				mp.failHit();
 				return opIFail();
 			}
+			mp.memoHit(m.consumed);
 			pos += m.consumed;
 			return op.skip;
 		}
+		mp.miss();
 		return this.opIFailPush(op);
 	}
 
@@ -526,13 +528,15 @@ public abstract class Context implements Source {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry m = memoTable.getMemo2(pos, mp.id, stateValue);
 		if(m != null) {
-			//this.memo.hit(m.consumed);
 			if(m.failed) {
+				mp.failHit();
 				return opIFail();
 			}
+			mp.memoHit(m.consumed);
 			pos += m.consumed;
 			return op.skip;
 		}
+		mp.miss();
 		return this.opIFailPush(op);
 	}
 
@@ -541,12 +545,15 @@ public abstract class Context implements Source {
 		MemoEntry entry = memoTable.getMemo(pos, mp.id);
 		if(entry != null) {
 			if(entry.failed) {
+				mp.failHit();
 				return opIFail();
 			}
-			pos += entry.consumed;
+			mp.memoHit(entry.consumed);
+			consume(entry.consumed);
 			pushDataLog(LazyLink, op.index, entry.result);
 			return op.skip;
 		}
+		mp.miss();
 		this.opIFailPush(op);
 		return this.opNodePush(op);
 	}
@@ -556,12 +563,15 @@ public abstract class Context implements Source {
 		MemoEntry me = memoTable.getMemo2(pos, mp.id, stateValue);
 		if(me != null) {
 			if(me.failed) {
+				mp.failHit();
 				return opIFail();
 			}
-			pos += me.consumed;
+			mp.memoHit(me.consumed);
+			consume(me.consumed);
 			pushDataLog(LazyLink, op.index, me.result);
 			return op.skip;
 		}
+		mp.miss();
 		this.opIFailPush(op);
 		return this.opNodePush(op);
 	}

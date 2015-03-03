@@ -54,6 +54,7 @@ class CheckCommand extends Command {
 			file.start(rec);
 			boolean result = product.match(file);
 			file.done(rec);
+			product.verboseMemo();
 			if(!result) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
 				failedInput.add(file.getResourceName());

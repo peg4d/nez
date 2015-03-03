@@ -1,5 +1,7 @@
 package nez.vm;
 
+import java.util.HashMap;
+
 import nez.SourceContext;
 import nez.ast.Tag;
 import nez.expr.ByteChar;
@@ -64,25 +66,12 @@ public abstract class Instruction {
 	}
 	
 	abstract Instruction exec(Context sc) throws TerminationException;
-	
-	private static boolean isDebug(Instruction inst) {
-		return inst instanceof StackOperation;
-	}
-	
+		
 	public static boolean run(Instruction code, SourceContext sc) {
 		boolean result = false;
 		try {
 			while(true) {
-//				if(isDebug(code)) {
-//					Instruction prev = code;
-//					sc.dumpStack("Before " + prev);
-//					code = code.exec(sc);
-//					sc.dumpStack("After  " + prev);
-//				}
-//				else {
-				//System.out.println("" + code.id + " " + code);
 				code = code.exec(sc);
-//				}
 			}
 		}
 		catch (TerminationException e) {
@@ -114,6 +103,22 @@ public abstract class Instruction {
 			result = e.status;
 		}
 		return result;
+	}
+	
+	static void makeList(Instruction inst, UList<Instruction> l, HashMap<Integer, Instruction> m) {
+		while(inst != null && !m.containsKey(inst.id)) {
+			m.put(inst.id, inst);
+			l.add(inst);
+			if(inst.branch() != null) {
+				makeList(inst.next, l, m);
+				makeList(inst.branch(), l, m);
+				return;
+			}
+			if(inst instanceof ICallPush) {
+				makeList(((ICallPush) inst).jump, l, m);
+			}
+			inst = inst.next;
+		}
 	}
 
 }
