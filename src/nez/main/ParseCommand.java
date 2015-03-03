@@ -9,8 +9,7 @@ import nez.util.UList;
 
 class ParseCommand extends Command {
 	@Override
-	public
-	void exec(CommandConfigure config) {
+	public void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();
 		Production p = config.getProduction(config.StartingPoint);
 		if(p == null) {

@@ -9,9 +9,9 @@ import nez.main.Recorder;
 import nez.util.ConsoleUtils;
 
 public class RelationCommand extends Command {
-	static {
-		CommandConfigure.addCommand("rel", new RelationCommand());
-	}
+//	static {
+//		Command.addCommand("rel", new RelationCommand());
+//	}
 	@Override
 	public void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();

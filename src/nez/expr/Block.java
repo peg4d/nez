@@ -39,7 +39,7 @@ public class Block extends Unary {
 	@Override
 	public boolean match(SourceContext context) {
 		int stateValue = context.stateValue;
-		String indent = context.getIndentText(context.pos);
+		String indent = context.getIndentText(context.getPosition());
 		int stackTop = context.pushSymbolTable(NezTag.Indent, indent);
 		boolean b = this.inner.matcher.match(context);
 		context.popSymbolTable(stackTop);

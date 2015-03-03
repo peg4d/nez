@@ -74,7 +74,7 @@ public class ByteMap extends Terminal {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		if(this.charMap[context.byteAt(context.pos)]) {
+		if(this.charMap[context.byteAt(context.getPosition())]) {
 			context.consume(1);
 			return true;
 		}

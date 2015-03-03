@@ -12,9 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import nez.util.StringUtils;
-import nez.vm.Context;
+import nez.vm.ClassicContext;
 
-public abstract class SourceContext extends Context {
+public abstract class SourceContext extends ClassicContext {
 //	public final static int TextEOF   = 0;
 //	public final static int BinaryEOF = 256; 
 	
@@ -45,13 +45,13 @@ public abstract class SourceContext extends Context {
 		return fileName;
 	}
 
-	final String getFilePath(String fileName) {
-		int loc = this.getResourceName().lastIndexOf("/");
-		if(loc > 0) {
-			return this.getResourceName().substring(0, loc+1) + fileName; 
-		}
-		return fileName;
-	}
+//	final String getFilePath(String fileName) {
+//		int loc = this.getResourceName().lastIndexOf("/");
+//		if(loc > 0) {
+//			return this.getResourceName().substring(0, loc+1) + fileName; 
+//		}
+//		return fileName;
+//	}
 
 	public final int charAt(long pos) {
 		int c = byteAt(pos), c2, c3, c4;

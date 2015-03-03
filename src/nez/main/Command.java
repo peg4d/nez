@@ -3,6 +3,7 @@ package nez.main;
 import java.io.IOException;
 
 import nez.util.ConsoleUtils;
+import nez.util.UMap;
 
 
 public abstract class Command {
@@ -72,5 +73,31 @@ public abstract class Command {
 		}
 	}
 
+	// command database 
+	
+	private static UMap<Command> commandTable = new UMap<Command>();
+
+	public static void load(String name, String className) {
+		try {
+			Class<?> c = Class.forName(className);
+			commandTable.put(name, (Command)c.newInstance());
+		}
+		catch(Exception e) {
+			Verbose.println("undefined command: " + name + " due to " + e);
+		}
+	}
+
+	static {
+		load("check", "nez.main.CheckCommand");
+		load("parse", "nez.main.ParseCommand");
+		load("rel", "nez.x.RelationCommand");
+		load("cc", "nez.cc.GeneratorCommand");
+		load("peg", "nez.cc.GrammarCommand");
+	}
+	
+	public static final Command getCommand(String name) {
+		return commandTable.get(name);
+	}
+	
 }
 

@@ -49,8 +49,8 @@ public class AnyChar extends Terminal {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		if(context.byteAt(context.pos) != context.EOF()) {
-			int len = context.charLength(context.pos);
+		if(context.byteAt(context.getPosition()) != context.EOF()) {
+			int len = context.charLength(context.getPosition());
 			context.consume(len);
 			return true;
 		}

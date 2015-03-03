@@ -167,6 +167,12 @@ public class Production {
 		return compiledCode;
 	}
 	
+	public Compiler cc() {
+		Compiler bc = new Compiler(this.option);
+		bc.encode(ruleList);
+		return bc;
+	}
+	
 	public final boolean match(SourceContext s) {
 		boolean matched;
 		if(FlagUtils.is(this.option, Production.ClassicMode)) {

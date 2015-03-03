@@ -87,7 +87,7 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		
 	@Override
 	public String toString() {
-		return new NezFormatter().format(this);
+		return new GrammarFormatter().format(this);
 	}
 
 	public final UList<Expression> toList() {

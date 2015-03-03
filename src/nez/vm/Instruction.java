@@ -20,8 +20,8 @@ import nez.util.StringUtils;
 public abstract class Instruction {
 	protected Expression  e;
 	public Instruction next;
-	int id;
-	boolean label = false;
+	public int id;
+	public boolean label = false;
 	public Instruction(Expression e, Instruction next) {
 		this.e = e;
 		this.id = -1;

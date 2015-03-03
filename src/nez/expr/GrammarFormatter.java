@@ -4,15 +4,15 @@ import nez.util.StringUtils;
 
 import org.peg4d.Utils;
 
-public class NezFormatter extends ExpressionVisitor {
+public class GrammarFormatter extends ExpressionVisitor {
 	private StringBuilder sb = null;
 	private final static String NewIndent = "\n\t";
 
-	public NezFormatter() {
+	public GrammarFormatter() {
 		this(new StringBuilder());
 	}
 	
-	public NezFormatter(StringBuilder sb) {
+	public GrammarFormatter(StringBuilder sb) {
 		this.sb = sb;
 	}
 	
@@ -177,7 +177,7 @@ public class NezFormatter extends ExpressionVisitor {
 		sb.append(" }");
 	}
 
-	public void visitNewLeftLink(LeftNew e) {
+	public void visitLeftNew(LeftNew e) {
 		sb.append("{@ ");
 		this.appendSequence(e);
 		sb.append(" }");

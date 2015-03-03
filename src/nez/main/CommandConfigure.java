@@ -13,8 +13,6 @@ import nez.expr.NezParserCombinator;
 import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
-import nez.util.UMap;
-import nez.x.RelationCommand;
 
 public class CommandConfigure {
 //	// -X specified
@@ -236,20 +234,8 @@ public class CommandConfigure {
 //		}
 	}
 
-	private static UMap<Command> commandTable = new UMap<Command>();
-	public static void addCommand(String name, Command com) {
-		commandTable.put(name, com);
-	}
-
-	static {
-		addCommand("parse", new ParseCommand());
-		addCommand("check", new CheckCommand());
-		addCommand("peg",   new CheckCommand());
-		addCommand("rel",   new RelationCommand());
-	}
-	
 	public final Command getCommand() {
-		Command com = commandTable.get(this.CommandName);
+		Command com = Command.getCommand(this.CommandName);
 		if(com == null) {
 			this.showUsage("unknown command: " + this.CommandName);
 		}
@@ -283,10 +269,15 @@ public class CommandConfigure {
 	private int ProductionOption = Production.DefaultOption;
 	
 	public final Production getProduction(String start) {
-		if(start == null) {
-			start = this.StartingPoint;
+		Production p = getGrammar().getProduction(start, ProductionOption);
+		if(p == null) {
+			ConsoleUtils.exit(1, "undefined nonterminal: " + start);
 		}
-		return getGrammar().getProduction(start, ProductionOption);
+		return p;
+	}
+
+	public final Production getProduction() {
+		return this.getProduction(this.StartingPoint);
 	}
 
 	public final boolean hasInput() {

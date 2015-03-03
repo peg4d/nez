@@ -28,6 +28,7 @@ import nez.expr.Rule;
 import nez.expr.Sequence;
 import nez.expr.Tagging;
 import nez.main.Verbose;
+import nez.util.ConsoleUtils;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -41,7 +42,7 @@ public class Compiler {
 		int end;
 	}
 
-	UList<Instruction> codeList;
+	public UList<Instruction> codeList;
 	UMap<CodeBlock> ruleMap;
 	HashMap<Integer, MemoPoint> memoMap;
 	
@@ -148,18 +149,18 @@ public class Compiler {
 	public void dump(UList<Rule> ruleList) {
 		for(Rule r : ruleList) {
 			String uname = r.getUniqueName();
-			System.out.println(uname + ":");
+			ConsoleUtils.println(uname + ":");
 			CodeBlock block = this.ruleMap.get(uname);
 			for(int i = block.start; i < block.end; i++) {
 				Instruction inst = codeList.ArrayValues[i];
 				if(inst.label) {
-					System.out.println("" + inst.id + "*\t" + inst);
+					ConsoleUtils.println("" + inst.id + "*\t" + inst);
 				}
 				else {
-					System.out.println("" + inst.id + "\t" + inst);
+					ConsoleUtils.println("" + inst.id + "\t" + inst);
 				}
 				if(inst.next != null && inst.next.id != i+1) {
-					System.out.println("\tjump " + Instruction.label(inst.next));
+					ConsoleUtils.println("\tjump " + Instruction.label(inst.next));
 				}
 			}
 		}

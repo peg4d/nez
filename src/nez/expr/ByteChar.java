@@ -30,7 +30,7 @@ public class ByteChar extends Terminal {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		if(context.byteAt(context.pos) == this.byteChar) {
+		if(context.byteAt(context.getPosition()) == this.byteChar) {
 			context.consume(1);
 			return true;
 		}

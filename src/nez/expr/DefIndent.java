@@ -15,7 +15,7 @@ public class DefIndent extends Unconsumed {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		String indent = context.getIndentText(context.pos);
+		String indent = context.getIndentText(context.getPosition());
 		context.pushSymbolTable(NezTag.Indent, indent);
 		return true;
 	}
