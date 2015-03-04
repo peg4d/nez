@@ -29,6 +29,14 @@ public class DTDConverter extends NodeVisitor {
 		impList = new ArrayList<Integer>();
 	}
 
+	public int[] initAttDefList() {
+		int[] attDefList = new int[defCount];
+		for (int i = 0; i < attDefList.length; i++) {
+			attDefList[i] = i;
+		}
+		return attDefList;
+	}
+
 	public void visitDoc(AST node) {
 		System.out.println("DEBUG? " + node);
 		for(AST subnode: node) {
@@ -44,14 +52,21 @@ public class DTDConverter extends NodeVisitor {
 
 	public void visitAttlist(AST node) {
 		System.out.println("DEBUG? " + node);
-		String name = node.textAt(0, "");
+		String attListName = "At_" + node.textAt(0, "");
+		String choiceListName = "AC_" + attID;
 		initAttCounter();
 		for (AST subnode : node) {
 			this.visit("visit", subnode);
 		}
-		grammar.defineRule(node, name, toExpression(node.get(1)));
+		int[] attDefList = initAttDefList();
+		if (impList.isEmpty()) {
+			grammar.defineRule(node, attListName, toCompAtt(node, attDefList));
+		} else {
+			int[] requiredRules = extractRequiredRule(attDefList);
+			grammar.defineRule(node, choiceListName, toImpChoice(node));
+			grammar.defineRule(node, attListName, toApproAtt(node, requiredRules));
+		}
 	}
-	//attlist = 'ATTLIST' _* {@Name _* (@Def)* #Attlist} _*
 
 	public void visitREQUIRED(AST node) {
 		System.out.println("DEBUG? " + node);
@@ -87,7 +102,6 @@ public class DTDConverter extends NodeVisitor {
 		String name = node.textAt(0, "");
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
-	//Entity = { @Name @EntityValue #Entity}
 	
 	private Expression toExpression(AST node) {
 		return (Expression)this.visit("to", node);
@@ -213,6 +227,67 @@ public class DTDConverter extends NodeVisitor {
 		l.add(Factory.newNonTerminal(node, grammar, "NMTOKENS"));
 		return Factory.newSequence(node, l);
 	}
+	
+	public Expression toCompAtt(AST node, int[] attlist) {
+		int listLength = attlist.length;
+		if (listLength == 1) {
+			UList<Expression> l = new UList<Expression>(new Expression[3]);
+			l.add(Factory.newNonTerminal(node, grammar, "AD_" + attlist[0]));
+			l.add(Factory.newRepetition(node, Factory.newNonTerminal(node, grammar, "_")));
+			l.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
+			return Factory.newSequence(node, l);
+		} else {
+			int[][] permedList = perm(attlist);
+			UList<Expression> choiceList = new UList<Expression>(
+					new Expression[permedList.length]);
+			for (int[] target : permedList) {
+				UList<Expression> sequenceList = new UList<Expression>(
+						new Expression[listLength + 1]);
+				for (int index = 0; index < target.length; index++) {
+					sequenceList.add(Factory.newNonTerminal(node, grammar, "AD_" + target[index]));
+				}
+				sequenceList.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
+				choiceList.add(Factory.newSequence(node, sequenceList));
+			}
+			return Factory.newChoice(node, choiceList);
+		}
+	}
+	
+
+	public Expression toApproAtt(AST node, int[] attlist) {
+		int listLength = attlist.length;
+		if (listLength == 0) {
+			UList<Expression> l = new UList<Expression>(new Expression[3]);
+			l.add(Factory.newNonTerminal(node, grammar, "AD_" + attlist[0]));
+			l.add(Factory.newRepetition(node, Factory.newNonTerminal(node, grammar, "_")));
+			l.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
+			return Factory.newSequence(node, l);
+		} else {
+			int[][] permedList = perm(attlist);
+			UList<Expression> choiceList = new UList<Expression>(
+					new Expression[permedList.length]);
+			for (int[] target : permedList) {
+				UList<Expression> sequenceList = new UList<Expression>(
+						new Expression[listLength + 1]);
+				for (int index = 0; index < target.length; index++) {
+					sequenceList.add(Factory.newNonTerminal(node, grammar, "AD_" + target[index]));
+				}
+				sequenceList.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
+				choiceList.add(Factory.newSequence(node, sequenceList));
+			}
+			return Factory.newChoice(node, choiceList);
+		}
+	}
+
+	public Expression toImpChoice(AST node){
+		UList<Expression> l = new UList<Expression>(new Expression[impList.size()]);
+		for (Integer ruleNum : impList) {
+			Factory.addChoice(l, Factory.newNonTerminal(node, grammar, "AD_" + ruleNum));
+		}
+		return Factory.newChoice(node, l);
+	}
+	
+
 
 	public Expression toEnum(AST node) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
@@ -234,6 +309,27 @@ public class DTDConverter extends NodeVisitor {
 	public Expression toData(AST node) {
 		return Factory.newNonTerminal(node, grammar, "PCdata");
 	}
+
+	private final int[] extractRequiredRule(int[] attlist) {
+		int[] buf = new int[512];
+		int arrIndex = 0;
+		for (int requiredNum : attlist) {
+			if (reqList.contains(requiredNum)) {
+				buf[arrIndex++] = requiredNum;
+			}
+		}
+		int[] target = new int[arrIndex];
+		for (int i = 0; i < arrIndex; i++) {
+			target[i] = buf[i];
+		}
+		return target;
+	}
+
+	private int[][] perm(int[] attlist) {
+		Permutation permutation = new Permutation(attlist);
+		return permutation.getPermList();
+	}
+
 }
 
 
