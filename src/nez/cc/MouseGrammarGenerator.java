@@ -23,17 +23,28 @@ import nez.expr.Tagging;
 import nez.expr.Unary;
 import nez.util.StringUtils;
 
-import org.peg4d.Utils;
-
 public class MouseGrammarGenerator extends GrammarGenerator {
 	public MouseGrammarGenerator(String fileName) {
 		super(fileName);
 	}
 	
 	@Override
+	public void makeHeader() {
+		file.write("// Parsing Expression Grammars for Mouse");
+		file.writeIndent("// Translated from Nez");
+	}
+
+	String stringfyName(String s) {
+		if(s.equals("_")) {
+			return "SPACING";
+		}
+		return s;
+	}
+	
+	@Override
 	public void visitRule(Rule rule) {
 		Expression e = rule.getExpression();
-		file.writeIndent(rule.getLocalName());
+		file.writeIndent(stringfyName(rule.getLocalName()));
 		file.incIndent();
 		file.writeIndent("= ");
 		if(e instanceof Choice) {
@@ -60,21 +71,73 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 	}
 
 	public void visitNonTerminal(NonTerminal e) {
-		file.write(e.getLocalName());
+		file.write(stringfyName(e.getLocalName()));
 	}
 	
 	public void visitByteChar(ByteChar e) {
-		file.write(StringUtils.stringfyByte(e.byteChar));
+		file.write(stringfy("\"", e.byteChar, "\""));
 	}
 
 	public void visitByteMap(ByteMap e) {
-		file.write(StringUtils.stringfyCharClass(e.charMap));
+		file.write(stringfy(e.charMap));
 	}
 	
 	public void visitAnyChar(AnyChar e) {
 		file.write("_");
 	}
 
+	private final String stringfy(String s, int ch, String e) {
+		char c = (char)ch;
+		switch(c) {
+		case '\n' : return s+ "\\n" + e; 
+		case '\t' : return s+ "\\t" + e; 
+		case '\r' : return s+ "\\r" + e; 
+		case '"' : return s+ "\\\"" + e; 
+		case '\\' : return s + "\\\\" + e; 
+		}
+		if(Character.isISOControl(c) || c > 127) {
+			return s + String.format("0x%02x", (int)c) + e;
+		}
+		return(s + c + e);
+	}
+	
+	private final String stringfy(boolean[] b) {
+		StringBuilder sb = new StringBuilder();
+		String delim = "";
+		for(int s = 0; s < 256; s++) {
+			if(b[s]) {
+				int e = searchEndChar(b, s+1);
+				if(s == e) {
+					sb.append(delim);
+					sb.append(stringfy("",s,""));
+					delim = " / ";
+				}
+				else {
+					sb.append(delim);
+					sb.append("[");
+					sb.append(stringfy("",s,""));
+					sb.append("-");
+					sb.append(stringfy("",e,""));
+					sb.append("]");
+					delim = " / ";
+					s = e;
+				}
+			}
+		}
+		return sb.toString();
+	}
+
+	private final static int searchEndChar(boolean[] b, int s) {
+		for(; s < 256; s++) {
+			if(!b[s]) {
+				return s-1;
+			}
+		}
+		return 255;
+	}
+
+
+	
 	protected void visit(String prefix, Unary e, String suffix) {
 		if(prefix != null) {
 			file.write(prefix);
@@ -106,25 +169,6 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 	
 	public void visitNot(Not e) {
 		this.visit( "!", e, null);
-	}
-
-	public void visitTagging(Tagging e) {
-		file.write("/* #");
-		file.write(e.tag.toString());
-		file.write("*/");
-	}
-	
-	public void visitValue(Replace e) {
-		//file.write(StringUtils.quoteString('`', e.value, '`'));
-	}
-	
-	public void visitLink(Link e) {
-//		String predicate = "@";
-//		if(e.index != -1) {
-//			predicate += "[" + e.index + "]";
-//		}
-//		this.visit(predicate, e, null);
-		this.visit(e.get(0));
 	}
 
 	protected void visitSequenceImpl(ExpressionList l) {
@@ -164,7 +208,7 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 			break;
 		}
 		if(s.length() > 1) {
-			file.write(Utils.quoteString('"', s, '"'));
+			file.write(StringUtils.quoteString('"', s, '"'));
 		}
 		return end - 1;
 	}
@@ -192,6 +236,25 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 		file.write("( ");
 		this.visitSequenceImpl(e);
 		file.write(" )");
+	}
+
+	public void visitTagging(Tagging e) {
+		file.write("/*#");
+		file.write(e.tag.toString());
+		file.write("*/");
+	}
+	
+	public void visitValue(Replace e) {
+		//file.write(StringUtils.quoteString('`', e.value, '`'));
+	}
+	
+	public void visitLink(Link e) {
+//		String predicate = "@";
+//		if(e.index != -1) {
+//			predicate += "[" + e.index + "]";
+//		}
+//		this.visit(predicate, e, null);
+		this.visit(e.get(0));
 	}
 
 	@Override
