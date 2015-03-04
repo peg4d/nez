@@ -24,7 +24,7 @@ public class DefSymbol extends Unary {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		if(!this.checkAlwaysConsumed(checker, startNonTerminal, stack) && checker != null) {
+		if(!this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack) && checker != null) {
 			checker.reportWarning(s, "unconsumed expression: " + this.inner);
 		}
 		return true;
