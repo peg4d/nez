@@ -58,6 +58,9 @@ EOL
 DIGIT
 	= [0-9]
 
+HEX
+    = [A-Fa-f0-9]
+
 W
 	= [a-zA-Z0-9_]
 	/ UCHAR

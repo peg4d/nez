@@ -1,6 +1,6 @@
 /*
 
-  PEG4d Ruby Grammar
+  Nez Ruby Grammar
 
   Based on yacc grammar for Ruby[1]
 
@@ -830,38 +830,41 @@ addUnaryOperator
     / "!" #Not
 
 PowerExpression
-    = UnaryExpression {@ __ ( "**" #Power ) __ @UnaryExpression }*
+    = UnaryExpression {@ _ ( "**" #Power ) __ @UnaryExpression }*
 
 UnaryMinusExpression
-    = PowerExpression / { __ "-" #Minus _ @UnaryMinusExpression }
+    = PowerExpression / { _ "-" #Minus _ @UnaryMinusExpression }
 
 MultiplicativeExpression
     [example: a / 2]
     [example: a/ 2]
     [bad-example: a /2]
-    = UnaryMinusExpression {@ addMultiplicativeOperator @UnaryMinusExpression }*
+    = UnaryMinusExpression {@ (SPACE+ addMultiplicativeOperator SPACE_OR_NEWLINE+ / addMultiplicativeOperator __) @UnaryMinusExpression }*
 
 addMultiplicativeOperator
-    = __ "*" __ #Mul
-    / __ "%" __ #Mod
-    / SPACE_OR_NEWLINE __ "/" SPACE_OR_NEWLINE __ #Div
-    / "/" __ #Div
+    = "*" #Mul
+    / "%" #Mod
+    / "/" #Div
 
 AdditiveExpression
     [example: a + 1]
-    = MultiplicativeExpression {@ __ ( "+" #Add / "-" #Sub ) __ @MultiplicativeExpression }*
-  
+    = MultiplicativeExpression {@ (SPACE+ addAdditiveOperator SPACE_OR_NEWLINE+ / addAdditiveOperator __) @MultiplicativeExpression }*
+
+addAdditiveOperator
+    = "+" #Add
+    / "-" #Sub 
+
 ShiftExpression
-    = AdditiveExpression {@ __ ("<<" #LeftShift / ">>" #RightShift ) __ @AdditiveExpression }*
+    = AdditiveExpression {@ (SPACE+ "<<" SPACE_OR_NEWLINE+ #LeftShift / "<<" __ #LeftShift / _ ">>" __ #RightShift) @AdditiveExpression }*
 
 BitwiseANDExpression
-    = ShiftExpression {@ __ "&" __ @ShiftExpression #BitwiseAnd }*
+    = ShiftExpression {@ (SPACE+ "&" SPACE_OR_NEWLINE+ / "&" __) @ShiftExpression #BitwiseAnd }*
 
 BitwiseORExpression
-    = BitwiseANDExpression {@ __ ("|" #BitwiseOr / "^" #BitwiseXor) __ @BitwiseANDExpression }*
+    = BitwiseANDExpression {@ _ ("|" #BitwiseOr / "^" #BitwiseXor) __ @BitwiseANDExpression }*
 
 RelationalExpression
-    = BitwiseORExpression {@ __ addRelationalOperator __ @BitwiseORExpression }*
+    = BitwiseORExpression {@ _ addRelationalOperator __ @BitwiseORExpression }*
 
 addRelationalOperator
     = "<=" #LessThanEquals
@@ -871,7 +874,7 @@ addRelationalOperator
   
 EqualityExpression
     [example: /hoge/ =~ str]
-    = RelationalExpression {@ __ addEqualityOperator __ @RelationalExpression }*
+    = RelationalExpression {@ _ addEqualityOperator __ @RelationalExpression }*
 
 addEqualityOperator
     = "=="  #Equals
@@ -882,13 +885,13 @@ addEqualityOperator
     / "!~" #NotMatch
 
 LogicalANDExpression
-    = EqualityExpression {@ __ "&&" __ @EqualityExpression #And }*
+    = EqualityExpression {@ _ "&&" __ @EqualityExpression #And }*
 
 LogicalORExpression
-    = LogicalANDExpression {@ __ "||" __ @LogicalANDExpression #Or }*
+    = LogicalANDExpression {@ _ "||" __ @LogicalANDExpression #Or }*
   
 RangeExpression
-    = {@LogicalORExpression  __ addRangeOperator __ @LogicalORExpression }
+    = {@LogicalORExpression  _ addRangeOperator __ @LogicalORExpression }
     / LogicalORExpression
 
 addRangeOperator
@@ -901,7 +904,7 @@ AssignmentExpression
     [example: a = Klass.new 1, 2]
     [example: a += b -= c **= 2]
     [example: a = 1,2]
-    = { @LeftHandSideExpression __ addAssignmentOperator __ ( @Command / @UnwrapedArray / @AssignmentExpression ) }
+    = { @LeftHandSideExpression _ addAssignmentOperator __ ( @Command / @UnwrapedArray / @AssignmentExpression ) }
     / ConditionalExpression
 
 addAssignmentOperator
@@ -983,7 +986,7 @@ Command
     [example: a(b).c 1]
     [example: p +1]
     [bad-example: a(b) 1]
-    [bad-example: p if false then 1 else 2 end]
+//    [bad-example: p if false then 1 else 2 end]
     = { @DummySelf @OperationName !'[' !OPERATOR _ addCmdArguments #Apply }
     / { @DummySelf @OperationName2 !'[' !OPERATOR _ addCmdArguments? #Apply }
     / { @BeforeCommandFunctionCallExpression _ addFuncName _ addCmdArguments #Apply }
