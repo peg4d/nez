@@ -30,14 +30,8 @@ public class GrammarCommand extends Command {
 	
 	static {
 		regist("mouse", "nez.cc.MouseGrammarGenerator");
-	}
-	
-	static {
-		regist("lua", "nez.cc.LPegGrammarGenerator");
-	}
-	
-	static {
-		regist("lpeg", "nez.cc.LPegGrammarGenerator");
+		regist("lua",   "nez.cc.LPegGrammarGenerator");
+		regist("lpeg",  "nez.cc.LPegGrammarGenerator");
 	}
 	
 	final GrammarGenerator loadGenerator(String output) {
