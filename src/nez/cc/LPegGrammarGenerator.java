@@ -5,21 +5,24 @@ import nez.expr.And;
 import nez.expr.AnyChar;
 import nez.expr.ByteChar;
 import nez.expr.ByteMap;
+import nez.expr.Capture;
 import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
-import nez.expr.SequentialExpression;
 import nez.expr.Failure;
 import nez.expr.LeftNew;
 import nez.expr.Link;
+import nez.expr.New;
 import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
 import nez.expr.Repetition;
+import nez.expr.Repetition1;
 import nez.expr.Replace;
 import nez.expr.Rule;
 import nez.expr.Sequence;
+import nez.expr.SequentialExpression;
 import nez.expr.Tagging;
 import nez.expr.Unary;
 import nez.util.StringUtils;
@@ -35,6 +38,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		super(fileName);
 	}
 	
+	@Override
 	public void generate(Grammar grammar) {
 		peg = grammar;
 		makeHeader();
@@ -54,6 +58,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		file.flush();
 	}
 
+	@Override
 	public void makeHeader() {
 		file.writeIndent("local lpeg = require \"lpeg\"");
 		UList<Rule> list = peg.getDefinedRuleList();
@@ -85,6 +90,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		file.decIndent();
 	}
 	
+	@Override
 	public void makeFooter() {
 		file.writeIndent("function evalExp (s)");
 		file.incIndent();
@@ -201,7 +207,11 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 	public void visitRepetition(Repetition e) {
 		this.visit(null, e, "^0");
 	}
-	
+
+	public void visitRepetition1(Repetition1 e) {
+		this.visit(null, e, "^1");
+	}
+
 	public void visitAnd(And e) {
 		this.visit( "#", e, null);
 	}
@@ -293,7 +303,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		}
 	}
 
-	public void visitNew(NewClosure e) {
+	public void visitNewClosure(NewClosure e) {
 		file.write("( ");
 		this.visitSequenceImpl(e);
 		file.write(" )");
@@ -303,6 +313,14 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		file.write("( ");
 		this.visitSequenceImpl(e);
 		file.write(" )");
+	}
+
+	public void visitNew(New e) {
+
+	}
+
+	public void visitCapture(Capture e) {
+
 	}
 
 	@Override
