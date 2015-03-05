@@ -1,6 +1,6 @@
 package org.peg4d.expression;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -19,10 +19,10 @@ public class ParsingIndent extends ParsingFunction {
 	}
 	@Override
 	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.BooleanType;
+		return Typestate.BooleanType;
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		return this;
 	}
 	@Override

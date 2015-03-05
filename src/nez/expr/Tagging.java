@@ -26,12 +26,12 @@ public class Tagging extends Unconsumed {
 		return "#" + this.tag.toString();
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.OperationType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.OperationType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		if(c.required != NodeTransition.OperationType) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "unexpected #" + tag.toString() + " => removed!!");
 			return Factory.newEmpty(this.s);
 		}

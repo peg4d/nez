@@ -274,6 +274,7 @@ public class Production {
 		long startPosition = sc.getPosition();
 		sc.setBaseNode(base);
 		if(!this.match(sc)) {
+			
 			return null;
 		}
 		Node node = sc.getParsedNode();

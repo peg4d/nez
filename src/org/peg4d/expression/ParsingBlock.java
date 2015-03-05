@@ -2,7 +2,7 @@ package org.peg4d.expression;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -23,7 +23,7 @@ public class ParsingBlock extends ParsingFunction {
 		return this.inner.inferNodeTransition(visited);
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		this.inner = this.inner.checkNodeTransition(c);
 		return this;
 	}

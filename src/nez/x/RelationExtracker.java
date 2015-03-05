@@ -1,24 +1,36 @@
 package nez.x;
 
 import java.util.AbstractList;
+import java.util.Arrays;
 
 import nez.ast.Node;
 import nez.ast.Source;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.main.Recorder;
+import nez.util.FileBuilder;
 import nez.util.StringUtils;
 import nez.util.UList;
 import nez.util.UMap;
 
 public class RelationExtracker {
-	public final static int MaximumColumns = 16;
-	UList<Schema> schemaList;
+	Schema inferedSchema = null;
+	long lastExtracted = 0;
+	RNode[] buffer;
+	Schema[] schemaBuffer;
 	UList<String> workingValueList;
-
-	RelationExtracker() {
-		this.schemaList = new UList<Schema>(new Schema[4]);
-		this.workingValueList = new UList<String>(new String[MaximumColumns]);
+	long    index = 0;
+	double thr = 0.75;
+	WordCount keyCount = new WordCount();
+	FileBuilder file;
+	
+	RelationExtracker(int w, double thr, String fileName) {
+		this.workingValueList = new UList<String>(new String[64]);
+		this.buffer = new RNode[w];
+		this.schemaBuffer = new Schema[w];
+		this.index = 0;
+		this.thr = thr;
+		this.file = new FileBuilder(fileName);
 	}
 	
 	public Node newNode() {
@@ -26,96 +38,167 @@ public class RelationExtracker {
 	}
 
 	void recieve(RNode t) {
-		Schema r = extractSchema(t);
-		if(r != null) {
-			matchSchema(t, r);
+		keyCount.count(t.getTag().getName());
+		if(t.subNodes() < 3) {
+			return; // Too small
 		}
+		if(extractRelation(t)) {
+			return;
+		}
+		appendBuffer(t);
+		//System.out.println("index="+index + ", last+len=" + (lastExtracted + buffer.length));
+		if(index == lastExtracted + buffer.length) {
+			inferSchema(buffer.length);
+			lastExtracted = index;
+		}
+	}
+	
+	boolean extractRelation(RNode t) {
+		if(inferedSchema != null) {
+			Schema s = extractSchema(t);
+			double sim = inferedSchema.sim(s);
+			if(sim > thr) {
+				this.inferedSchema.addRelation(t.getSourcePosition(), sim, s, this.workingValueList);
+				lastExtracted = index;
+				if(inferedSchema.count > 4096) {
+					this.flushRelation();
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	void appendBuffer(RNode t) {
+		int n = (int)(index % buffer.length);
+		RNode old = this.buffer[n];
+		if(old != null) {
+			old.subTree = null; // GC
+		}
+		this.buffer[n] = t;
+		index++;	
+	}
+		
+	void inferSchema(int bufsiz) {
+		sort(bufsiz);
+		Arrays.fill(this.schemaBuffer, null);
+		for(int i = 0; i < bufsiz; i++) {
+			Schema s = getSchemaInBuffer(i);
+			s = findSchema(s, i+1, bufsiz);
+			if(s != null) {
+				detectedNewSchema(s, bufsiz);
+				return;
+			}
+		}
+	}
+	
+	public void cleanUp() {
+		if(index < buffer.length) {
+			inferSchema((int)index);
+		}
+		this.flushRelation();
+	}
+	
+	void sort(int e) {
+		for(int i = 0; i < e -1; i++) {
+			if(this.buffer[i] == null) {
+				e = i;
+				continue;
+			}
+			for(int j = i+1; j < e; j++) {
+				if(this.buffer[i].subNodes() < this.buffer[j].subNodes()) {
+					RNode o = this.buffer[i];
+					this.buffer[i] = this.buffer[j];
+					this.buffer[j] = o;
+				}
+			}
+		}
+	}
+	
+	Schema getSchemaInBuffer(int index) {
+		if(this.schemaBuffer[index] == null) {
+			this.schemaBuffer[index] = extractSchema(this.buffer[index]);
+		}
+		return this.schemaBuffer[index];
+	}
+
+	Schema findSchema(Schema s1, int s, int e) {
+		Schema[] candidates = new Schema[e - s + 1];
+		candidates[0] = s1;
+		int size = 1;
+		for(int i = s; i < e; i++) {
+			Schema s2 = getSchemaInBuffer(i);
+			double sim = s1.sim(s2);
+			if(sim > thr) {
+				candidates[size] = s2;
+				size++;
+			}
+			if(sim < 0.2) {
+				break;
+			}
+		}
+		//System.out.println("candidate: " + size + " " + s1);
+		if(size < 4) {
+			return null;
+		}
+		Schema view = candidates[0];
+		boolean needsUnion = false;
+		for(int i = 1; i < size; i++) {
+			Schema v = candidates[i];
+			//System.out.println("candidate: @" + i + " " + v);
+			if(v.contains(view)) {
+				view = v;
+				continue;
+			}
+			needsUnion = true;
+		}
+		//System.out.println("enlarge: " + size + " " + view);
+//		if(needsUnion) {
+//			for(int i = 1; i < size; i++) {
+//				Schema v = candidates[i];
+//				if(view.contains(v)) {
+//					continue;
+//				}
+//				view = view.union(v);
+//			}
+//		}
+//		System.out.println("extracted: " + size + " " + view);
+//		keyCount.dump();
+		return view;
 	}
 	
 	Schema extractSchema(RNode t) {
-		if(t.size() < 2) {
-			return null;
-		}
 		Schema extra = new Schema();
 		this.workingValueList.clear(0);
+		assert(t != null);
 		extra.extractImpl(t, this.workingValueList);
-		if(extra.size() < 3 || extra.size() == MaximumColumns - 1) {
-			return null;
-		}
-		//System.out.println("extracted: " + extra.nameList + "\n" + t);
 		return extra;
 	}
 	
-	void matchSchema(RNode t, Schema extracted) {
-		if(extracted.count > extracted.size() / 2) {
-			return;
+	void detectedNewSchema(Schema s, int bufsiz) {
+		this.flushRelation();
+		this.inferedSchema = s;
+		for(int i = 0; i < bufsiz; i++) {
+			extractRelation(this.buffer[i]);
 		}
-		for(Schema schema: schemaList) {
-			if(schema.size() == extracted.size()) {
-				double sim = schema.sim(extracted);
-				//System.out.println("Sim: " +sim + "\n\t" + schema + "\n\t" + extracted);
-				if(sim > 0.99999) {
-					schema.addRelationalData(t, this.workingValueList);
-					return;
-				}
-			}
-		}
-		System.out.println("new schema extracted: dup=" + extracted.count + "," + extracted.size() + " " + extracted);
-		extracted.count = 0;
-		this.schemaList.add(extracted);
-		extracted.addRelationalData(t, workingValueList);
-		System.out.println("schema size=" + schemaList.size());
 	}
-	
-	
-	Schema findView() {
-		Schema view = null;
-		for(Schema schema: schemaList) {
-			if(schema.view != null) {
-				continue;
+
+	void flushRelation() {
+		if(this.inferedSchema != null) {
+			System.out.println("Schema: " + this.inferedSchema);
+			while(this.inferedSchema.firstData != null) {
+				Object[] d = this.inferedSchema.formatEach();
+				file.writeIndent(formatCSV(d));
+				//System.out.println(formatCSV(d));
 			}
-			if(view == null) {
-				view = schema;
-				continue;
-			}
-			if(schema.contains(view)) {
-				view = schema;
-				continue;
-			}
-		}
-		if(view == null) {
-			return null;
-		}
-		for(Schema schema: schemaList) {
-			if(schema.view != null) {
-				continue;
-			}
-			if(schema == view || view.contains(schema)) {
-				schema.view = view;
-				continue;
-			}
-		}
-		return view;
-	}
-		
-	void dump() {
-		Schema view = findView();
-		while(view != null) {
-			System.out.println("View: " + view);
-			for(Schema schema: schemaList) {
-				if(schema.view == view) {
-					while(schema.firstData != null) {
-						String[] d = schema.formatEach(view);
-						System.out.println(formatCSV(d));
-					}
-				}
-			}
-			System.out.println("");
-			view = findView();
+			this.inferedSchema.count = 0;
+			this.inferedSchema.lastData = null;
+//			file.writeNewLine();
+//			this.inferedSchema = null;
 		}
 	}
 	
-	public static String formatCSV(String[] rel) {
+	public static String formatCSV(Object[] rel) {
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < rel.length; i++) {
 			if(i > 0) {
@@ -126,14 +209,21 @@ public class RelationExtracker {
 		return sb.toString();
 	}
 	
-	public static String formatCSVValue(String v) {
+	public static String formatCSVValue(Object v) {
 		if(v == null) {
 			return "";
 		}
-		if(isNumber(v)) {
-			return v;
+		if(v instanceof Integer) {
+			return v.toString();
 		}
-		return StringUtils.quoteString('"', v, '"');
+		if(v instanceof Double) {
+			return String.format("%f", v);
+		}
+		String s = v.toString();
+		if(isNumber(s)) {
+			return s;
+		}
+		return StringUtils.quoteString('"', s, '"');
 	}
 
 	public final static boolean isNumber(String v) {
@@ -158,6 +248,7 @@ public class RelationExtracker {
 	public void record(Recorder rec) {
 		// TODO Auto-generated method stub
 	}
+
 }
 
 class Schema {
@@ -189,7 +280,7 @@ class Schema {
 	}
 
 	boolean contains(Schema r) {
-		if(this.size() > r.size()) {
+		if(this.size() >= r.size()) {
 			for(String n : r.nameList) {
 				if(!this.contains(n)) {
 					return false;
@@ -217,24 +308,28 @@ class Schema {
 		return (double)interSection / (this.size() + r.size() - interSection);
 	}
 	
-	Schema union(Schema s, Schema s2) {
-		int n1 = s.size(), n2 = s2.size();
+	Schema union(Schema s2) {
+		int n1 = this.size(), n2 = s2.size();
 		if(n1 < n2) {
-			return union(s2, s); // the first one is larger
+			return s2.union(this); // the first one is larger
 		}
 		int m = n1 * n2;
 		Schema u = new Schema();
+		int i1=0,i2=0;
 		for(int i = 0; i < m; i++) {
 			/* The following is to merge two name lists in preserving
 			 * partial orders ..
 			 */
-			if(i % n1 == 0) {
-				add(s.nameList.ArrayValues[i/n1], null, null);
-			}
 			if(i % n2 == 0) {
-				add(s2.nameList.ArrayValues[i/n2], null, null);
+				u.add(this.nameList.ArrayValues[i1]);
+				i1++;
+			}
+			if(i % n1 == 0) {
+				u.add(s2.nameList.ArrayValues[i2]);
+				i2++;
 			}
 		}
+		System.out.println("union: " + u + "\n\t" + this + "\n\t" + s2);
 		return u;
 	}
 
@@ -253,9 +348,7 @@ class Schema {
 			add(t.getTag().getName(), t.getText(), wlist);
 		}
 		for(RNode sub: t) {
-			if(this.nameList.size() < RelationExtracker.MaximumColumns) {
-				extractImpl(sub, wlist);
-			}
+			extractImpl(sub, wlist);
 		}
 	}
 	
@@ -276,9 +369,30 @@ class Schema {
 			wlist.add(value);
 		}
 	}
-	
-	void addRelationalData(RNode t, UList<String> workingStringList) {
-		RelationalData d = new RelationalData(t, workingStringList);
+
+	void add(String key) {
+		Integer n = this.names.get(key);
+		if(n == null) {
+			this.names.put(key, 1);
+			this.nameList.add(key);
+			this.count++;
+		}
+	}
+
+	public void addRelation(long pos, double sim, Schema extracted, UList<String> workingValueList) {
+		Schema view = this;
+		Object[] rel = new Object[this.size()+2];
+		rel[0] = pos;
+		rel[1] = sim;
+		int column = 2;
+		for(String n : view.nameList) {
+			int index = extracted.indexOf(n);
+			if(index != -1) {
+				rel[column] = workingValueList.ArrayValues[index];
+			}
+			column ++;
+		}
+		RelationalData d = new RelationalData(rel);
 		if(firstData == null) {
 			firstData = d;
 			lastData = d;
@@ -290,7 +404,7 @@ class Schema {
 		count++;
 	}
 
-	int indexOf(String name) {
+	private int indexOf(String name) {
 		for(int i = 0; i < this.nameList.size(); i++) {
 			if(name.equals(this.nameList.ArrayValues[i])) {
 				return i;
@@ -299,23 +413,8 @@ class Schema {
 		return -1;
 	}
 	
-	String[] formatEach() {
-		String[] rel = firstData.columns;
-		firstData = firstData.next;
-		return rel;
-	}
-
-	String[] formatEach(Schema view) {
-		String[] rel = new String[view.size()+1];
-		rel[0] = String.valueOf(firstData.pos);
-		int column = 1;
-		for(String n : view.nameList) {
-			int index = indexOf(n);
-			if(index != -1) {
-				rel[column] = firstData.columns[index];
-			}
-			column ++;
-		}
+	Object[] formatEach() {
+		Object[] rel = firstData.columns;
 		firstData = firstData.next;
 		return rel;
 	}
@@ -323,13 +422,48 @@ class Schema {
 }
 
 class RelationalData {
-	long pos;
-	String[] columns;
+	Object[] columns;
 	RelationalData next;
-	RelationalData(RNode t, UList<String> l) {
-		this.pos = t.getSourcePosition();
-		this.columns = new String[l.size()];
-		System.arraycopy(l.ArrayValues, 0, this.columns, 0, this.columns.length);
+	RelationalData(Object[] columns) {
+		this.columns = columns;
+	}
+}
+
+class WordCount {
+	UMap<Counter> map = new UMap<Counter>();
+	int total;
+	class Counter {
+		int count = 0;
+	}
+	void count(String key) {
+		Counter c = map.get(key);
+		if(c == null) {
+			c = new Counter();
+			map.put(key, c);
+		}
+		c.count++;
+		this.total++;
+	}
+	double ratio(String key) {
+		Counter c = map.get(key);
+		if(c == null) {
+			return 0.0;
+		}
+		return (double)c.count / this.total;
+	}
+	boolean isNoise(String key) {
+		if(map.size() > 0) {
+			double r = ratio(key);
+			return r > 2.0 / map.size();
+		}
+		return false;
+	}
+	void dump() {
+		System.out.print("WordCount** ");
+		for(String k: this.map.keys()) {
+			System.out.print(String.format("%s[%f,%s],", k, ratio(k), isNoise(k)));
+		}
+		System.out.println();
 	}
 }
 
@@ -340,9 +474,9 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 	private long      pos;
 	private int       length;
 	private Object    value  = null;
-	RNode               parent = null;
-	private RNode       subTree[] = null;
-
+	RNode     subTree[] = null;
+	private int subNodes = -1;
+	
 	public RNode(RelationExtracker tracker) {
 		this.tracker    = tracker;
 		this.tag        = Tag.tag("Text");
@@ -406,11 +540,7 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 			this.resizeAst(newSize);
 		}
 	}
-
-	public final RNode getParent() {
-		return this.parent;
-	}
-
+	
 	public Source getSource() {
 		return this.source;
 	}
@@ -424,6 +554,17 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 		return this.source.formatPositionLine(type, this.getSourcePosition(), msg);
 	}
 
+	public final int subNodes() {
+		if(this.subNodes == -1) {
+			int c = this.size();
+			for(RNode t: this) {
+				c += t.subNodes();
+			}
+			this.subNodes = c;
+		}
+		return this.subNodes;
+	}
+	
 	public int getLength() {
 		return this.length;
 	}
@@ -431,6 +572,7 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 	public final boolean is(Tag t) {
 		return this.tag == t;
 	}
+	
 	
 	
 	public final boolean isEmptyToken() {
@@ -478,7 +620,6 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 		}
 		oldValue = this.subTree[index];
 		this.subTree[index] = node;
-		node.parent = this;
 		return oldValue;
 	}
 

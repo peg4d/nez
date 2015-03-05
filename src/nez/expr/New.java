@@ -10,7 +10,7 @@ import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class New extends ExpressionList {
+public class New extends SequentialExpression {
 	int prefetchIndex = 0;
 	New(SourcePosition s, UList<Expression> list) {
 		super(s, list);
@@ -41,18 +41,18 @@ public class New extends ExpressionList {
 		return Factory.newSequence(s, l);
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.ObjectType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.ObjectType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		if(c.required != NodeTransition.ObjectType) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		if(c.required != Typestate.ObjectType) {
 			checker.reportWarning(s, "unexpected { .. => removed!");
 			return this.removeNodeOperator();
 		}
-		c.required = NodeTransition.OperationType;
+		c.required = Typestate.OperationType;
 		for(Expression p: this) {
-			p.checkNodeTransition(checker, c);
+			p.checkTypestate(checker, c);
 		}
 		return this;
 	}

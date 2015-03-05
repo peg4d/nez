@@ -292,8 +292,10 @@ public abstract class Context implements Source {
 		}
 		this.contextStacks[0].jump = new IExit(false);
 		this.contextStacks[0].debugFailStackFlag = true;
+		this.contextStacks[0].pos = this.getPosition();
 		this.contextStacks[0].lastLog = this.lastAppendedLog;
 		this.contextStacks[1].jump = new IExit(true);  // for a point of the first called nonterminal
+		this.contextStacks[1].pos = this.getPosition();
 		this.failStackTop = 0;
 		this.usedStackTop = 1;
 		this.memoTable = memoTable;

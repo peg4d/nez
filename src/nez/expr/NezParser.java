@@ -24,7 +24,7 @@ public class NezParser extends NodeVisitor {
 		while(sc.hasUnconsumed()) {
 			AST ast = product.parse(sc, new AST());
 			if(ast == null) {
-				ConsoleUtils.exit(1, sc.formatPositionMessage("error", sc.getPosition(), "syntax error"));
+				ConsoleUtils.exit(1, sc.getSyntaxErrorMessage());
 			}
 			if(!this.parse(ast, checker)) {
 				break;

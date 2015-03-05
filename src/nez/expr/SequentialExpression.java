@@ -2,9 +2,9 @@ package nez.expr;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 
-public abstract class ExpressionList extends Expression {
+public abstract class SequentialExpression extends Expression {
 	Expression[] inners;
-	ExpressionList(SourcePosition s, UList<Expression> list) {
+	SequentialExpression(SourcePosition s, UList<Expression> list) {
 		super(s);
 		this.inners = new Expression[list.size()];
 		for(int i = 0; i < list.size(); i++) {

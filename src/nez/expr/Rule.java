@@ -78,20 +78,20 @@ public class Rule extends Expression {
 		return minlen > 0;
 	}
 	
-	public int transType = NodeTransition.Undefined;
+	public int transType = Typestate.Undefined;
 	public final boolean isPurePEG() {
-		return this.transType == NodeTransition.BooleanType;
+		return this.transType == Typestate.BooleanType;
 	}
 	private Rule definedRule;  // defined
 
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		if(this.transType != NodeTransition.Undefined) {
+	public int inferTypestate(UMap<String> visited) {
+		if(this.transType != Typestate.Undefined) {
 			return this.transType;
 		}
 		if(visited != null) {
 			if(visited.hasKey(uname)) {
-				this.transType = NodeTransition.BooleanType;
+				this.transType = Typestate.BooleanType;
 				return this.transType;
 			}
 		}
@@ -99,9 +99,9 @@ public class Rule extends Expression {
 			visited = new UMap<String>();
 		}
 		visited.put(uname, uname);
-		int t = body.inferNodeTransition(visited);
-		assert(t != NodeTransition.Undefined);
-		if(this.transType == NodeTransition.Undefined) {
+		int t = body.inferTypestate(visited);
+		assert(t != Typestate.Undefined);
+		if(this.transType == Typestate.Undefined) {
 			this.transType = t;
 		}
 		else {
@@ -111,24 +111,24 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int t = checkNamingConvention(this.name);
-		c.required = this.inferNodeTransition(null);
-		if(t != NodeTransition.Undefined && c.required != t) {
+		c.required = this.inferTypestate(null);
+		if(t != Typestate.Undefined && c.required != t) {
 			checker.reportNotice(s, "invalid naming convention: " + this.name);
 		}
-		this.body = this.getExpression().checkNodeTransition(checker, c);
+		this.body = this.getExpression().checkTypestate(checker, c);
 		return this;
 	}
 
 	public final static int checkNamingConvention(String ruleName) {
 		int start = 0;
 		if(ruleName.startsWith("~") || ruleName.startsWith("\"")) {
-			return NodeTransition.BooleanType;
+			return Typestate.BooleanType;
 		}
 		for(;ruleName.charAt(start) == '_'; start++) {
 			if(start + 1 == ruleName.length()) {
-				return NodeTransition.BooleanType;
+				return Typestate.BooleanType;
 			}
 		}
 		boolean firstUpperCase = Character.isUpperCase(ruleName.charAt(start));
@@ -136,18 +136,18 @@ public class Rule extends Expression {
 			char ch = ruleName.charAt(i);
 			if(ch == '!') break; // option
 			if(Character.isUpperCase(ch) && !firstUpperCase) {
-				return NodeTransition.OperationType;
+				return Typestate.OperationType;
 			}
 			if(Character.isLowerCase(ch) && firstUpperCase) {
-				return NodeTransition.ObjectType;
+				return Typestate.ObjectType;
 			}
 		}
-		return firstUpperCase ? NodeTransition.BooleanType : NodeTransition.Undefined;
+		return firstUpperCase ? Typestate.BooleanType : Typestate.Undefined;
 	}
 
 	@Override
 	public Expression removeNodeOperator() {
-		if(this.inferNodeTransition(null) == NodeTransition.BooleanType) {
+		if(this.inferTypestate(null) == Typestate.BooleanType) {
 			return this;
 		}
 		String name = "~" + this.name;
@@ -155,7 +155,7 @@ public class Rule extends Expression {
 		if(r == null) {
 			r = this.grammar.newRule(name, this.body);
 			r.definedRule = this;
-			r.transType = NodeTransition.BooleanType;
+			r.transType = Typestate.BooleanType;
 			r.body = this.body.removeNodeOperator();
 		}
 		return r;

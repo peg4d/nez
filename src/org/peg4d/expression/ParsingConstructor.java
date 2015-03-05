@@ -2,7 +2,7 @@ package org.peg4d.expression;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.ReportLevel;
 import nez.util.UList;
 import nez.util.UMap;
@@ -30,23 +30,23 @@ public class ParsingConstructor extends ParsingList {
 	}
 	@Override
 	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.ObjectType;
+		return Typestate.ObjectType;
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		if(this.leftJoin) {
-			if(c.required != NodeTransition.OperationType) {
+			if(c.required != Typestate.OperationType) {
 				this.report(ReportLevel.warning, "unexpected left-associative constructor");
 				return this.removeNodeOperator();
 			}
 		}
 		else {
-			if(c.required != NodeTransition.ObjectType) {
+			if(c.required != Typestate.ObjectType) {
 				this.report(ReportLevel.warning, "unexpected constructor");
 				return this.removeNodeOperator();
 			}
 		}
-		c.required = NodeTransition.OperationType;
+		c.required = Typestate.OperationType;
 		return this;
 	}
 	@Override

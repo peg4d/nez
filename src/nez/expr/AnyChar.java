@@ -28,11 +28,11 @@ public class AnyChar extends Terminal {
 		return true;
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.BooleanType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		return this;
 	}
 	@Override

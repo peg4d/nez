@@ -23,7 +23,7 @@ public class IsIndent extends Terminal implements ContextSensitive {
 		return false;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		return this;
 	}
 	@Override

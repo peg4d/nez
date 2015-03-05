@@ -3,7 +3,7 @@ package org.peg4d.jvm;
 import java.lang.reflect.InvocationTargetException;
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -27,7 +27,7 @@ public class EntryPoint extends ParsingExpression {
 		throw new RuntimeException("TODO");
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		throw new RuntimeException("TODO");
 	}
 

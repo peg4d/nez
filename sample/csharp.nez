@@ -74,6 +74,12 @@ __ = (WHITESPACE / NEW_LINE / COMMENT)*
 
 // B.1.5 Unicode character escape sequences
 
+DIGIT
+    = [0-9]
+
+HEX
+    = [A-Fa-f0-9]
+
 HEX4
     = HEX HEX HEX HEX
 

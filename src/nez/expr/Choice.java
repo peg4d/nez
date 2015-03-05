@@ -12,7 +12,7 @@ import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class Choice extends ExpressionList {
+public class Choice extends SequentialExpression {
 	Choice(SourcePosition s, UList<Expression> l) {
 		super(s, l);
 	}
@@ -38,19 +38,19 @@ public class Choice extends ExpressionList {
 		return afterAll;
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
+	public int inferTypestate(UMap<String> visited) {
 		if(this.size() > 0) {
-			return this.get(0).inferNodeTransition(visited);
+			return this.get(0).inferTypestate(visited);
 		}
-		return NodeTransition.BooleanType;
+		return Typestate.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int required = c.required;
 		UList<Expression> l = newList();
 		for(Expression e : this) {
 			c.required = required;
-			Factory.addChoice(l, e.checkNodeTransition(checker, c));
+			Factory.addChoice(l, e.checkTypestate(checker, c));
 		}
 		return Factory.newChoice(this.s, l);
 	}

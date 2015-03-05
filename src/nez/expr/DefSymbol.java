@@ -24,19 +24,19 @@ public class DefSymbol extends Unary {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		if(!this.checkAlwaysConsumed(checker, startNonTerminal, stack) && checker != null) {
-			checker.reportWarning(s, "unconsumed expression: " + this.inner);
+		if(!this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack) && checker != null) {
+			checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
 		}
 		return true;
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.BooleanType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		int t = this.inner.inferNodeTransition(null);
-		if(t != NodeTransition.BooleanType) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		int t = this.inner.inferTypestate(null);
+		if(t != Typestate.BooleanType) {
 			this.inner = this.inner.removeNodeOperator();
 		}
 		return this;

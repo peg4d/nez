@@ -29,12 +29,12 @@ public class WithFlag extends Unary {
 		return inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return this.inner.inferNodeTransition(visited);
+	public int inferTypestate(UMap<String> visited) {
+		return this.inner.inferTypestate(visited);
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		this.inner = this.inner.checkNodeTransition(checker, c);
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		this.inner = this.inner.checkTypestate(checker, c);
 		return this;
 	}
 	@Override

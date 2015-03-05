@@ -2,7 +2,7 @@ package org.peg4d;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.ConsoleUtils;
 import nez.util.ReportLevel;
 import nez.util.UList;
@@ -51,17 +51,17 @@ public class ParsingRule extends ParsingExpression {
 		return minlen > 0;
 	}
 	
-	public int transType = NodeTransition.Undefined;
+	public int transType = Typestate.Undefined;
 
 	@Override
 	public int inferNodeTransition(UMap<String> visited) {
-		if(this.transType != NodeTransition.Undefined) {
+		if(this.transType != Typestate.Undefined) {
 			return this.transType;
 		}
 		String uname = this.getUniqueName();
 		if(visited != null) {
 			if(visited.hasKey(uname)) {
-				this.transType = NodeTransition.BooleanType;
+				this.transType = Typestate.BooleanType;
 				return this.transType;
 			}
 		}
@@ -70,8 +70,8 @@ public class ParsingRule extends ParsingExpression {
 		}
 		visited.put(uname, uname);
 		int t = expr.inferNodeTransition(visited);
-		assert(t != NodeTransition.Undefined);
-		if(this.transType == NodeTransition.Undefined) {
+		assert(t != Typestate.Undefined);
+		if(this.transType == Typestate.Undefined) {
 			this.transType = t;
 		}
 		else {
@@ -81,10 +81,10 @@ public class ParsingRule extends ParsingExpression {
 	}
 
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		int t = checkNamingConvention(this.localName);
 		c.required = this.inferNodeTransition();
-		if(t != NodeTransition.Undefined && c.required != t) {
+		if(t != Typestate.Undefined && c.required != t) {
 			this.report(ReportLevel.warning, "invalid naming convention: " + this.localName);
 		}
 		this.expr = this.expr.checkNodeTransition(c);
@@ -94,11 +94,11 @@ public class ParsingRule extends ParsingExpression {
 	public final static int checkNamingConvention(String ruleName) {
 		int start = 0;
 		if(ruleName.startsWith("~") || ruleName.startsWith("\"")) {
-			return NodeTransition.BooleanType;
+			return Typestate.BooleanType;
 		}
 		for(;ruleName.charAt(start) == '_'; start++) {
 			if(start + 1 == ruleName.length()) {
-				return NodeTransition.BooleanType;
+				return Typestate.BooleanType;
 			}
 		}
 		boolean firstUpperCase = Character.isUpperCase(ruleName.charAt(start));
@@ -106,18 +106,18 @@ public class ParsingRule extends ParsingExpression {
 			char ch = ruleName.charAt(i);
 			if(ch == '!') break; // option
 			if(Character.isUpperCase(ch) && !firstUpperCase) {
-				return NodeTransition.OperationType;
+				return Typestate.OperationType;
 			}
 			if(Character.isLowerCase(ch) && firstUpperCase) {
-				return NodeTransition.ObjectType;
+				return Typestate.ObjectType;
 			}
 		}
-		return firstUpperCase ? NodeTransition.BooleanType : NodeTransition.Undefined;
+		return firstUpperCase ? Typestate.BooleanType : Typestate.Undefined;
 	}
 
 	@Override
 	public ParsingExpression removeNodeOperator() {
-		if(this.inferNodeTransition() == NodeTransition.BooleanType) {
+		if(this.inferNodeTransition() == Typestate.BooleanType) {
 			return this;
 		}
 		String name = "~" + this.localName;
@@ -125,7 +125,7 @@ public class ParsingRule extends ParsingExpression {
 		if(r == null) {
 			r = this.peg.newRule(name, this.expr);
 			r.definedRule = this;
-			r.transType = NodeTransition.BooleanType;
+			r.transType = Typestate.BooleanType;
 			r.expr = this.expr.removeNodeOperator();
 		}
 		return r;
@@ -202,10 +202,10 @@ public class ParsingRule extends ParsingExpression {
 		return this.peg.uniqueRuleName(localName);
 	}
 
-	public final static int LexicalRule   = NodeTransition.BooleanType;
-	public final static int ObjectRule    = NodeTransition.ObjectType;
-	public final static int OperationRule = NodeTransition.OperationType;
-	public final static int ReservedRule  = NodeTransition.Undefined;
+	public final static int LexicalRule   = Typestate.BooleanType;
+	public final static int ObjectRule    = Typestate.ObjectType;
+	public final static int OperationRule = Typestate.OperationType;
+	public final static int ReservedRule  = Typestate.Undefined;
 	String baseName;
 
 	ParsingObject po;

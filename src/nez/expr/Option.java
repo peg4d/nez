@@ -29,18 +29,18 @@ public class Option extends Unary {
 		return false;
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		int t = this.inner.inferNodeTransition(visited);
-		if(t == NodeTransition.ObjectType) {
-			return NodeTransition.BooleanType;
+	public int inferTypestate(UMap<String> visited) {
+		int t = this.inner.inferTypestate(visited);
+		if(t == Typestate.ObjectType) {
+			return Typestate.BooleanType;
 		}
 		return t;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int required = c.required;
-		Expression inn = this.inner.checkNodeTransition(checker, c);
-		if(required != NodeTransition.OperationType && c.required == NodeTransition.OperationType) {
+		Expression inn = this.inner.checkTypestate(checker, c);
+		if(required != Typestate.OperationType && c.required == Typestate.OperationType) {
 			checker.reportWarning(s, "unable to create objects in repetition => removed!!");
 			this.inner = inn.removeNodeOperator();
 			c.required = required;

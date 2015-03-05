@@ -30,11 +30,11 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 		return true;
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.BooleanType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(this.symbolExpression == null) {
 			this.symbolExpression = checker.getSymbolExpression(table.name);
 			if(this.symbolExpression == null) { 

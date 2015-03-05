@@ -2,7 +2,7 @@ package org.peg4d;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.ConsoleUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -199,7 +199,7 @@ public class Grammar {
 		// type check
 		for(int i = 0; i < definedNameList.size(); i++) {
 			ParsingRule r = this.getRule(definedNameList.ArrayValues[i]);
-			r.checkNodeTransition(new NodeTransition());
+			r.checkNodeTransition(new Typestate());
 		}
 		for(int i = 0; i < definedNameList.size(); i++) {
 			ParsingRule rule = this.getRule(definedNameList.ArrayValues[i]);

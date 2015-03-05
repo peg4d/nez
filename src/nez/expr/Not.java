@@ -25,13 +25,13 @@ public class Not extends Unary {
 		return false;
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.BooleanType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		int t = this.inner.inferNodeTransition(null);
-		if(t == NodeTransition.ObjectType || t == NodeTransition.OperationType) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		int t = this.inner.inferTypestate(null);
+		if(t == Typestate.ObjectType || t == Typestate.OperationType) {
 			this.inner = this.inner.removeNodeOperator();
 		}
 		return this;

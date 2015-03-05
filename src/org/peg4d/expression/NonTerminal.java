@@ -2,7 +2,7 @@ package org.peg4d.expression;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.ReportLevel;
 import nez.util.UList;
 import nez.util.UMap;
@@ -47,22 +47,22 @@ public class NonTerminal extends ParsingExpression {
 		return r.inferNodeTransition(visited);
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		ParsingRule r = this.getRule();
 		int t = r.inferNodeTransition();
-		if(t == NodeTransition.BooleanType) {
+		if(t == Typestate.BooleanType) {
 			return this;
 		}
-		if(c.required == NodeTransition.ObjectType) {
-			if(t == NodeTransition.OperationType) {
+		if(c.required == Typestate.ObjectType) {
+			if(t == Typestate.OperationType) {
 				this.report(ReportLevel.warning, "unexpected operation");
 				return this.removeNodeOperator();
 			}
-			c.required = NodeTransition.OperationType;
+			c.required = Typestate.OperationType;
 			return this;
 		}
-		if(c.required == NodeTransition.OperationType) {
-			if(t == NodeTransition.ObjectType) {
+		if(c.required == Typestate.OperationType) {
+			if(t == Typestate.ObjectType) {
 				this.report(ReportLevel.warning, "expected connector");
 				return ParsingExpression.newConnector(this, -1);
 			}

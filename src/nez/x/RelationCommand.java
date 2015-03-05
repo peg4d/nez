@@ -9,18 +9,12 @@ import nez.main.Recorder;
 import nez.util.ConsoleUtils;
 
 public class RelationCommand extends Command {
-//	static {
-//		Command.addCommand("rel", new RelationCommand());
-//	}
 	@Override
 	public void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();
-		Production p = config.getProduction(config.StartingPoint);
-		if(p == null) {
-			ConsoleUtils.exit(1, "undefined nonterminal: " + config.StartingPoint);
-		}
+		Production p = config.getProduction();
 		p.record(rec);
-		RelationExtracker rel = new RelationExtracker();
+		RelationExtracker rel = new RelationExtracker(4096, 0.5, config.getOutputFileName());
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
 			file.start(rec);
@@ -35,6 +29,6 @@ public class RelationCommand extends Command {
 				rec.log();
 			}
 		}
-		rel.dump();
+		rel.cleanUp();
 	}
 }

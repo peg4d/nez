@@ -1,6 +1,6 @@
 package org.peg4d.expression;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -21,7 +21,7 @@ public class ParsingCatch extends ParsingFunction {
 		throw new RuntimeException("TODO");
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		throw new RuntimeException("TODO");
 	}
 

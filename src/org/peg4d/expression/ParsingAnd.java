@@ -2,7 +2,7 @@ package org.peg4d.expression;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -24,17 +24,17 @@ public class ParsingAnd extends ParsingUnary {
 	@Override
 	public int inferNodeTransition(UMap<String> visited) {
 		int t = this.inner.inferNodeTransition(visited);
-		if(t == NodeTransition.ObjectType) {  // typeCheck needs to report error
-			return NodeTransition.BooleanType;
+		if(t == Typestate.ObjectType) {  // typeCheck needs to report error
+			return Typestate.BooleanType;
 		}
 		return t;
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
-		if(c.required == NodeTransition.ObjectType) {
-			c.required = NodeTransition.BooleanType;
+	public ParsingExpression checkNodeTransition(Typestate c) {
+		if(c.required == Typestate.ObjectType) {
+			c.required = Typestate.BooleanType;
 			this.inner = this.inner.checkNodeTransition(c);
-			c.required = NodeTransition.ObjectType;
+			c.required = Typestate.ObjectType;
 		}
 		else {
 			this.inner = this.inner.checkNodeTransition(c);

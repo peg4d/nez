@@ -30,17 +30,17 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 
 	public abstract String getInterningKey();
 	
-	public boolean isAlwaysConsumed() {
+	public final boolean isAlwaysConsumed() {
 		return this.checkAlwaysConsumed(null, null, null);
 	}
 
-	public int inferNodeTransition() {
-		return this.inferNodeTransition(null);
+	public final int inferTypestate() {
+		return this.inferTypestate(null);
 	}
 
 	public abstract boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack);
-	public abstract int inferNodeTransition(UMap<String> visited);
-	public abstract Expression checkNodeTransition(GrammarChecker checker, NodeTransition c);
+	public abstract int inferTypestate(UMap<String> visited);
+	public abstract Expression checkTypestate(GrammarChecker checker, Typestate c);
 	public abstract Expression removeNodeOperator();
 	public abstract Expression removeFlag(TreeMap<String, String> undefedFlags);
 	
