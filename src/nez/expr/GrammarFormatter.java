@@ -115,7 +115,7 @@ public class GrammarFormatter extends ExpressionVisitor {
 		this.format(predicate, e, null);
 	}
 
-	protected void appendSequence(ExpressionList l) {
+	protected void appendSequence(SequentialExpression l) {
 		for(int i = 0; i < l.size(); i++) {
 			if(i > 0) {
 				sb.append(" ");
@@ -136,7 +136,7 @@ public class GrammarFormatter extends ExpressionVisitor {
 		}
 	}
 
-	private int appendAsString(ExpressionList l, int start) {
+	private int appendAsString(SequentialExpression l, int start) {
 		int end = l.size();
 		String s = "";
 		for(int i = start; i < end; i++) {

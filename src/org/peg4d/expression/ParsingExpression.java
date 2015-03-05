@@ -3,7 +3,7 @@ package org.peg4d.expression;
 import java.util.AbstractList;
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.ReportLevel;
 import nez.util.UList;
 import nez.util.UMap;
@@ -51,7 +51,7 @@ public abstract class ParsingExpression extends AbstractList<ParsingExpression> 
 	}
 
 	public abstract int inferNodeTransition(UMap<String> visited);
-	public abstract ParsingExpression checkNodeTransition(NodeTransition c);
+	public abstract ParsingExpression checkNodeTransition(Typestate c);
 	
 	public abstract ParsingExpression removeNodeOperator();
 	public abstract ParsingExpression removeFlag(TreeMap<String,String> undefedFlags);	

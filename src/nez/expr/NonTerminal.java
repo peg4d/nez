@@ -74,27 +74,27 @@ public class NonTerminal extends Expression {
 	}
 
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
+	public int inferTypestate(UMap<String> visited) {
 		Rule r = this.getRule();
-		return r.inferNodeTransition(visited);
+		return r.inferTypestate(visited);
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		Rule r = this.getRule();
-		int t = r.inferNodeTransition();
-		if(t == NodeTransition.BooleanType) {
+		int t = r.inferTypestate();
+		if(t == Typestate.BooleanType) {
 			return this;
 		}
-		if(c.required == NodeTransition.ObjectType) {
-			if(t == NodeTransition.OperationType) {
+		if(c.required == Typestate.ObjectType) {
+			if(t == Typestate.OperationType) {
 				checker.reportWarning(s, "unexpected AST operations => removed!!");
 				return this.removeNodeOperator();
 			}
-			c.required = NodeTransition.OperationType;
+			c.required = Typestate.OperationType;
 			return this;
 		}
-		if(c.required == NodeTransition.OperationType) {
-			if(t == NodeTransition.ObjectType) {
+		if(c.required == Typestate.OperationType) {
+			if(t == Typestate.ObjectType) {
 				checker.reportWarning(s, "expected @ => inserted!!");
 				return Factory.newLink(this.s, this, -1);
 			}

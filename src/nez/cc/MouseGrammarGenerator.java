@@ -7,7 +7,7 @@ import nez.expr.ByteMap;
 import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
-import nez.expr.ExpressionList;
+import nez.expr.SequentialExpression;
 import nez.expr.Failure;
 import nez.expr.LeftNew;
 import nez.expr.Link;
@@ -171,7 +171,7 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 		this.visit( "!", e, null);
 	}
 
-	protected void visitSequenceImpl(ExpressionList l) {
+	protected void visitSequenceImpl(SequentialExpression l) {
 		for(int i = 0; i < l.size(); i++) {
 			if(i > 0) {
 				file.write(" ");
@@ -192,7 +192,7 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 		}
 	}
 
-	private int appendAsString(ExpressionList l, int start) {
+	private int appendAsString(SequentialExpression l, int start) {
 		int end = l.size();
 		String s = "";
 		for(int i = start; i < end; i++) {

@@ -20,22 +20,22 @@ public class And extends Unary {
 		return false;
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		int t = this.inner.inferNodeTransition(visited);
-		if(t == NodeTransition.ObjectType) {  // typeCheck needs to report error
-			return NodeTransition.BooleanType;
+	public int inferTypestate(UMap<String> visited) {
+		int t = this.inner.inferTypestate(visited);
+		if(t == Typestate.ObjectType) {  // typeCheck needs to report error
+			return Typestate.BooleanType;
 		}
 		return t;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		if(c.required == NodeTransition.ObjectType) {
-			c.required = NodeTransition.BooleanType;
-			this.inner = this.inner.checkNodeTransition(checker, c);
-			c.required = NodeTransition.ObjectType;
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		if(c.required == Typestate.ObjectType) {
+			c.required = Typestate.BooleanType;
+			this.inner = this.inner.checkTypestate(checker, c);
+			c.required = Typestate.ObjectType;
 		}
 		else {
-			this.inner = this.inner.checkNodeTransition(checker, c);
+			this.inner = this.inner.checkTypestate(checker, c);
 		}
 		return this;
 	}

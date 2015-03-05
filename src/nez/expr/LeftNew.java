@@ -22,14 +22,14 @@ public class LeftNew extends New {
 		return "{@}";
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		if(c.required != NodeTransition.OperationType) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "unexpected {@ .. => removed!!");
 			return this.removeNodeOperator();
 		}
-		c.required = NodeTransition.OperationType;
+		c.required = Typestate.OperationType;
 		for(Expression p: this) {
-			p.checkNodeTransition(checker, c);
+			p.checkTypestate(checker, c);
 		}
 		return this;
 	}

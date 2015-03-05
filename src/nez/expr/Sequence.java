@@ -11,7 +11,7 @@ import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class Sequence extends ExpressionList {
+public class Sequence extends SequentialExpression {
 	Sequence(SourcePosition s, UList<Expression> l) {
 		super(s, l);
 	}
@@ -41,20 +41,20 @@ public class Sequence extends ExpressionList {
 		return Factory.newSequence(s, l);
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
+	public int inferTypestate(UMap<String> visited) {
 		for(Expression e: this) {
-			int t = e.inferNodeTransition(visited);
-			if(t == NodeTransition.ObjectType || t == NodeTransition.OperationType) {
+			int t = e.inferTypestate(visited);
+			if(t == Typestate.ObjectType || t == Typestate.OperationType) {
 				return t;
 			}
 		}
-		return NodeTransition.BooleanType;
+		return Typestate.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		UList<Expression> l = newList();
 		for(Expression e : this) {
-			Factory.addSequence(l, e.checkNodeTransition(checker, c));
+			Factory.addSequence(l, e.checkTypestate(checker, c));
 		}
 		return Factory.newSequence(s, l);
 	}

@@ -28,11 +28,11 @@ public class Match extends Unary {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.BooleanType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.BooleanType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		return this.inner.removeNodeOperator();
 	}
 	@Override

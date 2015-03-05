@@ -2,7 +2,7 @@ package org.peg4d.expression;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.ReportLevel;
 import nez.util.UList;
 import nez.util.UMap;
@@ -26,19 +26,19 @@ public class ParsingRepetition extends ParsingUnary {
 	@Override
 	public int inferNodeTransition(UMap<String> visited) {
 		int t = this.inner.inferNodeTransition(visited);
-		if(t == NodeTransition.ObjectType) {
-			return NodeTransition.BooleanType;
+		if(t == Typestate.ObjectType) {
+			return Typestate.BooleanType;
 		}
 		return t;
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		int required = c.required;
 		if(!this.inner.checkAlwaysConsumed(null, null)) {
 			this.report(ReportLevel.warning, "empty repetition");
 		}
 		ParsingExpression inn = this.inner.checkNodeTransition(c);
-		if(required != NodeTransition.OperationType && c.required == NodeTransition.OperationType) {
+		if(required != Typestate.OperationType && c.required == Typestate.OperationType) {
 			this.report(ReportLevel.warning, "unable to create objects in repetition");
 			this.inner = inn.removeNodeOperator();
 			c.required = required;

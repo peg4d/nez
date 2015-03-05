@@ -2,7 +2,7 @@ package org.peg4d.expression;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -37,10 +37,10 @@ public class ParsingChoice extends ParsingList {
 		if(this.size() > 0) {
 			return this.get(0).inferNodeTransition(visited);
 		}
-		return NodeTransition.BooleanType;
+		return Typestate.BooleanType;
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
 		int required = c.required;
 		UList<ParsingExpression> l = newList();
 		for(ParsingExpression e : this) {

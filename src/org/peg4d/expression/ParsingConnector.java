@@ -2,7 +2,7 @@ package org.peg4d.expression;
 
 import java.util.TreeMap;
 
-import nez.expr.NodeTransition;
+import nez.expr.Typestate;
 import nez.util.ReportLevel;
 import nez.util.UList;
 import nez.util.UMap;
@@ -28,22 +28,22 @@ public class ParsingConnector extends ParsingUnary {
 	}
 	@Override
 	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.OperationType;
+		return Typestate.OperationType;
 	}
 	@Override
-	public ParsingExpression checkNodeTransition(NodeTransition c) {
-		if(c.required != NodeTransition.OperationType) {
+	public ParsingExpression checkNodeTransition(Typestate c) {
+		if(c.required != Typestate.OperationType) {
 			this.report(ReportLevel.warning, "unexpected connector");
 			return this.inner.removeNodeOperator();
 		}
-		c.required = NodeTransition.ObjectType;
+		c.required = Typestate.ObjectType;
 		ParsingExpression inn = inner.checkNodeTransition(c);
-		if(c.required != NodeTransition.OperationType) {
+		if(c.required != Typestate.OperationType) {
 			this.report(ReportLevel.warning, "no object created");
-			c.required = NodeTransition.OperationType;
+			c.required = Typestate.OperationType;
 			return inn;
 		}
-		c.required = NodeTransition.OperationType;
+		c.required = Typestate.OperationType;
 		this.inner = inn;
 		return this;
 	}

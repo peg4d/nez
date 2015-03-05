@@ -20,7 +20,7 @@ public class GrammarChecker {
 
 	boolean foundFlag  = false;
 
-	public GrammarChecker(int optimizedLevel) {
+	public GrammarChecker(int checkerLevel) {
 		// TODO Auto-generated constructor stub
 	}
 
@@ -59,11 +59,11 @@ public class GrammarChecker {
 	public void verify(Grammar grammar) {
 		UList<String> stack = new UList<String>(new String[64]);
 		for(Rule r: grammar.getDefinedRuleList()) {
-			r.minlen = -1;  // reset for all checking
-			r.checkAlwaysConsumed(this, null, stack);
 			if(Verbose.Grammar) {
 				ConsoleUtils.println(r.getUniqueName() + " = " + r.getExpression());
 			}
+			r.minlen = -1;  // reset for all checking
+			r.checkAlwaysConsumed(this, null, stack);
 			checkSymbolTable(r.getExpression());
 		}
 		if(this.foundError) {
@@ -71,7 +71,7 @@ public class GrammarChecker {
 		}
 		// type check
 		for(Rule r: grammar.getRuleList()) {
-			r.checkNodeTransition(this, new NodeTransition());
+			r.checkTypestate(this, new Typestate());
 		}
 		// interning
 		for(Rule r: grammar.getRuleList()) {

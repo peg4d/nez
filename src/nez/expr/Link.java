@@ -31,23 +31,23 @@ public class Link extends Unary {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override
-	public int inferNodeTransition(UMap<String> visited) {
-		return NodeTransition.OperationType;
+	public int inferTypestate(UMap<String> visited) {
+		return Typestate.OperationType;
 	}
 	@Override
-	public Expression checkNodeTransition(GrammarChecker checker, NodeTransition c) {
-		if(c.required != NodeTransition.OperationType) {
+	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
+		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "unexpected @ => removed");
 			return this.inner.removeNodeOperator();
 		}
-		c.required = NodeTransition.ObjectType;
-		Expression inn = inner.checkNodeTransition(checker, c);
-		if(c.required != NodeTransition.OperationType) {
+		c.required = Typestate.ObjectType;
+		Expression inn = inner.checkTypestate(checker, c);
+		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "no object created at @ => removed");
-			c.required = NodeTransition.OperationType;
+			c.required = Typestate.OperationType;
 			return inn;
 		}
-		c.required = NodeTransition.OperationType;
+		c.required = Typestate.OperationType;
 		this.inner = inn;
 		return this;
 	}
