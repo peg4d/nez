@@ -11,10 +11,7 @@ class ParseCommand extends Command {
 	@Override
 	public void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();
-		Production p = config.getProduction(config.StartingPoint);
-		if(p == null) {
-			ConsoleUtils.exit(1, "undefined nonterminal: " + config.StartingPoint);
-		}
+		Production p = config.getProduction();
 		p.record(rec);
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
@@ -43,10 +40,7 @@ class CheckCommand extends Command {
 	void exec(CommandConfigure config) {
 		UList<String> failedInput = new UList<String>(new String[4]);
 		Recorder rec = config.getRecorder();
-		Production product = config.getProduction(config.StartingPoint);
-		if(product == null) {
-			ConsoleUtils.exit(1, "undefined nonterminal: " + config.StartingPoint);
-		}
+		Production product = config.getProduction();
 		product.disable(Production.ASTConstruction);
 		product.record(rec);
 		while(config.hasInput()) {

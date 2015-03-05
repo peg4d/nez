@@ -35,27 +35,39 @@ public class NezParser extends NodeVisitor {
 		checker.verify(loaded);
 		return loaded;
 	}
+
+	public Rule parseRule(Grammar peg, String res, int linenum, String text) {
+		SourceContext sc = SourceContext.newStringSourceContext(res, linenum, text);
+		this.loaded = peg;
+		this.checker = null;
+		AST ast = product.parse(sc, new AST());
+		if(ast == null || !ast.is(NezTag.Rule)) {
+			return null;
+		}
+		return toRule(ast);
+	}
 	
 	private boolean parse(AST ast) {
 		//System.out.println("DEBUG? parsed: " + ast);
 		if(ast.is(NezTag.Rule)) {
-			if(ast.size() > 3) {
-				System.out.println("DEBUG? parsed: " + ast);		
-			}
-			String ruleName = ast.textAt(0, "");
-			if(ast.get(0).is(NezTag.String)) {
-				ruleName = quote(ruleName);
-			}
-			Rule rule = loaded.getRule(ruleName);
-			Expression e = toExpression(ast.get(1));
-			if(rule != null) {
-				checker.reportWarning(ast, "duplicated rule name: " + ruleName);
-				rule = null;
-			}
-			rule = loaded.defineRule(ast.get(0), ruleName, e);
-			if(ast.size() >= 3) {
-				readAnnotations(rule, ast.get(2));
-			}
+			toRule(ast);
+//			if(ast.size() > 3) {
+//				System.out.println("DEBUG? parsed: " + ast);		
+//			}
+//			String ruleName = ast.textAt(0, "");
+//			if(ast.get(0).is(NezTag.String)) {
+//				ruleName = quote(ruleName);
+//			}
+//			Rule rule = loaded.getRule(ruleName);
+//			Expression e = toExpression(ast.get(1));
+//			if(rule != null) {
+//				checker.reportWarning(ast, "duplicated rule name: " + ruleName);
+//				rule = null;
+//			}
+//			rule = loaded.defineRule(ast.get(0), ruleName, e);
+//			if(ast.size() >= 3) {
+//				readAnnotations(rule, ast.get(2));
+//			}
 			return true;
 		}
 //		if(ast.is(NezTag.Import)) {
@@ -76,15 +88,6 @@ public class NezParser extends NodeVisitor {
 		return false;
 	}
 	
-	private void readAnnotations(Rule rule, AST pego) {
-		for(int i = 0; i < pego.size(); i++) {
-			AST p = pego.get(i);
-			if(p.is(NezTag.Annotation)) {
-				rule.addAnotation(p.textAt(0, ""), p.get(1));
-			}
-		}
-	}
-
 //	private String searchPegFilePath(Source s, String filePath) {
 //		String f = s.getFilePath(filePath);
 //		if(new File(f).exists()) {
@@ -99,7 +102,34 @@ public class NezParser extends NodeVisitor {
 	Expression toExpression(AST po) {
 		return (Expression)this.visit(po);
 	}
-
+	
+	public Rule toRule(AST ast) {
+		String ruleName = ast.textAt(0, "");
+		if(ast.get(0).is(NezTag.String)) {
+			ruleName = quote(ruleName);
+		}
+		Rule rule = loaded.getRule(ruleName);
+		Expression e = toExpression(ast.get(1));
+		if(rule != null) {
+			checker.reportWarning(ast, "duplicated rule name: " + ruleName);
+			rule = null;
+		}
+		rule = loaded.defineRule(ast.get(0), ruleName, e);
+		if(ast.size() >= 3) {
+			readAnnotations(rule, ast.get(2));
+		}
+		return rule;
+	}
+	
+	private void readAnnotations(Rule rule, AST pego) {
+		for(int i = 0; i < pego.size(); i++) {
+			AST p = pego.get(i);
+			if(p.is(NezTag.Annotation)) {
+				rule.addAnotation(p.textAt(0, ""), p.get(1));
+			}
+		}
+	}
+	
 	public Expression toNonTerminal(AST ast) {
 		String symbol = ast.getText();
 //		if(ruleName.equals(symbol)) {

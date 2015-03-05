@@ -42,24 +42,23 @@ public abstract class Command {
 				throw new RuntimeException(e);
 			}
 		}
-		String line = readSingleLine(prompt);
-//		if(line == null) {
-//			System.exit(0);
-//		}
-//		if(prompt2 != null) {
-//			int level = 0;
-//			while((level = CheckBraceLevel(line)) > 0) {
-//				String line2 = readSingleLine(prompt2);
-//				line += "\n" + line2;
-//			}
-//			if(level < 0) {
-//				line = "";
-//				ConsoleUtils.println(" .. canceled");
-//			}
-//		}
-		if(line != null) {
-			ConsoleReader.getHistory().addToHistory(line);
+		StringBuilder sb = new StringBuilder();
+		String line;
+		while(true) {
+			line = readSingleLine(prompt);
+			if(line == null) {
+				return null;
+			}
+			if(!line.endsWith("\\")) {
+				sb.append(line);
+				break;
+			}
+			sb.append(line.substring(0, line.length() - 1));
+			sb.append("\n");
+			prompt = prompt2;
 		}
+		line = sb.toString();
+		ConsoleReader.getHistory().addToHistory(line);
 		return line;
 	}
 
@@ -93,6 +92,7 @@ public abstract class Command {
 		load("rel", "nez.x.RelationCommand");
 		load("cc", "nez.cc.GeneratorCommand");
 		load("peg", "nez.cc.GrammarCommand");
+		load("demo", "nez.x.DemoCommand");
 	}
 	
 	public static final Command getCommand(String name) {

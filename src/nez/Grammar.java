@@ -83,15 +83,12 @@ public class Grammar {
 		if(r != null) {
 			return new Production(r, option);
 		}
+		//System.out.println("** " + this.ruleMap.keys());
 		return null;
 	}
 
 	public final Production getProduction(String name) {
-		Rule r = this.getRule(name);
-		if(r != null) {
-			return new Production(r, Production.DefaultOption);
-		}
-		return null;
+		return this.getProduction(name, Production.DefaultOption);
 	}
 
 	public void dump() {

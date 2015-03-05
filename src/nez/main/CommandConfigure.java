@@ -235,6 +235,22 @@ public class CommandConfigure {
 		return NezParserCombinator.newGrammar();
 	}
 
+	public final Grammar newGrammar() {
+		if(GrammarFile != null) {
+			try {
+				NezParser p = new NezParser();
+				return p.load(SourceContext.loadSource(GrammarFile), new GrammarChecker(this.OptimizationLevel));
+			} catch (IOException e) {
+				ConsoleUtils.exit(1, "cannot open " + GrammarFile + "; " + e.getMessage());
+			}
+		}
+		if(GrammarText != null) {
+			NezParser p = new NezParser();
+			return p.load(SourceContext.newStringSourceContext(GrammarText), new GrammarChecker(this.OptimizationLevel));
+		}
+		return new Grammar("my");
+	}
+
 	public final Production getProduction(String start, int option) {
 		if(start == null) {
 			start = this.StartingPoint;

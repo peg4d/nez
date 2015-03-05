@@ -31,6 +31,15 @@ public class Production {
 		//dump();
 	}
 
+	public Rule getRule() {
+		return this.start;
+	}
+
+	public UList<Rule> getRuleList() {
+		return this.ruleList;
+	}
+
+	
 	private void add(int pos, Rule r) {
 		if(!ruleMap.hasKey(r.getUniqueName())) {
 			ruleList.add(r);
@@ -367,6 +376,7 @@ public class Production {
 		}
 		return s;
 	}
+
 
 
 }
