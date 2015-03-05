@@ -99,14 +99,14 @@ public class NezParserCombinator extends ParserCombinator {
 		Expression StringContent  = ZeroMore(Choice(
 			t("\\'"), t("\\\\"), Sequence(Not(t("'")), AnyChar())
 		));
-		return Sequence(t("'"),  New(StringContent, Tag(NezTag.CharacterSequence)), t("'"));
+		return Sequence(t("'"),  New(StringContent, Tag(NezTag.Character)), t("'"));
 	}
 
 	public Expression ValueReplacement() {
 		Expression ValueContent = ZeroMore(Choice(
 			t("\\`"), t("\\\\"), Sequence(Not(t("`")), AnyChar())
 		));
-		return Sequence(t("`"), New(ValueContent, Tag(NezTag.Value)), t("`"));
+		return Sequence(t("`"), New(ValueContent, Tag(NezTag.Replace)), t("`"));
 	}
 
 	public Expression NonTerminal() {
@@ -128,20 +128,20 @@ public class NezParserCombinator extends ParserCombinator {
 
 	public Expression Charset() {
 		Expression _CharChunk = Sequence(
-			New (P("CHAR"), Tag(NezTag.Character)), 
+			New (P("CHAR"), Tag(NezTag.Class)), 
 			Option(
-				NewLeftLink(t("-"), Link(New(P("CHAR"), Tag(NezTag.Character))), Tag(NezTag.List))
+				NewLeftLink(t("-"), Link(New(P("CHAR"), Tag(NezTag.Class))), Tag(NezTag.List))
 			)
 		);
-		return Sequence(t("["), New(ZeroMore(Link(_CharChunk)), Tag(NezTag.Character)), t("]"));
+		return Sequence(t("["), New(ZeroMore(Link(_CharChunk)), Tag(NezTag.Class)), t("]"));
 	}
 
 	public Expression Constructor() {
 		return New(
 			t("{"), 
 			Choice(
-				Sequence(t("@"), P("S"), Tag(NezTag.LeftJoin)), 
-				Tag(NezTag.Constructor)
+				Sequence(t("@"), P("S"), Tag(NezTag.LeftNew)), 
+				Tag(NezTag.New)
 			), 
 			P("_"), 
 			Option(Link(P("Expr")), P("_")),
@@ -178,10 +178,10 @@ public class NezParserCombinator extends ParserCombinator {
 	}
 
 	public Expression Term() {
-		Expression _Any = New(t("."), Tag(NezTag.Any));
+		Expression _Any = New(t("."), Tag(NezTag.AnyChar));
 		Expression _Tagging = Sequence(t("#"), New(c("A-Za-z0-9"), ZeroMore(c("A-Za-z0-9_.")), Tag(NezTag.Tagging)));
-		Expression _Byte = New(t("0x"), P("HEX"), P("HEX"), Tag(NezTag.Byte));
-		Expression _Unicode = New(t("U+"), P("HEX"), P("HEX"), P("HEX"), P("HEX"), Tag(NezTag.Byte));
+		Expression _Byte = New(t("0x"), P("HEX"), P("HEX"), Tag(NezTag.ByteChar));
+		Expression _Unicode = New(t("U+"), P("HEX"), P("HEX"), P("HEX"), P("HEX"), Tag(NezTag.ByteChar));
 		return Choice(
 			P("SingleQuotedString"), 
 			P("Charset"), 
@@ -206,9 +206,9 @@ public class NezParserCombinator extends ParserCombinator {
 				NewLeftLink(
 					Choice(
 						Sequence(t("*"), Option(Link(1, P("Integer"))), Tag(NezTag.Repetition)), 
-						Sequence(t("+"), Tag(NezTag.OneMoreRepetition)), 
+						Sequence(t("+"), Tag(NezTag.Repetition1)), 
 						Sequence(t("?"), Tag(NezTag.Option)),
-						Sequence(Connector, Option(Link(1, P("Integer"))), Tag(NezTag.Connector))
+						Sequence(Connector, Option(Link(1, P("Integer"))), Tag(NezTag.Link))
 					)
 				)
 			)
@@ -221,8 +221,8 @@ public class NezParserCombinator extends ParserCombinator {
 				Choice(
 					Sequence(t("&"), Tag(NezTag.And)),
 					Sequence(t("!"), Tag(NezTag.Not)),
-					Sequence(t("@["), P("_"), Link(1, P("Integer")), P("_"), t("]"), Tag(NezTag.Connector)),							
-					Sequence(t("@"), Tag(NezTag.Connector))
+					Sequence(t("@["), P("_"), Link(1, P("Integer")), P("_"), t("]"), Tag(NezTag.Link)),							
+					Sequence(t("@"), Tag(NezTag.Link))
 				), 
 				Link(0, P("SuffixTerm"))
 			), 

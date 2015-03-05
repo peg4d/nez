@@ -316,7 +316,7 @@ public class Factory {
 		return internImpl(s, new NewClosure(s, l));
 	}
 
-	public final static Expression newNewLeftLink(SourcePosition s, UList<Expression> l) {
+	public final static Expression newLeftNew(SourcePosition s, UList<Expression> l) {
 		if(s != null && isInterned(l)) {
 			s = null;
 		}

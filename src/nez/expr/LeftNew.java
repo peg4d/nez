@@ -40,7 +40,7 @@ public class LeftNew extends NewClosure {
 			Expression e = get(i).removeFlag(undefedFlags);
 			Factory.addSequence(l, e);
 		}
-		return Factory.newNewLeftLink(this.s, l);
+		return Factory.newLeftNew(this.s, l);
 	}
 	@Override
 	public boolean match(SourceContext context) {

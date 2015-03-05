@@ -131,7 +131,7 @@ public class ParserCombinator {
 		for(Expression e : elist) {
 			Factory.addSequence(l, e);
 		}
-		return Factory.newNewLeftLink(src(), l);
+		return Factory.newLeftNew(src(), l);
 	}
 	
 	protected Expression Link(Expression ... e) {
