@@ -34,10 +34,16 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 
 	Grammar peg;
 	
+	
 	public LPegGrammarGenerator(String fileName) {
 		super(fileName);
 	}
 	
+	@Override
+	public String getDesc() {
+		return "Lua script (required LPEG)" ;
+	}
+
 	@Override
 	public void generate(Grammar grammar) {
 		peg = grammar;

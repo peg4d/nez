@@ -32,6 +32,11 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 	}
 	
 	@Override
+	public String getDesc() {
+		return "a PEG-style grammar for Mouse" ;
+	}
+	
+	@Override
 	public void makeHeader() {
 		file.write("// Parsing Expression Grammars for Mouse");
 		file.writeIndent("// Translated from Nez");

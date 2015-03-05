@@ -69,7 +69,7 @@ public class GrammarFormatter extends GrammarVisitor {
 		sb.append(e.tag.toString());
 	}
 	
-	public void visitValue(Replace e) {
+	public void visitReplace(Replace e) {
 		sb.append(StringUtils.quoteString('`', e.value, '`'));
 	}
 	
@@ -98,7 +98,7 @@ public class GrammarFormatter extends GrammarVisitor {
 		this.format(null, e, "*");
 	}
 
-	public void visitRepetition(Repetition1 e) {
+	public void visitRepetition1(Repetition1 e) {
 		this.format(null, e, "+");
 	}
 

@@ -2,8 +2,6 @@ package nez.expr;
 
 import java.util.TreeMap;
 
-import nez.SourceContext;
-import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
@@ -11,7 +9,7 @@ import nez.vm.Compiler;
 import nez.vm.Instruction;
 
 public class New extends Unconsumed {
-	boolean lefted;
+	public boolean lefted;
 	int shift;
 	New(SourcePosition s, boolean lefted, int shift) {
 		super(s);
@@ -40,9 +38,17 @@ public class New extends Unconsumed {
 	}
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		if(c.required != Typestate.ObjectType) {
-			checker.reportWarning(s, "unexpected { .. => removed!");
-			return Factory.newEmpty(s);
+		if(this.lefted) {
+			if(c.required != Typestate.OperationType) {
+				checker.reportWarning(s, "unexpected {@ .. => removed!!");
+				return this.removeNodeOperator();
+			}
+		}
+		else {
+			if(c.required != Typestate.ObjectType) {
+				checker.reportWarning(s, "unexpected { .. => removed!");
+				return Factory.newEmpty(s);
+			}
 		}
 		c.required = Typestate.OperationType;
 		return this;
@@ -57,37 +63,9 @@ public class New extends Unconsumed {
 		return Unconsumed;
 	}
 	@Override
-	public boolean match(SourceContext context) {
-		long startIndex = context.getPosition();
-//
-////		ParsingObject left = context.left;
-//		for(int i = 0; i < this.prefetchIndex; i++) {
-//			if(!this.get(i).matcher.match(context)) {
-//				context.rollback(startIndex);
-//				return false;
-//			}
-//		}
-		int mark = context.startConstruction();
-		Node newnode = context.newNode();
-		context.left = newnode;
-		for(int i = 0; i < this.size(); i++) {
-			if(!this.get(i).optimized.match(context)) {
-				context.abortConstruction(mark);
-				context.rollback(startIndex);
-				newnode = null;
-				return false;
-			}
-		}
-		newnode.setEndingPosition(context.getPosition());
-		context.left = newnode;
-		return true;
-	}
-	
-	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
 		return bc.encodeNew(this, next);
 	}
-
 	@Override
 	protected int pattern(GEP gep) {
 		int max = 0;

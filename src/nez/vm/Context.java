@@ -266,7 +266,7 @@ public abstract class Context implements Source {
 				if(onlyTop) break;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	// ----------------------------------------------------------------------

@@ -203,10 +203,15 @@ public class NezParser extends NodeVisitor {
 	}
 
 	public Expression toRepetition1(AST ast) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		l.add(toExpression(ast.get(0)));
-		l.add(Factory.newRepetition(ast, toExpression(ast.get(0))));
-		return Factory.newSequence(ast, l);
+		if(Expression.ClassicMode) {
+			UList<Expression> l = new UList<Expression>(new Expression[2]);
+			l.add(toExpression(ast.get(0)));
+			l.add(Factory.newRepetition(ast, toExpression(ast.get(0))));
+			return Factory.newSequence(ast, l);
+		}
+		else {
+			return Factory.newRepetition1(ast, toExpression(ast.get(0)));
+		}
 	}
 
 	public Expression toRepetition(AST ast) {
@@ -226,13 +231,25 @@ public class NezParser extends NodeVisitor {
 	// PEG4d TransCapturing
 
 	public Expression toNew(AST ast) {
-		Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-		return Factory.newNew(ast, seq.toList());
+		if(Expression.ClassicMode) {
+			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, seq.toList());
+		}
+		else {
+			Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, false, p);
+		}
 	}
 
 	public Expression toLeftNew(AST ast) {
-		Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-		return Factory.newLeftNew(ast, seq.toList());
+		if(Expression.ClassicMode) {
+			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, seq.toList());
+		}
+		else {
+			Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, true, p);
+		}
 	}
 
 	public Expression toLink(AST ast) {

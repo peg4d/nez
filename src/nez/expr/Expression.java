@@ -10,6 +10,7 @@ import nez.vm.Compiler;
 import nez.vm.Instruction;
 
 public abstract class Expression extends AbstractList<Expression> implements Recognizer {
+	public final static boolean ClassicMode = false;
 	SourcePosition s      = null;
 	public int    internId   = 0;
 	public Expression optimized;

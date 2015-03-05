@@ -220,7 +220,7 @@ public class Compiler {
 	}
 
 	public final Instruction encodeRepetition1(Repetition1 p, Instruction next) {
-		return p.encode(this, this.encodeRepetition(p, next));
+		return p.get(0).encode(this, this.encodeRepetition(p, next));
 	}
 
 	public final Instruction encodeOption(Option p, Instruction next) {
@@ -395,7 +395,7 @@ public class Compiler {
 
 	public final Instruction encodeNew(New p, Instruction next) {
 		if(this.enableASTConstruction()) {
-			return new INew(p, next);
+			return p.lefted ? new ILeftNew(p, next) : new INew(p, next);
 		}
 		return next;
 	}
@@ -432,7 +432,7 @@ public class Compiler {
 		return new IPosPush(p, inner);
 	}
 	public final Instruction encodeIsSymbol(IsSymbol p, Instruction next) {
-		Instruction inner = p.get(0).encode(this, new IIsSymbol(p, p.checkLastSymbolOnly, next));
+		Instruction inner = p.getSymbolExpression().encode(this, new IIsSymbol(p, p.checkLastSymbolOnly, next));
 		return new IPosPush(p, inner);
 	}
 	public final Instruction encodeDefIndent(DefIndent p, Instruction next) {

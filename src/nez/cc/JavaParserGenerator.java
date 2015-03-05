@@ -7,6 +7,12 @@ class JavaParserGenerator extends ParserGenerator {
 	JavaParserGenerator(String fileName) {
 		super(fileName);
 	}
+
+	@Override
+	public String getDesc() {
+		return "a Nez parser generator for Java" ;
+	}
+
 	void generate(Compiler cc) {
 		file.writeIndent("public class NezParser {");
 		file.incIndent();

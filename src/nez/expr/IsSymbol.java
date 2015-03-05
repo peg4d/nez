@@ -17,6 +17,9 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 		this.table = table;
 		this.checkLastSymbolOnly = false;
 	}
+	public final Expression getSymbolExpression() {
+		return this.symbolExpression;
+	}
 	@Override
 	public String getPredicate() {
 		return (checkLastSymbolOnly ? "is " : "isa ") + table.name;
