@@ -97,7 +97,11 @@ public class GrammarFormatter extends GrammarVisitor {
 	public void visitRepetition(Repetition e) {
 		this.format(null, e, "*");
 	}
-	
+
+	public void visitRepetition(Repetition1 e) {
+		this.format(null, e, "+");
+	}
+
 	public void visitAnd(And e) {
 		this.format( "&", e, null);
 	}
@@ -171,7 +175,7 @@ public class GrammarFormatter extends GrammarVisitor {
 		}
 	}
 
-	public void visitNew(NewClosure e) {
+	public void visitNewClosure(NewClosure e) {
 		sb.append("{ ");
 		this.appendSequence(e);
 		sb.append(" }");
@@ -181,6 +185,14 @@ public class GrammarFormatter extends GrammarVisitor {
 		sb.append("{@ ");
 		this.appendSequence(e);
 		sb.append(" }");
+	}
+
+	public void visitNew(New e) {
+		sb.append(e.lefted ? "{@ " : "{ ");
+	}
+
+	public void visitCapture(Capture e) {
+		sb.append("}");
 	}
 
 	@Override

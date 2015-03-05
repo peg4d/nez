@@ -10,8 +10,8 @@ import nez.vm.Compiler;
 import nez.vm.Instruction;
 
 public abstract class Expression extends AbstractList<Expression> implements Recognizer {
-	public int    internId   = 0;
 	SourcePosition s      = null;
+	public int    internId   = 0;
 	public Expression optimized;
 
 	Expression(SourcePosition s) {
@@ -20,6 +20,10 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		this.optimized = this;
 	}
 	
+	public final SourcePosition getSourcePosition() {
+		return this.s;
+	}
+
 	public final int getId() {
 		return this.internId;
 	}
@@ -123,5 +127,6 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	public boolean match(SourceContext context) {
 		throw new RuntimeException("old one");
 	}
+
 
 }

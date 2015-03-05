@@ -322,6 +322,14 @@ public class Factory {
 		}
 		return internImpl(s, new LeftNew(s, l));
 	}
+
+	public final static Expression newNew(SourcePosition s, boolean lefted, Expression e) {
+		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
+		Factory.addSequence(l, new New(s, lefted, 0));
+		Factory.addSequence(l, e);
+		Factory.addSequence(l, new Capture(s, 0));
+		return newSequence(s, l);
+	}
 	
 	public final static UList<Expression> toSequenceList(Expression e) {
 		UList<Expression> l = null;

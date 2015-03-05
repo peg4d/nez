@@ -6,8 +6,8 @@ import java.lang.reflect.Method;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.expr.Expression;
-import nez.expr.GrammarChecker;
 import nez.expr.Factory;
+import nez.expr.GrammarChecker;
 import nez.util.UList;
 
 public class ParserCombinator {
@@ -27,7 +27,7 @@ public class ParserCombinator {
 				}
 				try {
 					Expression e = (Expression)m.invoke(this);
-					grammar.newRule(name, e);
+					grammar.defineRule(e.getSourcePosition(), name, e);
 				} catch (IllegalAccessException e1) {
 					e1.printStackTrace();
 				} catch (IllegalArgumentException e1) {
