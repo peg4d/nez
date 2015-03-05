@@ -24,6 +24,7 @@ import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
 import nez.expr.Repetition;
+import nez.expr.Repetition1;
 import nez.expr.Replace;
 import nez.expr.Rule;
 import nez.expr.Sequence;
@@ -214,6 +215,10 @@ public class Compiler {
 		Instruction start = p.get(0).encode(this, skip);
 		skip.next = start;
 		return new IFailPush(p, next, start);
+	}
+
+	public final Instruction encodeRepetition1(Repetition1 p, Instruction next) {
+		return p.encode(this, this.encodeRepetition(p, next));
 	}
 
 	public final Instruction encodeOption(Option p, Instruction next) {

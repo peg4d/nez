@@ -62,7 +62,7 @@ public class Option extends Unary {
 	public boolean match(SourceContext context) {
 		//long f = context.rememberFailure();
 		Node left = context.left;
-		if(!this.inner.matcher.match(context)) {
+		if(!this.inner.optimized.match(context)) {
 			context.left = left;
 			//context.forgetFailure(f);
 		}

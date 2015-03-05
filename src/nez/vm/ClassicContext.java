@@ -190,7 +190,7 @@ public abstract class ClassicContext extends Context {
 //			this.stackedNonTerminals.clear(pos);
 //			return b;
 //		}
-		return e.deReference().matcher.match((SourceContext)this); // FIXME
+		return e.deReference().optimized.match((SourceContext)this); // FIXME
 	}
 	
 //	protected MemoTable memoTable = null;

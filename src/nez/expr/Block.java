@@ -41,7 +41,7 @@ public class Block extends Unary {
 		int stateValue = context.stateValue;
 		String indent = context.getIndentText(context.getPosition());
 		int stackTop = context.pushSymbolTable(NezTag.Indent, indent);
-		boolean b = this.inner.matcher.match(context);
+		boolean b = this.inner.optimized.match(context);
 		context.popSymbolTable(stackTop);
 		context.stateValue = stateValue;
 		return b;

@@ -82,6 +82,13 @@ public class Factory {
 		return internImpl(s, new Repetition(s, p));
 	}
 
+	public final static Expression newRepetition1(SourcePosition s, Expression p) {
+		if(p.isInterned()) {
+			s = null;
+		}
+		return internImpl(s, new Repetition1(s, p));
+	}
+
 	public final static Expression newAnd(SourcePosition s, Expression p) {
 		if(p.isInterned()) {
 			s = null;

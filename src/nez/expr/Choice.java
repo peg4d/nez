@@ -90,7 +90,7 @@ public class Choice extends SequentialExpression {
 		Node left = context.left;
 		for(int i = 0; i < this.size(); i++) {
 			context.left = left;
-			if(this.get(i).matcher.match(context)) {
+			if(this.get(i).optimized.match(context)) {
 				//context.forgetFailure(f);
 				left = null;
 				return true;
@@ -112,7 +112,7 @@ public class Choice extends SequentialExpression {
 	int endIndex = 257;
 	@Override
 	public final Expression optimize(int option) {
-		if(FlagUtils.is(option, Production.Optimization) && !(this.matcher instanceof ByteMap)) {
+		if(FlagUtils.is(option, Production.Optimization) && !(this.optimized instanceof ByteMap)) {
 			boolean byteMap[] = new boolean[257];
 			if(isByteMap(option, byteMap, 0)) {
 				return Factory.newByteMap(s, byteMap);

@@ -51,7 +51,7 @@ public class Not extends Unary {
 		long pos = context.getPosition();
 		//long f   = context.rememberFailure();
 		Node left = context.left;
-		if(this.inner.matcher.match(context)) {
+		if(this.inner.optimized.match(context)) {
 			context.rollback(pos);
 			context.failure2(this);
 			left = null;

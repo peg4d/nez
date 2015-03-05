@@ -47,7 +47,7 @@ public class LeftNew extends New {
 		long startIndex = context.getPosition();
 //		ParsingObject left = context.left;
 		for(int i = 0; i < this.prefetchIndex; i++) {
-			if(!this.get(i).matcher.match(context)) {
+			if(!this.get(i).optimized.match(context)) {
 				context.rollback(startIndex);
 				return false;
 			}
@@ -58,7 +58,7 @@ public class LeftNew extends New {
 		context.lazyLink(newnode, 0, context.left);
 		context.left = newnode;
 		for(int i = 0; i < this.size(); i++) {
-			if(!this.get(i).matcher.match(context)) {
+			if(!this.get(i).optimized.match(context)) {
 				context.abortConstruction(mark);
 				context.rollback(startIndex);
 				newnode = null;

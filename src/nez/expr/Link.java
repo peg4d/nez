@@ -63,7 +63,7 @@ public class Link extends Unary {
 	public boolean match(SourceContext context) {
 		Node left = context.left;
 		int mark = context.startConstruction();
-		if(this.inner.matcher.match(context)) {
+		if(this.inner.optimized.match(context)) {
 			if(context.left != left) {
 				context.commitConstruction(mark, context.left);
 				context.lazyLink(left, this.index, context.left);

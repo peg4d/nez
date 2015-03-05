@@ -41,7 +41,7 @@ public class Match extends Unary {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		return this.inner.matcher.match(context);
+		return this.inner.optimized.match(context);
 	}
 	
 	@Override

@@ -51,7 +51,7 @@ public class And extends Unary {
 	@Override
 	public boolean match(SourceContext context) {
 		long pos = context.getPosition();
-		boolean b = this.inner.matcher.match(context);
+		boolean b = this.inner.optimized.match(context);
 		context.rollback(pos);
 		return b;
 	}

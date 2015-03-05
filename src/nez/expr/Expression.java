@@ -9,17 +9,21 @@ import nez.vm.Compiler;
 import nez.vm.Instruction;
 
 public abstract class Expression extends AbstractList<Expression> implements Recognizer {
+	public int    internId   = 0;
+	SourcePosition s      = null;
+	public Expression optimized;
+
 	protected Expression(SourcePosition s) {
 		this.s = s;
 		this.internId = 0;
-		this.matcher = this;
+		this.optimized = this;
 	}
 	
-	public abstract String getPredicate();
 	
-	public int    internId   = 0;
-	SourcePosition s      = null;
-
+	public final int getId() {
+		return this.internId;
+	}
+	
 	final boolean isInterned() {
 		return (this.internId > 0);
 	}
@@ -28,6 +32,7 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		return Factory.intern(this);
 	}
 
+	public abstract String getPredicate();
 	public abstract String getInterningKey();
 	
 	public final boolean isAlwaysConsumed() {
@@ -83,8 +88,6 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		return this;
 	}
 	
-	public Recognizer matcher;
-		
 	@Override
 	public String toString() {
 		return new GrammarFormatter().format(this);
@@ -102,7 +105,11 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		}
 		return l;
 	}
-	
+
+	public final void visit(GrammarVisitor visitor) {
+		visitor.visit(this);
+	}
+
 	public abstract Instruction encode(Compiler bc, Instruction next);
 //	public Instruction encode(Compiler bc, Instruction next) {
 //		// todo
@@ -111,9 +118,5 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 
 	protected abstract int pattern(GEP gep);
 	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);
-
-	public final void visit(ExpressionVisitor visitor) {
-		visitor.visit(this);
-	}
 	
 }

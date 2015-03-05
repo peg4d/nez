@@ -90,7 +90,7 @@ public class New extends SequentialExpression {
 		Node newnode = context.newNode();
 		context.left = newnode;
 		for(int i = 0; i < this.size(); i++) {
-			if(!this.get(i).matcher.match(context)) {
+			if(!this.get(i).optimized.match(context)) {
 				context.abortConstruction(mark);
 				context.rollback(startIndex);
 				newnode = null;

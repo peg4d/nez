@@ -14,7 +14,7 @@ import nez.expr.ByteMap;
 import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
-import nez.expr.ExpressionVisitor;
+import nez.expr.GrammarVisitor;
 import nez.expr.Factory;
 import nez.expr.Failure;
 import nez.expr.LeftNew;
@@ -32,7 +32,7 @@ import nez.expr.Unary;
 import nez.util.UList;
 
 
-public class Compiler extends ExpressionVisitor {
+public class Compiler extends GrammarVisitor {
 	
 	// Kind of optimize
 	boolean O_Inlining = false;

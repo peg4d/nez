@@ -4,7 +4,7 @@ import nez.util.StringUtils;
 
 import org.peg4d.Utils;
 
-public class GrammarFormatter extends ExpressionVisitor {
+public class GrammarFormatter extends GrammarVisitor {
 	private StringBuilder sb = null;
 	private final static String NewIndent = "\n\t";
 

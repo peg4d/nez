@@ -72,7 +72,7 @@ public class Repetition extends Unary {
 //		long f = context.rememberFailure();
 		while(ppos < pos) {
 			Node left = context.left;
-			if(!this.inner.matcher.match(context)) {
+			if(!this.inner.optimized.match(context)) {
 				context.left = left;
 				left = null;
 				break;
@@ -103,6 +103,4 @@ public class Repetition extends Unary {
 			}
 		}
 	}
-
-
 }

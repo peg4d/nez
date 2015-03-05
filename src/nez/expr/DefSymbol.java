@@ -52,7 +52,7 @@ public class DefSymbol extends Unary {
 	@Override
 	public boolean match(SourceContext context) {
 		long startIndex = context.getPosition();
-		if(this.inner.matcher.match(context)) {
+		if(this.inner.optimized.match(context)) {
 			long endIndex = context.getPosition();
 			String s = context.substring(startIndex, endIndex);
 			context.pushSymbolTable(table, s);

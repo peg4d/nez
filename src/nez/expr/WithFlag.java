@@ -14,7 +14,7 @@ public class WithFlag extends Unary {
 	WithFlag(SourcePosition s, String flagName, Expression inner) {
 		super(s, inner);
 		this.flagName = flagName;
-		this.matcher = inner.matcher;
+		this.optimized = inner.optimized;
 	}
 	@Override
 	public String getPredicate() {
@@ -57,7 +57,7 @@ public class WithFlag extends Unary {
 
 	@Override
 	public boolean match(SourceContext context) {
-		return this.inner.matcher.match(context);
+		return this.inner.optimized.match(context);
 	}
 	
 	@Override
