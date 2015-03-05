@@ -42,7 +42,9 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		file.incIndent();
 		UList<Rule> list = grammar.getDefinedRuleList();
 		for(Rule r: list) {
-			visitRule(r);
+			if(!r.getLocalName().startsWith("\"")) {
+				visitRule(r);
+			}
 		}
 		file.decIndent();
 		file.writeIndent("}");
@@ -56,8 +58,10 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		file.writeIndent("local lpeg = require \"lpeg\"");
 		UList<Rule> list = peg.getDefinedRuleList();
 		for(Rule r: list) {
-			String localName = r.getLocalName();
-			file.writeIndent("local " + localName + " = lpeg.V\"" + localName + "\"");
+			if(!r.getLocalName().startsWith("\"")) {
+				String localName = r.getLocalName();
+				file.writeIndent("local " + localName + " = lpeg.V\"" + localName + "\"");
+			}
 		}
 	}
 
@@ -145,7 +149,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		case '\\' : sb.append("'\\\\'"); 
 		}
 		if(Character.isISOControl(c) || c > 127) {
-			sb.append(String.format("0x%02x", (int)c));
+			sb.append(String.format("0x%02x", (int)c)); // Fix me
 		}
 		sb.append(c);
 	}
@@ -303,12 +307,12 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 
 	@Override
 	public void visitUndefined(Expression e) {
-		file.write("/* LPeg Unsupported <");
+		file.write("lpeg.P\"\" --[[ LPeg Unsupported <");
 		file.write(e.getPredicate());
 		for(Expression se : e) {
 			file.write(" ");
 			visit(se);
 		}
-		file.write("> */");
+		file.write("> ]]");
 	}
 }
