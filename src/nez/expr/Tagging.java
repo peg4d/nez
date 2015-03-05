@@ -4,11 +4,10 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.util.StringUtils;
-import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class Tagging extends Unconsumed {
+public class Tagging extends ParsingOperation {
 	public Tag tag;
 	Tagging(SourcePosition s, Tag tag) {
 		super(s);
@@ -26,40 +25,16 @@ public class Tagging extends Unconsumed {
 		return "#" + this.tag.getName();
 	}
 	@Override
-	public int inferTypestate(UMap<String> visited) {
-		return Typestate.OperationType;
-	}
-	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		if(c.required != Typestate.OperationType) {
-			checker.reportWarning(s, "unexpected #" + tag.getName() + " => removed!!");
-			return Factory.newEmpty(this.s);
-		}
-		return this;
+		return this.checkTypestate(checker, c, "#" + tag.getName());
 	}
-	@Override
-	public Expression removeNodeOperator() {
-		return Factory.newEmpty(null);
-	}
-
 	@Override
 	public boolean match(SourceContext context) {
 		context.left.setTag(this.tag);
 		return true;
 	}
-	
 	@Override
 	public Instruction encode(Compiler bc, Instruction next) {
 		return bc.encodeTagging(this, next);
 	}
-
-	@Override
-	protected int pattern(GEP gep) {
-		return 0;
-	}
-
-	@Override
-	protected void examplfy(GEP gep, StringBuilder sb, int p) {
-	}
-
 }

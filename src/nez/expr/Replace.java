@@ -3,11 +3,10 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.StringUtils;
-import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class Replace extends Unconsumed {
+public class Replace extends ParsingOperation {
 	public String value;
 	Replace(SourcePosition s, String value) {
 		super(s);
@@ -22,20 +21,8 @@ public class Replace extends Unconsumed {
 		return "`" + this.value;
 	}
 	@Override
-	public int inferTypestate(UMap<String> visited) {
-		return Typestate.OperationType;
-	}
-	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		if(c.required != Typestate.OperationType) {
-			checker.reportWarning(s, "unexpected `" + value + "` => removed");
-			return Factory.newEmpty(this.s);
-		}
-		return this;
-	}
-	@Override
-	public Expression removeNodeOperator() {
-		return Factory.newEmpty(null);
+		return this.checkTypestate(checker, c, "`" + value + "`");
 	}
 	@Override
 	public boolean match(SourceContext context) {
@@ -46,15 +33,4 @@ public class Replace extends Unconsumed {
 	public Instruction encode(Compiler bc, Instruction next) {
 		return bc.encodeReplace(this, next);
 	}
-	
-	@Override
-	protected int pattern(GEP gep) {
-		return 0;
-	}
-
-	@Override
-	protected void examplfy(GEP gep, StringBuilder sb, int p) {
-	}
-
-
 }
