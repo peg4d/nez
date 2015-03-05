@@ -729,11 +729,13 @@ public abstract class Context implements Source {
 		ContextStack top = this.newUnusedLocalStack();
 		top.pos = this.stackedSymbolTable.size();
 		top.prevFailTop = this.stateValue;
+		//System.out.println("pushtable " + top.pos + " " + top.prevFailTop);
 		return op.next;
 	}
 
 	public final Instruction opITablePop(ITablePop op) {
 		ContextStack top = popLocalStack();
+		//System.out.println("poptable " + top.pos + " " + top.prevFailTop);
 		this.stateValue = top.prevFailTop;
 		this.popSymbolTable((int)top.pos);
 		return op.next;

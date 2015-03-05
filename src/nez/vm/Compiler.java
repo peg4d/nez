@@ -423,7 +423,7 @@ public class Compiler {
 	
 	public final Instruction encodeBlock(Block p, Instruction next) {
 		Instruction failed = new ITablePop(p, new IFail(p));
-		Instruction inner = p.get(0).encode(this, new ITablePop(p, next));
+		Instruction inner = p.get(0).encode(this, new IFailPop(p, new ITablePop(p, next)));
 		return new ITablePush(p, new IFailPush(p, failed, inner));
 	}
 

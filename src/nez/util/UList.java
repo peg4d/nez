@@ -39,11 +39,11 @@ public class UList<T> extends AbstractList<T> {
 		return this.currentSize;
 	}
 
-	private T[] newArray(int CopySize, int NewSize) {
+	private T[] newArray(int orgsize, int newsize) {
 		@SuppressWarnings("unchecked")
-		T[] newValues = (T[])Array.newInstance(this.ArrayValues.getClass().getComponentType(), NewSize);
-		System.arraycopy(this.ArrayValues, 0, newValues, 0, CopySize);
-		return newValues;
+		T[] newarrays = (T[])Array.newInstance(this.ArrayValues.getClass().getComponentType(), newsize);
+		System.arraycopy(this.ArrayValues, 0, newarrays, 0, orgsize);
+		return newarrays;
 	}
 
 	private void reserve(int newsize) {
@@ -61,12 +61,13 @@ public class UList<T> extends AbstractList<T> {
 	@Override
 	public final void add(int index, T Value) {
 		this.reserve(this.currentSize + 1);
-		System.arraycopy(this.ArrayValues, index, this.ArrayValues, index+1, this.currentSize - index);
+		//System.arraycopy(this.ArrayValues, index, this.ArrayValues, index+1, this.currentSize - index);
 		this.ArrayValues[index] = Value;
 		this.currentSize = this.currentSize + 1;
 	}
 
 	public final void clear(int index) {
+		assert(index <= this.currentSize);
 		this.currentSize = index;
 	}
 
@@ -92,6 +93,7 @@ public class UList<T> extends AbstractList<T> {
 
 	@Override
 	public boolean add(T e) {
+		//System.out.println("size: " + this.currentSize + ", " + this.ArrayValues.length);
 		this.reserve(this.currentSize + 1);
 		this.ArrayValues[this.currentSize] = e;
 		this.currentSize = this.currentSize + 1;
