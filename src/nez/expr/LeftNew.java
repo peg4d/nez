@@ -9,7 +9,7 @@ import nez.util.UList;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class LeftNew extends New {
+public class LeftNew extends NewClosure {
 	LeftNew(SourcePosition s, UList<Expression> list) {
 		super(s, list);
 	}

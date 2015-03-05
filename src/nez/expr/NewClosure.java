@@ -10,13 +10,10 @@ import nez.util.UMap;
 import nez.vm.Compiler;
 import nez.vm.Instruction;
 
-public class New extends Unconsumed {
-	boolean lefted;
-	int shift;
-	New(SourcePosition s, boolean lefted, int shift) {
-		super(s);
-		this.lefted = lefted;
-		this.shift  = shift;
+public class NewClosure extends SequentialExpression {
+	int prefetchIndex = 0;
+	NewClosure(SourcePosition s, UList<Expression> list) {
+		super(s, list);
 	}
 	@Override
 	public String getPredicate() { 
@@ -24,15 +21,24 @@ public class New extends Unconsumed {
 	}
 	@Override
 	public String getInterningKey() {
-		return lefted ? "{@}" : "{}";
+		return "{}";
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
+		for(Expression e: this) {
+			if(e.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
+				return true;
+			}
+		}
 		return false;
 	}
 	@Override
 	public Expression removeNodeOperator() {
-		return Factory.newEmpty(s);
+		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
+		for(Expression e : this) {
+			Factory.addSequence(l, e.removeNodeOperator());
+		}
+		return Factory.newSequence(s, l);
 	}
 	@Override
 	public int inferTypestate(UMap<String> visited) {
@@ -42,18 +48,31 @@ public class New extends Unconsumed {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(c.required != Typestate.ObjectType) {
 			checker.reportWarning(s, "unexpected { .. => removed!");
-			return Factory.newEmpty(s);
+			return this.removeNodeOperator();
 		}
 		c.required = Typestate.OperationType;
+		for(Expression p: this) {
+			p.checkTypestate(checker, c);
+		}
 		return this;
 	}
 	@Override
 	public Expression removeFlag(TreeMap<String, String> undefedFlags) {
-		return this;
+		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
+		for(int i = 0; i < this.size(); i++) {
+			Expression e = get(i).removeFlag(undefedFlags);
+			Factory.addSequence(l, e);
+		}
+		return Factory.newNew(s, l);
 	}
-
 	@Override
 	public short acceptByte(int ch) {
+		for(int i = 0; i < this.size(); i++) {
+			short r = this.get(i).acceptByte(ch);
+			if(r != Unconsumed) {
+				return r;
+			}
+		}
 		return Unconsumed;
 	}
 	@Override
@@ -105,4 +124,6 @@ public class New extends Unconsumed {
 			e.examplfy(gep, sb, p);
 		}
 	}
+
+
 }

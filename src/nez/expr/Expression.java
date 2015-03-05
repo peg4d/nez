@@ -2,6 +2,7 @@ package nez.expr;
 import java.util.AbstractList;
 import java.util.TreeMap;
 
+import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
@@ -13,12 +14,11 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	SourcePosition s      = null;
 	public Expression optimized;
 
-	protected Expression(SourcePosition s) {
+	Expression(SourcePosition s) {
 		this.s = s;
 		this.internId = 0;
 		this.optimized = this;
 	}
-	
 	
 	public final int getId() {
 		return this.internId;
@@ -118,5 +118,10 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 
 	protected abstract int pattern(GEP gep);
 	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);
-	
+
+	@Override
+	public boolean match(SourceContext context) {
+		throw new RuntimeException("old one");
+	}
+
 }

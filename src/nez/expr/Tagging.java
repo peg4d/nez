@@ -19,11 +19,11 @@ public class Tagging extends Unconsumed {
 	}
 	@Override
 	public String getPredicate() {
-		return "tag " + StringUtils.quoteString('"', tag.name, '"');
+		return "tag " + StringUtils.quoteString('"', tag.getName(), '"');
 	}
 	@Override
 	public String getInterningKey() {
-		return "#" + this.tag.toString();
+		return "#" + this.tag.getName();
 	}
 	@Override
 	public int inferTypestate(UMap<String> visited) {
@@ -32,7 +32,7 @@ public class Tagging extends Unconsumed {
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(c.required != Typestate.OperationType) {
-			checker.reportWarning(s, "unexpected #" + tag.toString() + " => removed!!");
+			checker.reportWarning(s, "unexpected #" + tag.getName() + " => removed!!");
 			return Factory.newEmpty(this.s);
 		}
 		return this;
@@ -41,7 +41,7 @@ public class Tagging extends Unconsumed {
 	public Expression removeNodeOperator() {
 		return Factory.newEmpty(null);
 	}
-	
+
 	@Override
 	public boolean match(SourceContext context) {
 		context.left.setTag(this.tag);

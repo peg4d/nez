@@ -9,6 +9,7 @@ import nez.expr.AnyChar;
 import nez.expr.Block;
 import nez.expr.ByteChar;
 import nez.expr.ByteMap;
+import nez.expr.Capture;
 import nez.expr.Choice;
 import nez.expr.ContextSensitive;
 import nez.expr.DefIndent;
@@ -20,6 +21,7 @@ import nez.expr.IsSymbol;
 import nez.expr.LeftNew;
 import nez.expr.Link;
 import nez.expr.New;
+import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -377,7 +379,7 @@ public class Compiler {
 	}
 
 	
-	public final Instruction encodeNew(New p, Instruction next) {
+	public final Instruction encodeNew(NewClosure p, Instruction next) {
 		if(this.enableASTConstruction()) {
 			return new INew(p, this.encodeSequence(p, new ICapture(p, next)));
 		}
@@ -390,7 +392,21 @@ public class Compiler {
 		}
 		return this.encodeSequence(p, next);
 	}
-		
+
+	public final Instruction encodeNew(New p, Instruction next) {
+		if(this.enableASTConstruction()) {
+			return new INew(p, next);
+		}
+		return next;
+	}
+
+	public final Instruction encodeCapture(Capture p, Instruction next) {
+		if(this.enableASTConstruction()) {
+			return new ICapture(p, next);
+		}
+		return next;
+	}
+	
 	public final Instruction encodeTagging(Tagging p, Instruction next) {
 		if(this.enableASTConstruction()) {
 			return new ITag(p, next);

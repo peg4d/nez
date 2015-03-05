@@ -11,7 +11,7 @@ import nez.expr.SequentialExpression;
 import nez.expr.Failure;
 import nez.expr.LeftNew;
 import nez.expr.Link;
-import nez.expr.New;
+import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -142,7 +142,7 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 		if(prefix != null) {
 			file.write(prefix);
 		}
-		if(/*e.get(0) instanceof String ||*/ e.get(0) instanceof NonTerminal || e.get(0) instanceof New) {
+		if(/*e.get(0) instanceof String ||*/ e.get(0) instanceof NonTerminal || e.get(0) instanceof NewClosure) {
 			this.visit(e.get(0));
 		}
 		else {
@@ -226,7 +226,7 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 		}
 	}
 
-	public void visitNew(New e) {
+	public void visitNew(NewClosure e) {
 		file.write("( ");
 		this.visitSequenceImpl(e);
 		file.write(" )");

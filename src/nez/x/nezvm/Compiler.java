@@ -19,7 +19,7 @@ import nez.expr.Factory;
 import nez.expr.Failure;
 import nez.expr.LeftNew;
 import nez.expr.Link;
-import nez.expr.New;
+import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -817,7 +817,7 @@ public class Compiler extends GrammarVisitor {
 				this.depth = depth;
 				return false;
 			}
-			if(e instanceof Sequence || e instanceof Choice || e instanceof New) {
+			if(e instanceof Sequence || e instanceof Choice || e instanceof NewClosure) {
 				if (depth < 2) {
 					for(int i = 0; i < e.size(); i++) {
 						if (!checkSC(e.get(i))) {
@@ -1589,7 +1589,7 @@ public class Compiler extends GrammarVisitor {
 		}
 	}
 
-	public void visitNew(New e) {
+	public void visitNew(NewClosure e) {
 		if (PatternMatching) {
 			for(int i = 0; i < e.size(); i++) {
 				if (O_FusionInstruction) {
