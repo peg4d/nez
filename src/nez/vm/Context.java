@@ -10,7 +10,6 @@ import nez.util.ConsoleUtils;
 import nez.util.UList;
 
 public abstract class Context implements Source {
-	
 	/* parsing position */
 	long   pos;
 	long   head_pos;
@@ -29,19 +28,13 @@ public abstract class Context implements Source {
 	
 	public final boolean consume(int length) {
 		this.pos += length;
-		if(head_pos < pos) {
-			this.head_pos = pos;
-//			if(this.stackedNonTerminals != null) {
-//				this.maximumFailureTrace = new StackTrace();
-//			}
-		}
 		return true;
 	}
 
 	public final void rollback(long pos) {
-//		if(stat != null && this.pos > pos) {
-//			stat.statBacktrack(pos, this.pos);
-//		}
+		if(head_pos < this.pos) {
+			this.head_pos = this.pos;
+		}
 		this.pos = pos;
 	}
 	
@@ -324,7 +317,7 @@ public abstract class Context implements Source {
 		stackTop.prevFailTop   = failStackTop;
 		failStackTop = usedStackTop;
 		stackTop.jump = op.failjump;
-		stackTop.pos = pos;
+		stackTop.pos = this.pos;
 		stackTop.lastLog = this.lastAppendedLog;
 		assert(stackTop.lastLog != null);
 		//stackTop.newPoint = this.newPoint;
@@ -370,7 +363,7 @@ public abstract class Context implements Source {
 		if(this.prof != null) {
 			this.prof.statBacktrack(stackTop.pos, this.pos);
 		}
-		this.pos = stackTop.pos;
+		rollback(stackTop.pos);
 		if(stackTop.lastLog != this.lastAppendedLog) {
 			this.logAbort(stackTop.lastLog, true);
 		}
@@ -411,7 +404,7 @@ public abstract class Context implements Source {
 
 	public final Instruction opIPopBack(IPosBack op) {
 		ContextStack top = popLocalStack();
-		this.pos = top.pos;
+		rollback(top.pos);
 		return op.next;
 	}
 
@@ -453,7 +446,6 @@ public abstract class Context implements Source {
 	public final Instruction opNodePush(Instruction op) {
 		ContextStack top = newUnusedLocalStack();
 		top.lastLog = this.lastAppendedLog;
-		//top.pos = this.pos;
 		return op.next;
 	}
 	
@@ -512,14 +504,14 @@ public abstract class Context implements Source {
 	
 	public final Instruction opILookup(ILookup op) {
 		MemoPoint mp = op.memoPoint;
-		MemoEntry m = memoTable.getMemo(pos, mp.id);
+		MemoEntry m = memoTable.getMemo(this.pos, mp.id);
 		if(m != null) {
 			if(m.failed) {
 				mp.failHit();
 				return opIFail();
 			}
 			mp.memoHit(m.consumed);
-			pos += m.consumed;
+			this.consume(m.consumed);
 			return op.skip;
 		}
 		mp.miss();
@@ -528,14 +520,14 @@ public abstract class Context implements Source {
 
 	public final Instruction opIStateLookup(IStateLookup op) {
 		MemoPoint mp = op.memoPoint;
-		MemoEntry m = memoTable.getMemo2(pos, mp.id, stateValue);
+		MemoEntry m = memoTable.getMemo2(this.pos, mp.id, stateValue);
 		if(m != null) {
 			if(m.failed) {
 				mp.failHit();
 				return opIFail();
 			}
 			mp.memoHit(m.consumed);
-			pos += m.consumed;
+			this.consume(m.consumed);
 			return op.skip;
 		}
 		mp.miss();
@@ -544,14 +536,14 @@ public abstract class Context implements Source {
 
 	public final Instruction opLookupNode(ILookupNode op) {
 		MemoPoint mp = op.memoPoint;
-		MemoEntry entry = memoTable.getMemo(pos, mp.id);
+		MemoEntry entry = memoTable.getMemo(this.pos, mp.id);
 		if(entry != null) {
 			if(entry.failed) {
 				mp.failHit();
 				return opIFail();
 			}
 			mp.memoHit(entry.consumed);
-			consume(entry.consumed);
+			this.consume(entry.consumed);
 			pushDataLog(LazyLink, op.index, entry.result);
 			return op.skip;
 		}
