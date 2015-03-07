@@ -9,12 +9,10 @@ import nez.Grammar;
 import nez.ast.AST;
 import nez.ast.NodeVisitor;
 import nez.expr.Expression;
-import nez.expr.Factory;
-import nez.util.UList;
 
 public class DTDConverter extends NodeVisitor {
 	int attID;
-	int defCount = 0;
+	int attDefCount = 0;
 	int elementCount = 0;
 	int entityCount = 0;
 	Map<Integer, String> elementMap = new HashMap<>();
@@ -30,13 +28,13 @@ public class DTDConverter extends NodeVisitor {
 	
 	public void initAttCounter() {
 		attID = elementCount - 1;
-		defCount = 0;
+		attDefCount = 0;
 		reqList = new ArrayList<Integer>();
 		impList = new ArrayList<Integer>();
 	}
 
 	public int[] initAttDefList() {
-		int[] attDefList = new int[defCount];
+		int[] attDefList = new int[attDefCount];
 		for (int i = 0; i < attDefList.length; i++) {
 			attDefList[i] = i;
 		}
@@ -67,21 +65,23 @@ public class DTDConverter extends NodeVisitor {
 	private Expression genElement(AST node, int elementID) {
 		String elementName = elementMap.get(elementID);
 		if (attributeMap.containsValue(elementID)) { // check whether attribute exists
-			UList<Expression> l = new UList<Expression>(new Expression[5]);
-			l.add(Factory.newString(node, "<" + elementName));
-			l.add(Factory.newNonTerminal(node, grammar, "At_" + elementID));
-			l.add(Factory.newString(node, ">"));
-			l.add(Factory.newNonTerminal(node, grammar, "El_" + elementID));
-			l.add(Factory.newString(node, "</" + elementName + ">"));
-			return Factory.newSequence(node, l);
+			Expression[] l = {
+			grammar.newString("<" + elementName),
+			grammar.newNonTerminal("At_" + elementID),
+			grammar.newString(">"),
+			grammar.newNonTerminal("El_" + elementID),
+			grammar.newString("</" + elementName + ">")
+			};
+			return grammar.newSequence(l);
 		}
 		else {
-			UList<Expression> l = new UList<Expression>(new Expression[4]);
-			l.add(Factory.newString(node, "<" + elementName));
-			l.add(Factory.newString(node, ">"));
-			l.add(Factory.newNonTerminal(node, grammar, "El_" + elementID));
-			l.add(Factory.newString(node, "</" + elementName + ">"));
-			return Factory.newSequence(node, l);
+			Expression[] l = {
+			grammar.newString("<" + elementName),
+			grammar.newString( ">"),
+			grammar.newNonTerminal("El_" + elementID),
+			grammar.newString("</" + elementName + ">")
+			};
+			return grammar.newSequence(l);
 		}
 	}
 
@@ -91,7 +91,7 @@ public class DTDConverter extends NodeVisitor {
 		String elementName = node.textAt(0, "");
 		attributeMap.put(elementName, attID);
 		String attListName = "At_" + attID;
-		String choiceListName = "AC_" + attID;
+		String choiceListName = "AttChoice" + attID;
 		for (AST subnode : node) {
 			this.visit("visit", subnode);
 		}
@@ -107,30 +107,30 @@ public class DTDConverter extends NodeVisitor {
 
 	public void visitREQUIRED(AST node) {
 		System.out.println("DEBUG? " + node);
-		String name = "AD" + attID + "_" + defCount++;
-		reqList.add(defCount);
+		String name = "AD" + attID + "_" + attDefCount++;
+		reqList.add(attDefCount);
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
 
 	public void visitIMPLIED(AST node) {
 		System.out.println("DEBUG? " + node);
-		String name = "AD" + attID + "_" + defCount++;
-		impList.add(defCount);
+		String name = "AD" + attID + "_" + attDefCount++;
+		impList.add(attDefCount);
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
 
 	public void visitFIXED(AST node) {
 		System.out.println("DEBUG? " + node);
-		String name = "AD" + attID + "_" + defCount++;
-		impList.add(defCount);
+		String name = "AD" + attID + "_" + attDefCount++;
+		impList.add(attDefCount);
 		grammar.defineRule(node, name, genFixedAtt(node));
 	}
 
 
 	public void visitDefault(AST node) {
 		System.out.println("DEBUG? " + node);
-		String name = "AD" + attID + "_" + defCount++;
-		impList.add(defCount);
+		String name = "AD" + attID + "_" + attDefCount++;
+		impList.add(attDefCount);
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
 
@@ -145,149 +145,162 @@ public class DTDConverter extends NodeVisitor {
 	}
 	
 	public Expression toEMPTY(AST node) {
-		return Factory.newNonTerminal(node, grammar, "EMPTY");
+		return grammar.newNonTerminal("EMPTY");
 	}
 
 	public Expression toANY(AST node) {
-		return Factory.newNonTerminal(node, grammar, "ANY");
+		return grammar.newNonTerminal("ANY");
 	}
 
 	public Expression toZeroMore(AST node) {
-		return Factory.newRepetition(node, toExpression(node.get(0)));
+		return grammar.newRepetition(toExpression(node.get(0)));
 	}
 
 	public Expression toOneMore(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		l.add(toExpression(node.get(0)));
-		l.add(Factory.newRepetition(node, toExpression(node.get(0))));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+		toExpression(node.get(0)),
+		grammar.newRepetition(toExpression(node.get(0)))
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toOption(AST node) {
-		return Factory.newOption(node, toExpression(node.get(0)));
+		return grammar.newOption(toExpression(node.get(0)));
 	}
 
 	public Expression toChoice(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[node.size()]);
+		Expression[] l = new Expression[node.size()];
+		int count = 0;
 		for (AST subnode : node) {
-			Factory.addChoice(l, toExpression(subnode));
+			l[count++] = toExpression(subnode);
 		}
-		return Factory.newChoice(node, l);
+		return grammar.newChoice(l);
 	}
 
 	public Expression toSeq(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[node.size()]);
+		Expression[] l = new Expression[node.size()];
+		int count = 0;
 		for (AST subnode : node) {
-			Factory.addSequence(l, toExpression(subnode));
+			l[count++] = toExpression(subnode);
 		}
-		return Factory.newSequence(node, l);
+		return grammar.newSequence(l);
 	}
 
 	public Expression toCDATA(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "=" ));
-		l.add(Factory.newNonTerminal(node, grammar, "STRING"));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "="),
+				grammar.newNonTerminal("STRING"),
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toID(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[3]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "=\""));
-		l.add(Factory.newNonTerminal(node, grammar, "IDTOKEN"));
-		l.add(Factory.newString(node, "\""));
-		//		l.add(Factory.newDefSymbol(node, Tag.tag("IDLIST"),
-		//				Factory.newNonTerminal(node, grammar, "IDTOKEN")));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "=\""),
+				grammar.newNonTerminal("IDTOKEN"),
+				grammar.newString("\"")
+		//		grammar.newDefSymbol(Tag.tag("IDLIST"),
+		//				grammar.newNonTerminal("IDTOKEN")));
+		};
+		return grammar.newSequence(l);
+
 	}
 
 	public Expression toIDREF(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[3]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "=\""));
-		l.add(Factory.newNonTerminal(node, grammar, "IDTOKEN"));
-		//		l.add(Factory.newIsaSymbol(node, Tag.tag("IDLIST")));
-		l.add(Factory.newString(node, "\""));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "=\""),
+				grammar.newNonTerminal("IDTOKEN"),
+		//		(grammar.newIsaSymbol(node, Tag.tag("IDLIST")));
+				grammar.newString("\"")
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toIDREFS(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[3]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "=\""));
-		l.add(Factory.newNonTerminal(node, grammar, "IDTOKENS"));
-		//l.add(Factory.newRepetition(node, Factory.newIsaSymbol(node, Tag.tag("IDLIST"))));
-		l.add(Factory.newString(node, "\""));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "=\""),
+				grammar.newNonTerminal("IDTOKENS"),
+		//(grammar.newRepetition(node, grammar.newIsaSymbol(node, Tag.tag("IDLIST"))));
+				grammar.newString("\"")
+		};
+		return grammar.newSequence(l);
 	}
 
 	private Expression genFixedAtt(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		String attName = node.textAt(0, "");
 		String fixedValue = node.textAt(2, "");
-		l.add(Factory.newString(node, attName + "=" + fixedValue));
-		l.add(Factory.newNonTerminal(node, grammar, "STRING"));
-		return Factory.newSequence(node, l);
+		Expression[] l ={
+				grammar.newString(attName + "=" + fixedValue),
+				grammar.newNonTerminal("STRING")
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toENTITY(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[3]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "=\""));
-		l.add(Factory.newNonTerminal(node, grammar, "entity"));
-		l.add(Factory.newString(node, "\""));
-		return Factory.newSequence(node, l);
+		Expression[] l ={
+		grammar.newString(attName + "=\""),
+		grammar.newNonTerminal("entity"),
+		grammar.newString("\"")
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toENTITIES(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[3]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "=\""));
-		l.add(Factory.newNonTerminal(node, grammar, "entities"));
-		l.add(Factory.newString(node, "\""));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "=\""),
+				grammar.newNonTerminal("entities"),
+				grammar.newString("\"")
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toNMTOKEN(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "="));
-		l.add(Factory.newNonTerminal(node, grammar, "NMTOKEN"));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "="),
+				grammar.newNonTerminal("NMTOKEN")
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toNMTOKENS(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "="));
-		l.add(Factory.newNonTerminal(node, grammar, "NMTOKENS"));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "="),
+				grammar.newNonTerminal("NMTOKENS")
+		};
+		return grammar.newSequence(l);
 	}
 	
 	public Expression genCompAtt(AST node, int[] attlist) {
 		int listLength = attlist.length;
 		if (listLength == 1) {
-			UList<Expression> l = new UList<Expression>(new Expression[3]);
-			l.add(Factory.newNonTerminal(node, grammar, "AD" + attID + "_" + attlist[0]));
-			l.add(Factory.newRepetition(node, Factory.newNonTerminal(node, grammar, "_")));
-			l.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
-			return Factory.newSequence(node, l);
+			Expression[] l = {
+					grammar.newNonTerminal("AD" + attID + "_" + attlist[0]),
+					grammar.newRepetition(grammar.newNonTerminal("_")),
+					grammar.newNonTerminal("ENDTAG")
+			};
+			return grammar.newSequence(l);
 		} else {
 			int[][] permedList = perm(attlist);
-			UList<Expression> choiceList = new UList<Expression>(
-					new Expression[permedList.length]);
+			Expression[] choiceList = new Expression[permedList.length];
+			int choiceCount = 0;
 			for (int[] target : permedList) {
-				UList<Expression> sequenceList = new UList<Expression>(
-						new Expression[listLength + 1]);
+				Expression[] seqList = new Expression[listLength + 1];
 				for (int index = 0; index < target.length; index++) {
-					sequenceList.add(Factory.newNonTerminal(node, grammar, "AD" + attID + "_"
-							+ target[index]));
+					seqList[index] = grammar.newNonTerminal("AD" + attID + "_"
+							+ target[index]);
 				}
-				sequenceList.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
-				choiceList.add(Factory.newSequence(node, sequenceList));
+				seqList[listLength] = grammar.newNonTerminal("ENDTAG");
+				choiceList[choiceCount++] = grammar.newSequence(seqList);
 			}
-			return Factory.newChoice(node, choiceList);
+			return grammar.newChoice(choiceList);
 		}
 	}
 	
@@ -295,70 +308,78 @@ public class DTDConverter extends NodeVisitor {
 	public Expression genProxAtt(AST node, int[] attlist) {
 		int listLength = attlist.length;
 		if (listLength == 0) {
-			UList<Expression> l = new UList<Expression>(new Expression[3]);
-			l.add(Factory.newNonTerminal(node, grammar, "AD" + attID + "_" + attlist[0]));
-			l.add(Factory.newRepetition(node, Factory.newNonTerminal(node, grammar, "_")));
-			l.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
-			return Factory.newSequence(node, l);
+			Expression[] l = {
+					grammar.newNonTerminal("AD" + attID + "_" + attlist[0]),
+					grammar.newRepetition(grammar.newNonTerminal("_")),
+					grammar.newNonTerminal("ENDTAG")
+			};
+			return grammar.newSequence(l);
 		} else {
 			int[][] permedList = perm(attlist);
-			UList<Expression> choiceList = new UList<Expression>(
-					new Expression[permedList.length]);
+
+			Expression[] choiceList = new Expression[permedList.length];
+			int choiceCount = 0;
 			for (int[] target : permedList) {
-				UList<Expression> sequenceList = new UList<Expression>(
-						new Expression[listLength + 1]);
+				Expression[] seqList = new Expression[listLength + 1];
+				int seqCount = 0;
+				seqList[seqCount++] = grammar
+						.newOption(grammar.newNonTerminal("AttChoice" + attID));
 				for (int index = 0; index < target.length; index++) {
-					sequenceList.add(Factory.newNonTerminal(node, grammar, "AD" + attID + "_"
-							+ target[index]));
+					seqList[seqCount++] = grammar.newNonTerminal("AD" + attID + "_"
+							+ target[index]);
+					seqList[seqCount++] = grammar.newOption(grammar.newNonTerminal("AttChoice"
+							+ attID));
 				}
-				sequenceList.add(Factory.newNonTerminal(node, grammar, "ENDTAG"));
-				choiceList.add(Factory.newSequence(node, sequenceList));
+				seqList[seqCount] = grammar.newNonTerminal("ENDTAG");
+				choiceList[choiceCount++] = grammar.newSequence(seqList);
 			}
-			return Factory.newChoice(node, choiceList);
+			return grammar.newChoice(choiceList);
 		}
 	}
 
 	public Expression genImpliedChoice(AST node){
-		UList<Expression> l = new UList<Expression>(new Expression[impList.size()]);
+		Expression[] l = new Expression[impList.size()];
+		int choiceCount = 0;
 		for (Integer ruleNum : impList) {
-			Factory.addChoice(l, Factory.newNonTerminal(node, grammar, "AD_" + ruleNum));
+			l[choiceCount++] = grammar.newNonTerminal( "AD_" + ruleNum);
 		}
-		return Factory.newChoice(node, l);
+		return grammar.newChoice(l);
 	}
 	
 
 
 	public Expression toEnum(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		String attName = node.getParent().textAt(0, "");
-		l.add(Factory.newString(node, attName + "="));
-		l.add(toChoice(node));
-		return Factory.newSequence(node, l);
+		Expression[] l = {
+				grammar.newString(attName + "="),
+				toChoice(node)
+		};
+		return grammar.newSequence(l);
 	}
 
 	public Expression toEntValue(AST node) {
 		String replaceString = node.textAt(0, "");
-		return Factory.newString(node, replaceString);
+		return grammar.newString(replaceString);
 	}
 
 	public Expression toElName(AST node) {
 		String elementName = "El_" + node.textAt(0, "");
-		return Factory.newNonTerminal(node, grammar, elementName);
+		return grammar.newNonTerminal(elementName);
 	}
 	public Expression toData(AST node) {
-		return Factory.newNonTerminal(node, grammar, "PCDATA");
+		return grammar.newNonTerminal("PCDATA");
 	}
 
 	private Expression genEntityList(AST node) {
 		if (entityCount == 0) {
-			return Factory.newNonTerminal(node, grammar, "NotAny");
+			return grammar.newNonTerminal("NotAny");
 		}
 		else {
-			UList<Expression> l = new UList<Expression>(new Expression[entityCount]);
+			Expression[] l = new Expression[entityCount];
 			for (int entityNum = 0; entityNum < entityCount; entityNum++) {
-				Factory.addChoice(l, Factory.newNonTerminal(node, grammar, "ENT_" + entityNum));
+				l[entityNum] = grammar.newNonTerminal("ENT_" + entityNum);
 			}
-			return Factory.newChoice(node, l);
+			return grammar.newChoice(l);
 		}
 	}
 
