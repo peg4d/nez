@@ -155,7 +155,7 @@ public class Grammar {
 		return Factory.newOption(src(), newSequence(seq));
 	}
 		
-	public final Expression newRepetiton(Expression ... seq) {
+	public final Expression newRepetition(Expression ... seq) {
 		return Factory.newRepetition(src(), newSequence(seq));
 	}
 
