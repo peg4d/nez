@@ -2,8 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 
 public class DefIndent extends Unconsumed {
 	DefIndent(SourcePosition s) {

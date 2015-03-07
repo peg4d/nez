@@ -3,9 +3,9 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Repetition1 extends Repetition {
 	Repetition1(SourcePosition s, Expression e) {

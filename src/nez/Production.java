@@ -7,15 +7,14 @@ import nez.expr.NonTerminal;
 import nez.expr.Rule;
 import nez.main.Recorder;
 import nez.main.Verbose;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
+import nez.runtime.MemoPoint;
+import nez.runtime.MemoTable;
 import nez.util.ConsoleUtils;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
-import nez.vm.MemoPoint;
-import nez.vm.MemoTable;
-//import nez.x.PEG;
 
 public class Production {
 	Rule start;

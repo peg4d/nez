@@ -5,10 +5,10 @@ import java.util.TreeMap;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class NewClosure extends SequentialExpression {
 	int prefetchIndex = 0;

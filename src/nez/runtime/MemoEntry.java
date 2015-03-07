@@ -1,4 +1,4 @@
-package nez.vm;
+package nez.runtime;
 
 import nez.ast.Node;
 

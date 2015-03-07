@@ -10,11 +10,11 @@ import nez.ast.Transformer;
 import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
 import nez.expr.NezParserCombinator;
+import nez.runtime.MemoTable;
 import nez.util.ConsoleUtils;
 import nez.util.FlagUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
-import nez.vm.MemoTable;
 
 public class CommandConfigure {
 //	// -X specified

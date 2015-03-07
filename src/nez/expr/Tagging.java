@@ -3,9 +3,9 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.StringUtils;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Tagging extends ParsingOperation {
 	public Tag tag;

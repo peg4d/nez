@@ -6,11 +6,11 @@ import nez.Production;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Choice extends SequentialExpression {
 	Choice(SourcePosition s, UList<Expression> l) {

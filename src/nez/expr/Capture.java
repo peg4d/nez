@@ -1,8 +1,8 @@
 package nez.expr;
 
 import nez.ast.SourcePosition;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 
 public class Capture extends ParsingOperation {
 	int shift;

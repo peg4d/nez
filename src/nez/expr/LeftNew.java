@@ -5,9 +5,9 @@ import java.util.TreeMap;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class LeftNew extends NewClosure {
 	LeftNew(SourcePosition s, UList<Expression> list) {

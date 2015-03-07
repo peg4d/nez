@@ -4,10 +4,10 @@ import java.util.TreeMap;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
-import nez.vm.Compiler;
 
 public class WithFlag extends Unary {
 	String flagName;

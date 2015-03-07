@@ -2,10 +2,10 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Block extends Unary {
 	Block(SourcePosition s, Expression e) {

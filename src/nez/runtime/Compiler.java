@@ -1,4 +1,4 @@
-package nez.vm;
+package nez.runtime;
 
 import java.util.HashMap;
 import java.util.Map.Entry;

@@ -3,11 +3,11 @@ package nez.expr;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 import nez.util.FlagUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class ByteMap extends Terminal {
 	public boolean[] byteMap; // Immutable

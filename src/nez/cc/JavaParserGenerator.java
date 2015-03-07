@@ -1,7 +1,7 @@
 package nez.cc;
 
-import nez.vm.Compiler;
-import nez.vm.Instruction;
+import nez.runtime.Compiler;
+import nez.runtime.Instruction;
 
 class JavaParserGenerator extends ParserGenerator {
 	JavaParserGenerator(String fileName) {
