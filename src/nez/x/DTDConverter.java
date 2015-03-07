@@ -90,7 +90,7 @@ public class DTDConverter extends NodeVisitor {
 		initAttCounter();
 		String elementName = node.textAt(0, "");
 		attributeMap.put(elementName, attID);
-		String attListName = "At_" + node.textAt(0, "");
+		String attListName = "At_" + attID;
 		String choiceListName = "AC_" + attID;
 		for (AST subnode : node) {
 			this.visit("visit", subnode);
