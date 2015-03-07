@@ -38,12 +38,6 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 	}
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		if(this.symbolExpression == null) {
-			this.symbolExpression = checker.getSymbolExpression(table.name);
-			if(this.symbolExpression == null) { 
-				checker.reportError(s, "undefined table " + table.name);
-			}
-		}
 		return this;
 	}
 	@Override

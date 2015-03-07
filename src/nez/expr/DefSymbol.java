@@ -20,12 +20,15 @@ public class DefSymbol extends Unary {
 	}
 	@Override
 	public String getInterningKey() {
-		return "def " + table.name;
+		return "def " + table.getName();
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		if(!this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack) && checker != null) {
-			checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
+		if(checker != null) {
+			checker.setSymbolExpresion(table.getName(), this.inner);
+			if(!this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
+				checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
+			}
 		}
 		return true;
 	}

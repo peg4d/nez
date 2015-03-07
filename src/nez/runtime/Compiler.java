@@ -426,7 +426,6 @@ public class Compiler {
 		Instruction inner = p.get(0).encode(this, new IFailPop(p, new ITablePop(p, next)));
 		return new ITablePush(p, new IFailPush(p, failed, inner));
 	}
-
 	public final Instruction encodeDefSymbol(DefSymbol p, Instruction next) {
 		Instruction inner = p.get(0).encode(this, new IDefSymbol(p, next));
 		return new IPosPush(p, inner);

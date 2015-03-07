@@ -96,25 +96,31 @@ public class GrammarChecker {
 
 	private UMap<Expression> tableMap; 
 	private void checkSymbolTable(Expression p) {
-		if(p instanceof DefSymbol) {
-			DefSymbol def = (DefSymbol)p;
-			if(tableMap == null) {
-				tableMap = new UMap<Expression>();
+		if(p instanceof IsSymbol) {
+			String tableName = ((IsSymbol) p).table.getName();
+			Expression e = null;
+			if(this.tableMap != null) {
+				e = this.tableMap.get(tableName);
 			}
-			tableMap.put(def.table.name, def.inner); 
+			if(e == null) {
+				this.reportError(p.s, "undefined table: " + tableName);
+				e = Factory.newFailure(p.s);
+			}
+			((IsSymbol) p).symbolExpression = e;
+			return;
 		}
 		for(Expression e: p) {
 			this.checkSymbolTable(e);
 		}
 	}
-	
-	public final Expression getSymbolExpression(String tableName) {
-		if(this.tableMap != null) {
-			return this.tableMap.get(tableName);
+
+	public final void setSymbolExpresion(String tableName, Expression e) {
+		if(tableMap == null) {
+			tableMap = new UMap<Expression>();
 		}
-		return null;
+		tableMap.put(tableName, e);
 	}
-	
+		
 //	final void optimizeConstructor(Constructor holder) {
 //		if(is(O_LazyObject)) {
 //			int prefetchIndex = 0;
