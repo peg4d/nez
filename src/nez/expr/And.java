@@ -17,6 +17,9 @@ public class And extends Unary {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
+		if(checker != null) {
+			this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
+		}
 		return false;
 	}
 	@Override
