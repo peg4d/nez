@@ -167,7 +167,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 	}
 
 	public void visitByteMap(ByteMap e) {
-		boolean b[] = e.charMap;
+		boolean b[] = e.byteMap;
 		for(int start = 0; start < 256; start++) {
 			if(b[start]) {
 				int end = searchEndChar(b, start+1);

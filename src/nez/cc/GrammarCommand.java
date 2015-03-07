@@ -29,6 +29,7 @@ public class GrammarCommand extends Command {
 	}
 	
 	static {
+		regist("nez", "nez.cc.NezGrammarGenerator");
 		regist("mouse", "nez.cc.MouseGrammarGenerator");
 		regist("lua",   "nez.cc.LPegGrammarGenerator");
 		regist("lpeg",  "nez.cc.LPegGrammarGenerator");
@@ -62,7 +63,7 @@ public class GrammarCommand extends Command {
 			}
 			return gen;
 		}
-		return new MouseGrammarGenerator(null);
+		return new NezGrammarGenerator(null);
 	}
 	
 	void showOutputType(String output) {

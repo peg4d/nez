@@ -138,7 +138,7 @@ public class Sequence extends SequentialExpression {
 					continue;
 				}
 				if(p instanceof ByteMap) {
-					ByteMap.appendBitMap(byteMap, ((ByteMap) p).charMap);
+					ByteMap.appendBitMap(byteMap, ((ByteMap) p).byteMap);
 					continue;
 				}
 			}

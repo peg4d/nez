@@ -153,7 +153,7 @@ public class Choice extends SequentialExpression {
 				continue;
 			}
 			if(e instanceof ByteMap) {
-				ByteMap.appendBitMap(byteMap, ((ByteMap)e).charMap);
+				ByteMap.appendBitMap(byteMap, ((ByteMap)e).byteMap);
 				continue;
 			}
 			if(e instanceof Choice) {

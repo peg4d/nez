@@ -898,7 +898,7 @@ public class Compiler extends GrammarVisitor {
 			else if (e.get(i) instanceof ByteMap) {
 				ByteMap br = (ByteMap)e.get(i);
 				for(int c = 0; c < 256; c++) {
-					if(br.charMap[c]) {
+					if(br.byteMap[c]) {
 						inst.append(c);
 					}
 				}
@@ -1056,7 +1056,7 @@ public class Compiler extends GrammarVisitor {
 			else if (e.get(i) instanceof ByteMap) {
 				ByteMap br = (ByteMap)e.get(i);
 				for(int c = 0; c < 256; c++) {
-					if(br.charMap[c]) {
+					if(br.byteMap[c]) {
 						inst.append(c);
 					}
 				}
@@ -1087,7 +1087,7 @@ public class Compiler extends GrammarVisitor {
 			ByteMap br = (ByteMap)inner;
 			NOTCHARSET inst = this.createNOTCHARSET(inner, this.getCurrentBasicBlock(), this.jumpFailureJump());
 			for(int c = 0; c < 256; c++) {
-				if(br.charMap[c]) {
+				if(br.byteMap[c]) {
 					inst.append(c);
 				}
 			}
@@ -1178,7 +1178,7 @@ public class Compiler extends GrammarVisitor {
 	private void writeOptionalByteMapCode(ByteMap e) {
 		OPTIONALCHARSET inst = this.createOPTIONALCHARSET(e, this.getCurrentBasicBlock());
 		for(int c = 0; c < 256; c++) {
-			if(e.charMap[c]) {
+			if(e.byteMap[c]) {
 				inst.append(c);
 			}
 		}
@@ -1193,7 +1193,7 @@ public class Compiler extends GrammarVisitor {
 			else if (e.get(i) instanceof ByteMap) {
 				ByteMap br = (ByteMap)e.get(i);
 				for(int c = 0; c < 256; c++) {
-					if(br.charMap[c]) {
+					if(br.byteMap[c]) {
 						inst.append(c);
 					}
 				}
@@ -1311,7 +1311,7 @@ public class Compiler extends GrammarVisitor {
 	
 	private void writeZeroMoreByteMapCode(ByteMap e, ZEROMORECHARSET inst) {
 		for(int c=0; c < 256; c++) {
-			if(e.charMap[c]) {
+			if(e.byteMap[c]) {
 				inst.append(c);
 			}
 		}
@@ -1435,7 +1435,7 @@ public class Compiler extends GrammarVisitor {
 	public void visitByteMap(ByteMap e) {
 		CHARSET inst = this.createCHARSET(e, this.getCurrentBasicBlock(), this.jumpFailureJump());
 		for(int c = 0; c < 256; c++) {
-			if(e.charMap[c]) {
+			if(e.byteMap[c]) {
 				inst.append(c);
 			}
 		}

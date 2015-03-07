@@ -57,7 +57,7 @@ public class GrammarFormatter extends GrammarVisitor {
 	}
 
 	public void visitByteMap(ByteMap e) {
-		sb.append(StringUtils.stringfyCharClass(e.charMap));
+		sb.append(StringUtils.stringfyCharClass(e.byteMap));
 	}
 	
 	public void visitAnyChar(AnyChar e) {
