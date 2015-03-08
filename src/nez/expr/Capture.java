@@ -5,10 +5,12 @@ import nez.runtime.Compiler;
 import nez.runtime.Instruction;
 
 public class Capture extends ParsingOperation {
+	public final New begin;
 	int shift;
-	Capture(SourcePosition s, int shift) {
+	Capture(SourcePosition s, New begin, int shift) {
 		super(s);
 		this.shift = shift;
+		this.begin = begin;
 	}
 	@Override
 	public String getPredicate() { 

@@ -12,7 +12,7 @@ public class TypeCommand extends Command {
 		Grammar peg = config.getGrammar();
 		for(Rule r : peg.getDefinedRuleList()) {
 			if(r.inferTypestate() == Typestate.ObjectType) {
-				Type t = Type.infer(r.getExpression());
+				Type t = Type.inferType(r, r.getExpression());
 				System.out.println(r.getLocalName() + " : " + t);
 			}
 		}

@@ -25,12 +25,16 @@ public class Sequence extends SequentialExpression {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
+		boolean result = false;
 		for(Expression e: this) {
 			if(e.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
-				return true;
+				result = true;
+				if(checker == null) {
+					return true;
+				}
 			}
 		}
-		return false;
+		return result;
 	}
 	@Override
 	public Expression removeNodeOperator() {

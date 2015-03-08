@@ -325,9 +325,10 @@ public class Factory {
 
 	public final static Expression newNew(SourcePosition s, boolean lefted, Expression e) {
 		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
-		Factory.addSequence(l, new New(s, lefted, 0));
+		New p = new New(s, lefted, 0);
+		Factory.addSequence(l, p);
 		Factory.addSequence(l, e);
-		Factory.addSequence(l, new Capture(s, 0));
+		Factory.addSequence(l, new Capture(s, p, 0));
 		return newSequence(s, l);
 	}
 	

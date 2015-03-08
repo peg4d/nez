@@ -1,249 +1,351 @@
 package nez.x;
 
+import java.util.ArrayList;
+
 import nez.ast.Tag;
+import nez.expr.And;
 import nez.expr.Capture;
 import nez.expr.Choice;
 import nez.expr.Expression;
 import nez.expr.Link;
 import nez.expr.New;
 import nez.expr.NonTerminal;
-import nez.expr.Replace;
+import nez.expr.Option;
+import nez.expr.Repetition;
+import nez.expr.Repetition1;
+import nez.expr.Rule;
+import nez.expr.Sequence;
 import nez.expr.Tagging;
 import nez.expr.Typestate;
 import nez.util.UList;
 
 public abstract class Type {
 	abstract Type dup();
+	abstract void ref(Rule p);
 	abstract void tag(Tag t);
-	abstract void link(int index, Type t);
+	abstract void link(Link p, Type t);
+	abstract boolean isRepetition();
+	abstract void startRepetition();
+	abstract void endRepetition();
 	abstract void stringfy(StringBuilder sb);
-	
-	public static Type infer(Expression e) {
-		Continuation c = Continuation.newContinuation(e, null);
-		if(c != null) {
-			c.dump();
-		}
-		return typeUnion(null, c);
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		stringfy(sb);
+		return sb.toString();
 	}
 	
-	static Type typeUnion(Type t0, Continuation c) {
-		Type t1 = typeSingleton(t0, c);
-		if(c != null && c.choice != null) {
-			UList<Type> l = null;
-			c = c.choice;
-			while(c != null) {
-				Type t2 = dup(t0);
-				t2 = typeSingleton(t2, c.choice);
-				if(l == null) {
-					l = new UList<Type>(new Type[2]);
-					l.add(t2);
-				}
-				c = c.choice;
-			}
-			if(l != null) {
-				t1 = new UnionType(t1, l);
-			}
-		}
-		return t1;
-	}
-	static Type dup(Type t) {
-		return t == null ? null : t.dup();
-	}
-	static Type typeSingleton(Type t0, Continuation c) {
-		Type t = t0;
-		while(c != null) {
-			Expression p = c.e;
-			if(p instanceof New) {
-				t = new AtomType();
-			}
-			if(p instanceof NonTerminal) {
-				t = new RefType((NonTerminal)p);
-			}
-			if(p instanceof Tagging /*&& t != null*/) {
-				t.tag(((Tagging) p).tag);
-			}
-			if(p instanceof Link /*&& t != null*/) {
-				Type t2 = typeUnion(null, Continuation.newContinuation(p.get(0), null));
-				if(t != null) {
-					t.link(((Link) p).index, t2);
-				}
-			}
-			c = c.next;
-		}
-		return t;
+	public static Type inferType(Rule name, Expression e) {
+		return inferType(name, e, new AtomType());
 	}
 
-}
-
-/* A = 'a' A 'a' / 'a' ; */
-
-class Continuation {
-	Expression e;
-	Continuation next;
-	Continuation choice;
-	Continuation(Expression e, Continuation next) {
-		this.e = e;
-		this.next = next;
-		this.choice = null;
-	}
-	void addChoice(Continuation c) {
-		Continuation self = this;
-		while(self.choice != null) {
-			self = self.choice;
+	static Type inferType(Rule name, Expression e, Type inf) {
+		if(e instanceof Tagging) {
+			inf.tag(((Tagging) e).tag);
+			return inf;
 		}
-		self.choice = c;
-	}
-	static Continuation newContinuation(Expression e, Continuation next) {
-		if(e.inferTypestate() == Typestate.BooleanType) {
-			return next;
+		if(e instanceof Choice && e.inferTypestate() != Typestate.BooleanType) {
+			UList<AtomType> u = new UList<AtomType>(new AtomType[e.size()]);
+			for(int i = 0; i < e.size(); i++) {
+				addUnionType(u, inferType(name, e.get(i), inf.dup()));
+			}
+			return new UnionType(u);
 		}
-		if(e instanceof Replace || e instanceof Capture) {
-			return next; // ignored
+		if(e instanceof Option && e.get(0).inferTypestate() != Typestate.BooleanType) {
+			UList<AtomType> u = new UList<AtomType>(new AtomType[e.size()]);
+			addUnionType(u, inferType(name, e.get(0), inf.dup()));
+			addUnionType(u, inf);
+			return new UnionType(u);
+		}
+		if(e instanceof NonTerminal) {
+			if(e.inferTypestate() == Typestate.ObjectType) {
+				inf.ref(((NonTerminal)e).getRule());
+				return inf;
+			}
+			if(e.inferTypestate() == Typestate.OperationType) {
+				inf = inferType(name, ((NonTerminal) e).getRule().getExpression(), inf);
+				return inf;
+			}
 		}
 		if(e instanceof Link) {
-			next = new Continuation(e, next);
+			Type t2 = inferType(name, e.get(0), new AtomType());
+			inf.link((Link) e, t2);
+			return inf;
 		}
-		if(e instanceof Choice) {
-			Continuation firstChoice = null;
-			for(Expression p: e) {
-				Continuation c = newContinuation(p, next);
-				if(firstChoice == null) {
-					firstChoice = c;
-				}
-				else {
-					firstChoice.addChoice(c);
-				}
+		if(e instanceof New && ((New) e).lefted) {
+			if(((New) e).unRepeated) {
+				System.out.println("TODO: Unrepeated left new is unsupported.");
 			}
-			return firstChoice;
+			AtomType left = new AtomType();
+			left.ref(name);
+			inf.link(null, left);
+			left = new AtomType();
+			left.right = inf;
+			return left;
 		}
-		if(e.size() > 0) {
-			for(Expression p: e) {
-				next = newContinuation(p, next);
+		if(e instanceof Capture) {
+			/* avoid (Expr, Expr*) in Expr {@ Expr}* */
+			//System.out.println("*" + inf.isRepetition());
+			if(inf.isRepetition()) {
+				inf.endRepetition(); 				
 			}
-			return next;
+			else {
+				((Capture)e).begin.unRepeated = true;
+			}
+			return inf;
 		}
-		return new Continuation(e, next);
+		if(e instanceof Repetition1) {
+			inf.startRepetition();
+			inf = inferType(name, e.get(0), inf);
+			inf.endRepetition();
+			inf = inferType(name, e.get(0), inf);
+			return inf;
+		}
+		if(e instanceof Repetition) {
+			inf.startRepetition();
+			inf = inferType(name, e.get(0), inf);
+			inf.endRepetition();
+			return inf;
+		}
+		if(e instanceof And) {
+			return inferType(name, e.get(0), inf);
+		}
+		if(e instanceof Sequence) {
+			for(int i = e.size() -1; i >= 0; i--) {
+				inf = inferType(name, e.get(i), inf);
+			}
+		}
+		return inf;
 	}
-	void dump() {
-		Continuation c = this;
-		while(c != null) {
-			System.out.print(c.e);
-			System.out.print(",");
-			c = c.next;
+	
+	static void addUnionType(UList<AtomType> l, Type t) {
+		if(t instanceof UnionType) {
+			for(AtomType u: ((UnionType)t).union) {
+				addUnionType(l, u);
+			}
 		}
-		System.out.println();
+		else {
+			for(AtomType u : l) {
+				if(AtomType.isA(u, (AtomType)t)) {
+					return;
+				}
+			}
+			l.add((AtomType)t);
+		}
+	}
+	
+	
+}
+
+class LinkLog {
+	boolean isRepetition;
+	Link p;
+	Type t;
+	LinkLog next;
+	LinkLog(boolean isRepetition, Link p, Type t, LinkLog next) {
+		this.isRepetition = isRepetition;
+		this.p = p;
+		this.t = t;
+		this.next = next;
+	}
+	int index() {
+		return this.p == null ? 0 : p.index;
+	}
+	boolean is(LinkLog l) {
+		if(this.isRepetition != l.isRepetition) {
+			return false;
+		}
+		if(this.index() != l.index()) {
+			return false;
+		}
+		return AtomType.is(this.t, l.t);
+	}
+	@Override
+	public String toString() {
+		return t.toString() + (this.isRepetition ? "*" : "");
 	}
 }
 
 class AtomType extends Type {
 	Tag tag = null;
-	Type[] record;
+	Rule p = null;
+	LinkLog link = null;
 	int size = 0;
-	int last = 0;
+	Type right = null;;
 	AtomType() {
-		this.record = new Type[2];
 	}
 	@Override
 	Type dup() {
 		AtomType t = new AtomType();
-		t.record = new Type[this.record.length];
-		System.arraycopy(this.record, 0, t.record, 0, size);
+		t.tag  = this.tag;
+		t.p    = this.p;
+		t.link = this.link;
 		t.size = this.size;
-		t.last = this.last;
+		t.right = this.right;
 		return t;
 	}
-	@Override
-	void tag(Tag tag) {
-		this.tag = tag;
-	}
-	@Override
-	void link(int index, Type t) {
-		if(index < 0) {
-			index = last;
-			last++;
+	
+	static boolean is(Type t, Type t2) {
+		if(t == null || t2 == null) {
+			return t == t2;
 		}
-		else {
-			if(last <= index) {
-				last = index + 1;
+		if(t instanceof AtomType || t2 instanceof AtomType) {
+			return isA((AtomType)t, (AtomType)t2);
+		}
+		if(t instanceof UnionType || t2 instanceof UnionType) {
+			UnionType u = (UnionType)t;
+			UnionType u2 = (UnionType)t2;
+			if(u.union.length == u2.union.length) {
+				for(int i = 0; i < u.union.length; i++) {
+					boolean found = false;
+					for(int j = 0; j < u.union.length; j++) {
+						if(isA(u.union[i], u2.union[j])) {
+							found = true;
+							break;
+						}
+					}
+					if(!found) {
+						return false;
+					}
+				}
+				return true;
 			}
 		}
-		if(!(index < this.record.length)) {
-			expand(index);
+		return false;
+	}
+
+	static boolean isA(AtomType t, AtomType t2) {
+		if(t.tag != t2.tag) {
+			return false;
 		}
-		this.record[index] = t;
+		if(t.p != t2.p) {
+			return false;
+		}		
+		if(t.size != t2.size) {
+			return false;
+		}
+		LinkLog l = t.link;
+		LinkLog l2 = t2.link;
+		while(l != null) { assert(l2 != null); /* t.size = t2.size */
+			if(!l.is(l2)) {
+				return false;
+			}
+			l = l.next;
+			l2 = l2.next;
+		}
+		return true;
+	}
+
+	@Override
+	void tag(Tag tag) {
+		if(this.tag == null) {
+			this.tag = tag;
+		}
+	}
+	@Override
+	void ref(Rule p) {
+		assert(this.p == null);
+		this.p = p;
+	}
+
+	boolean isRepetition = false;
+	@Override
+	void startRepetition() {
+		this.isRepetition = true;
+	}
+	@Override
+	void endRepetition() {
+		this.isRepetition = false;
+	}
+	@Override
+	boolean isRepetition() {
+		return this.isRepetition;
+	}
+
+	@Override
+	void link(Link e, Type t) {
+		this.link = new LinkLog(this.isRepetition, e, t, link);
+		this.size++;
 	}
 	
-	private void expand(int index) {
-		int newsize = this.record.length * 2;
-		if(!(index < newsize)) {
-			newsize = index + 1;
-		}
-		Type[] newrecord = new Type[newsize];
-		System.arraycopy(this.record, 0, newrecord, 0, this.record.length);
-		this.record = newrecord;
+	boolean isUnreatedLeftNew() {
+		return (this.right != null && this.size > 0 && this.link.t == this.right) ;
 	}
 	
 	@Override
 	void stringfy(StringBuilder sb) {
-		sb.append("#");
-		sb.append((this.tag == null) ? "Text" : this.tag.getName());
+		if(this.p != null) {
+			sb.append(p.getLocalName());
+			if(this.tag != null) {
+				sb.append("#");
+				sb.append(this.tag.getName());
+			}
+		}
+		else {
+			sb.append("#");
+			sb.append((this.tag == null) ? "Text" : this.tag.getName());
+		}
 		if(size > 0) {
 			sb.append("(");
-			for(int i = 0; i < size; i++) {
+			ArrayList<String> field = makeField();
+			for(int i = 0; i < field.size(); i++) {
 				if(i > 0) {
 					sb.append(",");
 				}
-				if(this.record[i] == null) {
-					sb.append("empty");
+				if(field.get(i) == null) {
+					sb.append("_");
 				}
 				else {
-					this.record[i].stringfy(sb);
+					sb.append(field.get(i));
 				}
 			}
 			sb.append(")");
 		}
-	}
-}
-
-class RefType extends Type {
-	NonTerminal p;
-	RefType(NonTerminal p) {
-		this.p = p;
-	}
-	@Override
-	Type dup() {
-		RefType t = new RefType(p);
-		return t;
-	}
-	@Override
-	void tag(Tag tag) {
-
-	}
-	@Override
-	void link(int index, Type t) {
-
+		if(this.right != null) {
+			sb.append("|");
+			this.right.stringfy(sb);
+		}
 	}
 	
-	@Override
-	void stringfy(StringBuilder sb) {
-		sb.append(this.p.getUniqueName());
+	ArrayList<String> makeField() {
+		ArrayList<String> field = new ArrayList<String>(size);
+		LinkLog l = this.link;
+		int last = 0;
+		while(l != null) {
+			int index = l.index();
+			if(index < 0) {
+				index = last;
+				last++;
+			}
+			else {
+				if(!(index < last)) {
+					last = index + 1;
+				}
+			}
+			field.ensureCapacity(last);
+			while (!(index < field.size())) {
+		        field.add(null);
+		    }
+			field.set(index, l.toString());
+			l = l.next;
+		}
+		return field;
 	}
 }
 
 class UnionType extends Type {
-	Type[] union;
-	UnionType(Type t, UList<Type> l) {
-		this.union = new Type[l.size() + 1];
-		this.union[0] = t;
-		int c = 1;
-		for(Type t2 : l) {
+	AtomType[] union;
+	UnionType(UList<AtomType> l) {
+		this.union = new AtomType[l.size()];
+		int c = 0;
+		for(AtomType t2 : l) {
 			this.union[c] = t2; c++;
 		}
 	}
 	private UnionType(Type[] u) {
-		this.union = new Type[u.length];
+		this.union = new AtomType[u.length];
 		for(int i = 0; i < u.length; i++) {
-			this.union[i] = u[i].dup();
+			this.union[i] = (AtomType)u[i].dup();
 		}
 	}
 	@Override
@@ -252,15 +354,37 @@ class UnionType extends Type {
 	}
 	@Override
 	void tag(Tag tag) {
-		for(Type t : this.union) {
+		for(AtomType t : this.union) {
 			t.tag(tag);
 		}
 	}
 	@Override
-	void link(int index, Type t2) {
-		for(Type t : this.union) {
-			t.link(index, t2);
+	void ref(Rule p) {
+		for(AtomType t : this.union) {
+			t.ref(p);
 		}
+	}
+	@Override
+	void link(Link p, Type t2) {
+		for(AtomType t : this.union) {
+			t.link(p, t2);
+		}
+	}
+	@Override
+	void startRepetition() {
+		for(AtomType t : this.union) {
+			t.startRepetition();
+		}
+	}
+	@Override
+	void endRepetition() {
+		for(AtomType t : this.union) {
+			t.endRepetition();
+		}
+	}
+	@Override
+	boolean isRepetition() {
+		return this.union[0].isRepetition();
 	}
 	@Override
 	void stringfy(StringBuilder sb) {

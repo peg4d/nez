@@ -10,6 +10,7 @@ import nez.util.UMap;
 
 public class New extends Unconsumed {
 	public boolean lefted;
+	public boolean unRepeated = false;
 	int shift;
 	New(SourcePosition s, boolean lefted, int shift) {
 		super(s);
