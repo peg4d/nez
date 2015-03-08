@@ -6,7 +6,7 @@ import nez.runtime.Compiler;
 import nez.runtime.Instruction;
 import nez.util.StringUtils;
 
-public class Replace extends ParsingOperation {
+public class Replace extends ASTOperation {
 	public String value;
 	Replace(SourcePosition s, String value) {
 		super(s);

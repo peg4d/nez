@@ -64,7 +64,7 @@ public class GrammarChecker {
 			}
 			r.minlen = -1;  // reset for all checking
 			r.checkAlwaysConsumed(this, null, stack);
-			checkSymbolTable(r.getExpression());
+			checkGrammarAll(r.getExpression());
 		}
 		if(this.foundError) {
 			ConsoleUtils.exit(1, "FatalGrammarError");
@@ -93,32 +93,28 @@ public class GrammarChecker {
 // TODO Auto-generated method stub
 		
 	}
-
-	private UMap<Expression> tableMap; 
-	private void checkSymbolTable(Expression p) {
-		if(p instanceof IsSymbol) {
-			String tableName = ((IsSymbol) p).table.getName();
-			Expression e = null;
-			if(this.tableMap != null) {
-				e = this.tableMap.get(tableName);
-			}
-			if(e == null) {
-				this.reportError(p.s, "undefined table: " + tableName);
-				e = Factory.newFailure(p.s);
-			}
-			((IsSymbol) p).symbolExpression = e;
-			return;
-		}
+	
+	private void checkGrammarAll(Expression p) {
+		p.checkGrammar(this);
 		for(Expression e: p) {
-			this.checkSymbolTable(e);
+			this.checkGrammarAll(e);
 		}
 	}
+
+	private UMap<Expression> tableMap; 
 
 	public final void setSymbolExpresion(String tableName, Expression e) {
 		if(tableMap == null) {
 			tableMap = new UMap<Expression>();
 		}
 		tableMap.put(tableName, e);
+	}
+
+	public final Expression getSymbolExpresion(String tableName) {
+		if(tableMap != null) {
+			return tableMap.get(tableName);
+		}
+		return null;
 	}
 		
 //	final void optimizeConstructor(Constructor holder) {

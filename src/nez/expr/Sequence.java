@@ -25,22 +25,18 @@ public class Sequence extends SequentialExpression {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		boolean result = false;
 		for(Expression e: this) {
 			if(e.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
-				result = true;
-				if(checker == null) {
-					return true;
-				}
+				return true;
 			}
 		}
-		return result;
+		return false;
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
 		for(Expression e : this) {
-			Factory.addSequence(l, e.removeNodeOperator());
+			Factory.addSequence(l, e.removeASTOperator());
 		}
 		return Factory.newSequence(s, l);
 	}

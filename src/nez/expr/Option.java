@@ -42,7 +42,7 @@ public class Option extends Unary {
 		Expression inn = this.inner.checkTypestate(checker, c);
 		if(required != Typestate.OperationType && c.required == Typestate.OperationType) {
 			checker.reportWarning(s, "unable to create objects in repetition => removed!!");
-			this.inner = inn.removeNodeOperator();
+			this.inner = inn.removeASTOperator();
 			c.required = required;
 		}
 		else {

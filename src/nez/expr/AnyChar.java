@@ -36,7 +36,7 @@ public class AnyChar extends Terminal {
 		return this;
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		return this;
 	}
 	@Override

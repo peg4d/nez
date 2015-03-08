@@ -11,7 +11,6 @@ import nez.expr.ByteChar;
 import nez.expr.ByteMap;
 import nez.expr.Capture;
 import nez.expr.Choice;
-import nez.expr.ContextSensitive;
 import nez.expr.DefIndent;
 import nez.expr.DefSymbol;
 import nez.expr.Expression;
@@ -99,7 +98,7 @@ public class Compiler {
 				return true;
 			}
 		}
-		return (e instanceof ContextSensitive);
+		return (e instanceof IsIndent || e instanceof IsSymbol);
 	}
 	
 	public final int getInstructionSize() {

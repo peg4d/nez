@@ -55,10 +55,10 @@ public class Choice extends SequentialExpression {
 		return Factory.newChoice(this.s, l);
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		UList<Expression> l = newList();
 		for(Expression e : this) {
-			Factory.addChoice(l, e.removeNodeOperator());
+			Factory.addChoice(l, e.removeASTOperator());
 		}
 		return Factory.newChoice(this.s, l);
 	}

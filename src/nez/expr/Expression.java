@@ -49,9 +49,11 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	}
 
 	public abstract boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack);
+	public void checkGrammar(GrammarChecker checker) { }
 	public abstract int inferTypestate(UMap<String> visited);
 	public abstract Expression checkTypestate(GrammarChecker checker, Typestate c);
-	public abstract Expression removeNodeOperator();
+
+	public abstract Expression removeASTOperator();
 	public abstract Expression removeFlag(TreeMap<String, String> undefedFlags);
 	
 	public static boolean hasReachableFlag(Expression e, String flagName, UMap<String> visited) {

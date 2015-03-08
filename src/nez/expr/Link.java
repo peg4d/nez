@@ -38,7 +38,7 @@ public class Link extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "unexpected @ => removed");
-			return this.inner.removeNodeOperator();
+			return this.inner.removeASTOperator();
 		}
 		c.required = Typestate.ObjectType;
 		Expression inn = inner.checkTypestate(checker, c);
@@ -52,8 +52,8 @@ public class Link extends Unary {
 		return this;
 	}
 	@Override
-	public Expression removeNodeOperator() {
-		return inner.removeNodeOperator();
+	public Expression removeASTOperator() {
+		return inner.removeASTOperator();
 	}
 	@Override
 	public short acceptByte(int ch) {

@@ -33,7 +33,7 @@ public class Match extends Unary {
 	}
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		return this.inner.removeNodeOperator();
+		return this.inner.removeASTOperator();
 	}
 	@Override
 	public short acceptByte(int ch) {

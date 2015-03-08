@@ -22,9 +22,9 @@ public class Not extends Unary {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		if(checker != null) {
-			this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
-		}
+//		if(checker != null) {
+//			this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
+//		}
 		return false;
 	}
 	@Override
@@ -35,7 +35,7 @@ public class Not extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int t = this.inner.inferTypestate(null);
 		if(t == Typestate.ObjectType || t == Typestate.OperationType) {
-			this.inner = this.inner.removeNodeOperator();
+			this.inner = this.inner.removeASTOperator();
 		}
 		return this;
 	}

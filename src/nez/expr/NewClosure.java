@@ -33,10 +33,10 @@ public class NewClosure extends SequentialExpression {
 		return false;
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
 		for(Expression e : this) {
-			Factory.addSequence(l, e.removeNodeOperator());
+			Factory.addSequence(l, e.removeASTOperator());
 		}
 		return Factory.newSequence(s, l);
 	}
@@ -48,7 +48,7 @@ public class NewClosure extends SequentialExpression {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(c.required != Typestate.ObjectType) {
 			checker.reportWarning(s, "unexpected { .. => removed!");
-			return this.removeNodeOperator();
+			return this.removeASTOperator();
 		}
 		c.required = Typestate.OperationType;
 		for(Expression p: this) {

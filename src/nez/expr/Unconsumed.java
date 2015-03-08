@@ -36,7 +36,7 @@ abstract class Unconsumed extends Expression {
 		return this;
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		return this;
 	}
 	@Override

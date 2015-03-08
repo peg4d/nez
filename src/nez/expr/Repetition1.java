@@ -25,7 +25,6 @@ public class Repetition1 extends Repetition {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		super.checkAlwaysConsumed(checker, startNonTerminal, stack);
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override public short acceptByte(int ch) {

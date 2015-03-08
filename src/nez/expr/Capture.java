@@ -4,7 +4,7 @@ import nez.ast.SourcePosition;
 import nez.runtime.Compiler;
 import nez.runtime.Instruction;
 
-public class Capture extends ParsingOperation {
+public class Capture extends ASTOperation {
 	public final New begin;
 	int shift;
 	Capture(SourcePosition s, New begin, int shift) {

@@ -6,7 +6,7 @@ import nez.runtime.Compiler;
 import nez.runtime.Instruction;
 import nez.util.UList;
 
-public class IsIndent extends Terminal implements ContextSensitive {
+public class IsIndent extends Terminal {
 	IsIndent(SourcePosition s) {
 		super(s);
 	}

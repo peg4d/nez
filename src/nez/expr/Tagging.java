@@ -7,7 +7,7 @@ import nez.runtime.Compiler;
 import nez.runtime.Instruction;
 import nez.util.StringUtils;
 
-public class Tagging extends ParsingOperation {
+public class Tagging extends ASTOperation {
 	public Tag tag;
 	Tagging(SourcePosition s, Tag tag) {
 		super(s);

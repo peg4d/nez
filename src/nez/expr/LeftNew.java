@@ -25,7 +25,7 @@ public class LeftNew extends NewClosure {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "unexpected {@ .. => removed!!");
-			return this.removeNodeOperator();
+			return this.removeASTOperator();
 		}
 		c.required = Typestate.OperationType;
 		for(Expression p: this) {

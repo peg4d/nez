@@ -30,7 +30,7 @@ public class New extends Unconsumed {
 		return false;
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		return Factory.newEmpty(s);
 	}
 	@Override
@@ -42,7 +42,7 @@ public class New extends Unconsumed {
 		if(this.lefted) {
 			if(c.required != Typestate.OperationType) {
 				checker.reportWarning(s, "unexpected {@ .. => removed!!");
-				return this.removeNodeOperator();
+				return this.removeASTOperator();
 			}
 		}
 		else {

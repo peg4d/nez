@@ -24,14 +24,17 @@ public class DefSymbol extends Unary {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		if(checker != null) {
-			checker.setSymbolExpresion(table.getName(), this.inner);
-			if(!this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack)) {
-				checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
-			}
-		}
+		this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 		return true;
 	}
+	@Override
+	public void checkGrammar(GrammarChecker checker) {
+		checker.setSymbolExpresion(table.getName(), this.inner);
+		if(!this.inner.isAlwaysConsumed()) {
+			checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
+		}
+	}
+
 	@Override
 	public int inferTypestate(UMap<String> visited) {
 		return Typestate.BooleanType;
@@ -40,7 +43,7 @@ public class DefSymbol extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int t = this.inner.inferTypestate(null);
 		if(t != Typestate.BooleanType) {
-			this.inner = this.inner.removeNodeOperator();
+			this.inner = this.inner.removeASTOperator();
 		}
 		return this;
 	}

@@ -25,7 +25,7 @@ public abstract class Terminal extends Expression {
 		return this;
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		return this;
 	}
 	@Override
