@@ -44,6 +44,7 @@ public class IsSymbol extends Terminal {
 			checker.reportError(this.s, "undefined table: " + tableName);
 			return Factory.newFailure(this.s);
 		}
+		this.symbolExpression = e;
 		return this;
 	}
 	@Override

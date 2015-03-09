@@ -43,8 +43,10 @@ class CheckCommand extends Command {
 		Production product = config.getProduction();
 		product.disable(Production.ASTConstruction);
 		product.record(rec);
+		int totalCount = 0, failureCount = 0, unconsumedCount = 0;
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
+			totalCount++;
 			file.start(rec);
 			boolean result = product.match(file);
 			file.done(rec);
@@ -52,14 +54,23 @@ class CheckCommand extends Command {
 			if(!result) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
 				failedInput.add(file.getResourceName());
+				failureCount++;
 				continue;
 			}
 			if(file.hasUnconsumed()) {
 				ConsoleUtils.println(file.getUnconsumedMessage());
+				unconsumedCount++;
 			}
 			if(rec != null) {
 				rec.log();
 			}
+		}
+		if(totalCount > 1){
+			Verbose.println(
+					totalCount + " files, " +
+					failureCount + " failed, " +
+					unconsumedCount + " uncosumed, " +
+					(100 - 100.0 * (unconsumedCount+failureCount)/totalCount) + "% passed.");
 		}
 		if(failedInput.size() > 0) {
 			ConsoleUtils.exit(1, "failed: " + failedInput);
