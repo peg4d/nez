@@ -3,7 +3,7 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
@@ -86,7 +86,7 @@ public class Repetition extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeRepetition(this, next);
 	}
 

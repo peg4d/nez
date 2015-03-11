@@ -5,7 +5,7 @@ import java.util.TreeMap;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
 import nez.util.UList;
 
@@ -74,7 +74,7 @@ public class LeftNew extends NewClosure {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeLeftNew(this, next);
 	}
 

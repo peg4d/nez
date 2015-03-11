@@ -5,8 +5,8 @@ import java.util.TreeMap;
 import nez.Grammar;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -132,13 +132,13 @@ public class NonTerminal extends Expression {
 	}
 
 	@Override
-	public Expression optimize(int option) {
+	void optimizeImpl(int option) {
 		Expression e = this;
 		while(e instanceof NonTerminal) {
 			NonTerminal nterm = (NonTerminal) e;
 			e = nterm.deReference().optimize(option);
 		}
-		return e;
+		this.optimized = e;
 	}
 
 	@Override
@@ -147,7 +147,7 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeNonTerminal(this, next);
 	}
 

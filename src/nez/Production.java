@@ -7,10 +7,10 @@ import nez.expr.NonTerminal;
 import nez.expr.Rule;
 import nez.main.Recorder;
 import nez.main.Verbose;
-import nez.runtime.Compiler;
 import nez.runtime.Instruction;
 import nez.runtime.MemoPoint;
 import nez.runtime.MemoTable;
+import nez.runtime.RuntimeCompiler;
 import nez.util.ConsoleUtils;
 import nez.util.FlagUtils;
 import nez.util.UList;
@@ -168,7 +168,7 @@ public class Production {
 
 	public final Instruction compile() {
 		if(compiledCode == null) {
-			Compiler bc = new Compiler(this.option);
+			RuntimeCompiler bc = new RuntimeCompiler(this.option);
 			compiledCode = bc.encode(this.ruleList);
 			this.InstructionSize  = bc.getInstructionSize();
 			this.memoPointSize = bc.getMemoPointSize();
@@ -182,8 +182,8 @@ public class Production {
 		return compiledCode;
 	}
 	
-	public Compiler cc() {
-		Compiler bc = new Compiler(this.option);
+	public RuntimeCompiler cc() {
+		RuntimeCompiler bc = new RuntimeCompiler(this.option);
 		bc.encode(ruleList);
 		return bc;
 	}
@@ -335,7 +335,8 @@ public class Production {
 	public final static int Prediction      = 1 << 6;
 	public final static int New             = 1 << 7;
 	public final static int Binary = 1 << 10;
-	public final static int Profiling = 1 << 11;
+	public final static int Utf8   = 1 << 11;	
+	public final static int Profiling = 1 << 12;
 
 	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization 
 											| Specialization | CommonPrefix | Prediction ;

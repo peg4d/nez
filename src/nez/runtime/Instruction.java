@@ -423,6 +423,21 @@ interface Memoization {
 
 }
 
+class IMonitor extends Instruction {
+	boolean deActivated;
+	Instruction anotherNext;
+	IMonitor(Expression e, Instruction next, Instruction anotherNext) {
+		super(e, next);
+		this.deActivated = false;
+		this.anotherNext = anotherNext;
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return this.deActivated ? this.anotherNext : this.next;
+	}
+	
+}
+
 class ILookup extends IFailPush implements Memoization {
 	final MemoPoint memoPoint;
 	final Instruction skip;

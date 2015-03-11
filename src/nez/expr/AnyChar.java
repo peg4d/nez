@@ -2,14 +2,15 @@ package nez.expr;
 
 import java.util.TreeMap;
 
+import nez.Production;
 import nez.SourceContext;
+import nez.ast.Source;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
-
-import org.peg4d.ParsingSource;
 
 public class AnyChar extends Terminal {
 	AnyChar(SourcePosition s) {
@@ -45,7 +46,12 @@ public class AnyChar extends Terminal {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		return (ch == ParsingSource.EOF) ? Reject : Accept;
+		if(FlagUtils.is(option, Production.Binary)) {
+			return (ch == Source.BinaryEOF) ? Reject : Accept;
+		}
+		else {
+			return (ch == Source.BinaryEOF || ch == 0) ? Reject : Accept;
+		}
 	}
 	@Override
 	public boolean match(SourceContext context) {
@@ -57,7 +63,7 @@ public class AnyChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeMatchAny(this, next);
 	}
 	@Override

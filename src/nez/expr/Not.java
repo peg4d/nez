@@ -3,8 +3,8 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -41,9 +41,15 @@ public class Not extends Unary {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		short r = this.inner.acceptByte(ch, option);
-		/* the code below works only if a single character in !(e) */
+		/* The code below works only if a single character in !(e) */
 		/* we must accept 'i' for !'int' 'i' */
+		Expression p = this.inner.optimize(option);
+		if(p instanceof ByteChar) {
+			return ((ByteChar) p).byteChar == ch ? Reject : Accept;
+		}
+		if(p instanceof ByteMap) {
+			return ((ByteMap) p).byteMap[ch] ? Reject : Accept;
+		}
 //		if(r == Accept || r == LazyAccept) {
 //			return Reject;
 //		}
@@ -74,7 +80,7 @@ public class Not extends Unary {
 	}
 
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeNot(this, next);
 	}
 	@Override

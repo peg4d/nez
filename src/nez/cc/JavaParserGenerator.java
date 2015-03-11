@@ -1,6 +1,6 @@
 package nez.cc;
 
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
 
 class JavaParserGenerator extends ParserGenerator {
@@ -13,7 +13,7 @@ class JavaParserGenerator extends ParserGenerator {
 		return "a Nez parser generator for Java" ;
 	}
 
-	void generate(Compiler cc) {
+	void generate(RuntimeCompiler cc) {
 		file.writeIndent("public class NezParser {");
 		file.incIndent();
 		file.writeIndent("public final static boolean parse() {");

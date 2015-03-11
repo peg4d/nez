@@ -15,8 +15,6 @@ import nez.runtime.ClassicContext;
 import nez.util.StringUtils;
 
 public abstract class SourceContext extends ClassicContext {
-//	public final static int TextEOF   = 0;
-//	public final static int BinaryEOF = 256; 
 	
 	private String     fileName;
 	protected long     startLineNum = 1;

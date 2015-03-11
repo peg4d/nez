@@ -46,7 +46,6 @@ public abstract class Context implements Source {
 		return this.formatPositionLine("unconsumed", this.pos, "");
 	}
 
-
 	/* PEG4d : AST construction */
 
 	Node base;

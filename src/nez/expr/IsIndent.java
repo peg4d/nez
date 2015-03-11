@@ -2,7 +2,7 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
 import nez.util.UList;
 
@@ -38,7 +38,7 @@ public class IsIndent extends Terminal {
 		return context.matchSymbolTable(NezTag.Indent, true);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeIsIndent(this, next);
 	}
 	@Override

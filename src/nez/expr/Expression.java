@@ -4,8 +4,8 @@ import java.util.TreeMap;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -13,8 +13,10 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	public final static boolean ClassicMode = false;
 	SourcePosition s = null;
 	int    internId   = 0;
+	
 	public Expression optimized;
-
+	int    optimizedOption = -1;
+	
 	Expression(SourcePosition s) {
 		this.s = s;
 		this.internId = 0;
@@ -91,10 +93,18 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	public final static short Reject = 2;
 	public abstract short acceptByte(int ch, int option);
 	
-	public Expression optimize(int option) {
-		return this;
+	public final Expression optimize(int option) {
+		if(this.optimizedOption != option) {
+			optimizeImpl(option);
+			this.optimizedOption = option;
+		}
+		return this.optimized;
 	}
 	
+	void optimizeImpl(int option) {
+		this.optimized = this;
+	}
+
 	@Override
 	public String toString() {
 		return new GrammarFormatter().format(this);
@@ -117,7 +127,7 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		visitor.visit(this);
 	}
 
-	public abstract Instruction encode(Compiler bc, Instruction next);
+	public abstract Instruction encode(RuntimeCompiler bc, Instruction next);
 //	public Instruction encode(Compiler bc, Instruction next) {
 //		// todo
 //		return next;

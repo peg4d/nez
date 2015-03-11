@@ -3,7 +3,7 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
 
 public class IfFlag extends Unconsumed {
@@ -24,7 +24,7 @@ public class IfFlag extends Unconsumed {
 		return this;
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return next;
 	}
 	@Override

@@ -6,7 +6,7 @@ import nez.Grammar;
 import nez.SourceContext;
 import nez.ast.AST;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
@@ -224,7 +224,7 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return this.getExpression().encode(bc, next);
 	}
 

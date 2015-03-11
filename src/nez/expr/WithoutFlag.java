@@ -4,7 +4,7 @@ import java.util.TreeMap;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
+import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
@@ -59,7 +59,7 @@ public class WithoutFlag extends Unary {
 		return this.inner.optimized.match(context);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return this.inner.encode(bc, next);
 	}
 	@Override

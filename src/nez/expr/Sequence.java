@@ -5,8 +5,8 @@ import java.util.TreeMap;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -111,22 +111,23 @@ public class Sequence extends SequentialExpression {
 	}
 	
 	@Override
-	public Expression optimize(int option) {
-		//System.out.println("checking .. " + this);
-		
+	void optimizeImpl(int option) {
 		if(FlagUtils.is(option, Production.Optimization) && this.get(this.size() - 1) instanceof AnyChar) {
 			boolean byteMap[] = ByteMap.newMap();
 			if(isByteMap(option, byteMap)) {
-				return Factory.newByteMap(s, byteMap);
+				this.optimized = Factory.newByteMap(s, byteMap);
+				return;
 			}
+			// (!'ab' !'ac' .) => (^[a]) / (!'ab' !'ac' .)
 			if(FlagUtils.is(option, Production.Prediction)) {
 				ByteMap.clear(byteMap);
-				if(isPredictedByteMap(0, this.size() - 1, byteMap, option)) {
-					return Factory.newChoice(s, Factory.newByteMap(s, byteMap), this);
+				if(isPredictedNotByteMap(0, this.size() - 1, byteMap, option)) {
+					this.optimized = Factory.newChoice(s, Factory.newByteMap(s, byteMap), this);
+					return;
 				}
 			}
 		}
-		return this;
+		this.optimized = this;
 	}
 	
 	boolean isByteMap(int option, boolean[] byteMap) {
@@ -149,9 +150,8 @@ public class Sequence extends SequentialExpression {
 		return true;
 	}
 
-	// (!'ab' !'ac' .) => !'a' / (!'ab' !'ac' .)
 	
-	boolean isPredictedByteMap(int start, int end, boolean[] byteMap, int option) {
+	boolean isPredictedNotByteMap(int start, int end, boolean[] byteMap, int option) {
 		for(int i = start; i < end; i++) {
 			Expression p = this.get(i); //.optimize(option);
 			if(p instanceof Not) {
@@ -205,7 +205,7 @@ public class Sequence extends SequentialExpression {
 		return true;
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeSequence(this, next);
 	}
 	

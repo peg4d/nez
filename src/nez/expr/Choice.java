@@ -6,8 +6,8 @@ import nez.Production;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
-import nez.runtime.Compiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -101,7 +101,7 @@ public class Choice extends SequentialExpression {
 		return false;
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeChoice(this, next);
 	}
 	
@@ -112,30 +112,26 @@ public class Choice extends SequentialExpression {
 //	int endIndex = 257;
 	
 	@Override
-	public final Expression optimize(int option) {
-		if(this.optimized != this) {
-			return optimized;
-		}
+	void optimizeImpl(int option) {
 		if(FlagUtils.is(option, Production.Optimization) && !(this.optimized instanceof ByteMap)) {
 			boolean byteMap[] = new boolean[257];
-			if(isByteMap(option, byteMap, 0)) {
+			if(toByteMap(option, byteMap, 0)) {
 				this.optimized = Factory.newByteMap(s, byteMap);
-				return optimized;
+				return;
 			}
 		}
-		if(FlagUtils.is(option, Production.Prediction) && this.matchCase == null) {
-			Expression[] matchCase = new Expression[257];
+		if(FlagUtils.is(option, Production.Prediction)) {
 			Expression fails = Factory.newFailure(s);
+			this.matchCase = new Expression[257];
 			for(int ch = 0; ch <= 256; ch++) {
 				Expression selected = selectChoice(ch, fails, option);
 				matchCase[ch] = selected;
 			}
-			this.matchCase = matchCase;
+			this.optimized = this;
 		}
-		return this;
 	}
 	
-	private final boolean isByteMap(int option, boolean[] byteMap, int level) {
+	private final boolean toByteMap(int option, boolean[] byteMap, int level) {
 		for(Expression e : this) {
 			e = e.optimize(option);
 			if(e instanceof ByteChar) {
@@ -148,7 +144,7 @@ public class Choice extends SequentialExpression {
 			}
 			if(e instanceof Choice) {
 				if(level < 8) {
-					if(!((Choice)e).isByteMap(option, byteMap, level+1)) {
+					if(!((Choice)e).toByteMap(option, byteMap, level+1)) {
 						return false;
 					}
 					continue;
