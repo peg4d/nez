@@ -176,6 +176,9 @@ public class CommandConfigure {
 				else if(argument.endsWith(":prediction")) {
 					this.ProductionOption |= Production.Prediction;
 				}
+				else if(argument.endsWith(":tracing")) {
+					this.ProductionOption |= Production.Tracing;
+				}
 				else if(argument.endsWith(":log")) {
 					RecorderFileName = "nezrec.csv";  // -Xrec
 				}
@@ -184,8 +187,11 @@ public class CommandConfigure {
 				if(argument.endsWith(":packrat")) {
 					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.PackratParsing);
 				}
+				else if(argument.endsWith(":tracing")) {
+					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Tracing);
+				}
 				else if(argument.endsWith(":prediction")) {
-					this.ProductionOption |= Production.Prediction;
+					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Prediction);
 				}
 			}
 			else if(argument.startsWith("-Xrec")) {

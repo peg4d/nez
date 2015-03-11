@@ -505,6 +505,7 @@ public abstract class Context implements Source {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry m = memoTable.getMemo(this.pos, mp.id);
 		if(m != null) {
+			op.monitor.used();
 			if(m.failed) {
 				mp.failHit();
 				return opIFail();
@@ -521,6 +522,7 @@ public abstract class Context implements Source {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry m = memoTable.getMemo2(this.pos, mp.id, stateValue);
 		if(m != null) {
+			op.monitor.used();
 			if(m.failed) {
 				mp.failHit();
 				return opIFail();
@@ -533,10 +535,11 @@ public abstract class Context implements Source {
 		return this.opIFailPush(op);
 	}
 
-	public final Instruction opLookupNode(ILookupNode op) {
+	public final Instruction opILookupNode(ILookupNode op) {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry entry = memoTable.getMemo(this.pos, mp.id);
 		if(entry != null) {
+			op.monitor.used();
 			if(entry.failed) {
 				mp.failHit();
 				return opIFail();
@@ -551,10 +554,11 @@ public abstract class Context implements Source {
 		return this.opNodePush(op);
 	}
 
-	public final Instruction opLookupNode2(ILookupNode op) {
+	public final Instruction opIStateLookupNode(ILookupNode op) {
 		MemoPoint mp = op.memoPoint;
 		MemoEntry me = memoTable.getMemo2(pos, mp.id, stateValue);
 		if(me != null) {
+			op.monitor.used();
 			if(me.failed) {
 				mp.failHit();
 				return opIFail();
@@ -574,6 +578,7 @@ public abstract class Context implements Source {
 		ContextStack stackTop = contextStacks[this.usedStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, null, length, 0);
+		op.monitor.stored();
 		return this.opIFailPop(op);
 	}
 
@@ -582,38 +587,43 @@ public abstract class Context implements Source {
 		ContextStack stackTop = contextStacks[this.usedStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, null, length, stateValue);
+		op.monitor.stored();
 		return this.opIFailPop(op);
 	}
 
-	public final Instruction opMemoizeNode(MemoizeNode op) {
+	public final Instruction opIMemoizeNode(IMemoizeNode op) {
 		MemoPoint mp = op.memoPoint;
 		this.opNodeStore(op);
 		assert(this.usedStackTop == this.failStackTop);
 		ContextStack stackTop = contextStacks[this.failStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, this.left, length, 0);
+		op.monitor.stored();
 		return this.opIFailPop(op);
 	}
 
-	public Instruction opMemoizeNode2(MemoizeNode op) {
+	public final Instruction opIStateMemoizeNode(IStateMemoizeNode op) {
 		MemoPoint mp = op.memoPoint;
 		this.opNodeStore(op);
 		assert(this.usedStackTop == this.failStackTop);
 		ContextStack stackTop = contextStacks[this.failStackTop];
 		int length = (int)(this.pos - stackTop.pos);
 		memoTable.setMemo(stackTop.pos, mp.id, false, this.left, length, stateValue);
+		op.monitor.stored();
 		return this.opIFailPop(op);
 	}
 
 	public final Instruction opIMemoizeFail(IMemoizeFail op) {
 		MemoPoint mp = op.memoPoint;
 		memoTable.setMemo(pos, mp.id, true, null, 0, 0);
+		op.monitor.stored();
 		return opIFail();
 	}
 
 	public final Instruction opIStateMemoizeFail(IMemoizeFail op) {
 		MemoPoint mp = op.memoPoint;
 		memoTable.setMemo(pos, mp.id, true, null, 0, stateValue);
+		op.monitor.stored();
 		return opIFail();
 	}
 

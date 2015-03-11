@@ -423,28 +423,56 @@ interface Memoization {
 
 }
 
-class IMonitor extends Instruction {
-	boolean deActivated;
-	Instruction anotherNext;
-	IMonitor(Expression e, Instruction next, Instruction anotherNext) {
+class IMonitoredSwitch extends Instruction {
+	final static IMonitoredSwitch dummyMonitor = new IMonitoredSwitch(null, null);
+	boolean isActivated;
+	Instruction activatedNext = null;
+	int used = 0;
+	int stored = 0;
+	IMonitoredSwitch(Expression e, Instruction next) {
 		super(e, next);
-		this.deActivated = false;
-		this.anotherNext = anotherNext;
+		this.isActivated = true;
+	}
+	void setActivatedNext(Instruction inst) {
+		this.activatedNext = labeling(inst);
+	}
+	@Override
+	Instruction branch() {
+		return this.activatedNext;
+	}
+	final void stored() {
+		stored++;
+		this.checked();
+	}
+	final void used() {
+		used++;
+	}
+	final void checked() {
+		if(this.isActivated) {
+			if(stored % 32 == 0) {
+				double r = used / (double)stored;
+				//System.out.println("monitor: " + this.used + "/" + this.stored + ", " + r);
+				if(r < 0.0361) {  /* this is a magic number */
+					this.isActivated = false;
+				}
+			}
+		}
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return this.deActivated ? this.anotherNext : this.next;
+		return this.isActivated ? this.activatedNext : this.next;
 	}
-	
 }
 
 class ILookup extends IFailPush implements Memoization {
 	final MemoPoint memoPoint;
 	final Instruction skip;
-	ILookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+	final IMonitoredSwitch monitor;
+	ILookup(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		super(e, failjump, next);
 		this.memoPoint = m;
 		this.skip = labeling(skip);
+		this.monitor = monitor;
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -458,8 +486,8 @@ class ILookup extends IFailPush implements Memoization {
 }
 
 class IStateLookup extends ILookup {
-	IStateLookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
-		super(e, m, next, skip, failjump);
+	IStateLookup(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		super(e, monitor, m, next, skip, failjump);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
@@ -468,9 +496,11 @@ class IStateLookup extends ILookup {
 }
 
 class IMemoize extends Instruction implements Memoization {
+	final IMonitoredSwitch monitor;
 	final MemoPoint memoPoint;
-	IMemoize(Expression e, MemoPoint m, Instruction next) {
+	IMemoize(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
 		super(e, next);
+		this.monitor = monitor;
 		this.memoPoint = m;
 	}
 	@Override
@@ -484,8 +514,8 @@ class IMemoize extends Instruction implements Memoization {
 }
 
 class IStateMemoize extends IMemoize {
-	IStateMemoize(Expression e, MemoPoint m, Instruction next) {
-		super(e, m, next);
+	IStateMemoize(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
+		super(e, monitor, m, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
@@ -494,10 +524,12 @@ class IStateMemoize extends IMemoize {
 }
 
 class IMemoizeFail extends IFail implements Memoization {
-	MemoPoint memoPoint;
-	IMemoizeFail(Expression e, MemoPoint m) {
+	final MemoPoint memoPoint;
+	final IMonitoredSwitch monitor;
+	IMemoizeFail(Expression e, IMonitoredSwitch monitor, MemoPoint m) {
 		super(e);
 		this.memoPoint = m;
+		this.monitor = monitor;
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -510,8 +542,8 @@ class IMemoizeFail extends IFail implements Memoization {
 }
 
 class IStateMemoizeFail extends IMemoizeFail {
-	IStateMemoizeFail(Expression e, MemoPoint m) {
-		super(e, m);
+	IStateMemoizeFail(Expression e, IMonitoredSwitch monitor, MemoPoint m) {
+		super(e, monitor, m);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
@@ -521,33 +553,35 @@ class IStateMemoizeFail extends IMemoizeFail {
 
 class ILookupNode extends ILookup {
 	final int index;
-	ILookupNode(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
-		super(e, m, next, skip, failjump);
+	ILookupNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		super(e, monitor, m, next, skip, failjump);
 		this.index = e.index;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opLookupNode(this);
+		return sc.opILookupNode(this);
 	}
 }
 
-class LookupNode2 extends ILookupNode {
+class IStateLookupNode extends ILookupNode {
 	final int index;
-	LookupNode2(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
-		super(e, m, next, skip, failjump);
+	IStateLookupNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		super(e, monitor, m, next, skip, failjump);
 		this.index = e.index;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opLookupNode2(this);
+		return sc.opIStateLookupNode(this);
 	}
 }
 
-class MemoizeNode extends INodeStore implements Memoization {
+class IMemoizeNode extends INodeStore implements Memoization {
 	final MemoPoint memoPoint;
-	MemoizeNode(Link e, MemoPoint m, Instruction next) {
+	final IMonitoredSwitch monitor;
+	IMemoizeNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
 		super(e, next);
 		this.memoPoint = m;
+		this.monitor = monitor;
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -555,17 +589,17 @@ class MemoizeNode extends INodeStore implements Memoization {
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoizeNode(this);
+		return sc.opIMemoizeNode(this);
 	}
 }
 
-class MemoizeNode2 extends MemoizeNode {
-	MemoizeNode2(Link e, MemoPoint m, Instruction next) {
-		super(e, m, next);
+class IStateMemoizeNode extends IMemoizeNode {
+	IStateMemoizeNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
+		super(e, monitor, m, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoizeNode2(this);
+		return sc.opIStateMemoizeNode(this);
 	}
 }
 
