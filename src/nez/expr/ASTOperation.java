@@ -45,7 +45,7 @@ public abstract class ASTOperation extends Expression {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return Unconsumed;
 	}
 

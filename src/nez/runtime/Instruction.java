@@ -651,13 +651,13 @@ class ITablePop extends Instruction {
 
 /* Specialization */
 
-class NByteMap extends Instruction {
+class INotByteMap extends Instruction {
 	public final boolean[] byteMap;
-	NByteMap(ByteMap e, Instruction next) {
+	INotByteMap(ByteMap e, Instruction next) {
 		super(e, next);
 		this.byteMap = e.byteMap;
 	}
-	NByteMap(ByteChar e, Instruction next) {
+	INotByteMap(ByteChar e, Instruction next) {
 		super(e, next);
 		this.byteMap = ByteMap.newMap();
 		this.byteMap[e.byteChar] = true;
@@ -673,13 +673,13 @@ class NByteMap extends Instruction {
 	}
 }
 
-class RByteMap extends Instruction {
+class IRepeatedByteMap extends Instruction {
 	public final boolean[] byteMap;
-	RByteMap(ByteMap e, Instruction next) {
+	IRepeatedByteMap(ByteMap e, Instruction next) {
 		super(e, next);
 		this.byteMap = e.byteMap;
 	}
-	RByteMap(ByteChar e, Instruction next) {
+	IRepeatedByteMap(ByteChar e, Instruction next) {
 		super(e, next);
 		this.byteMap = ByteMap.newMap();
 		this.byteMap[e.byteChar] = true;
@@ -721,8 +721,8 @@ class IMultiChar extends Instruction {
 	}
 }
 
-class NMultiChar extends IMultiChar {
-	NMultiChar(Sequence e, Instruction next) {
+class INotMultiChar extends IMultiChar {
+	INotMultiChar(Sequence e, Instruction next) {
 		super(e, false, next);
 	}
 	@Override

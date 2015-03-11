@@ -41,8 +41,8 @@ public class And extends Unary {
 	}
 
 	@Override
-	public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		short r = this.inner.acceptByte(ch, option);
 		if(r == Accept || r == Unconsumed) {
 			return Unconsumed;
 		}

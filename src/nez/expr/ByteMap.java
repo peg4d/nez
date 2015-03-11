@@ -69,7 +69,7 @@ public class ByteMap extends Terminal {
 		return true;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return (byteMap[ch]) ? Accept : Reject;
 	}
 	@Override

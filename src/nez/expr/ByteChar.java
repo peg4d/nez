@@ -25,7 +25,7 @@ public class ByteChar extends Terminal {
 		return true;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return (byteChar == ch) ? Accept : Reject;
 	}
 	@Override

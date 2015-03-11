@@ -66,9 +66,9 @@ public class NewClosure extends SequentialExpression {
 		return Factory.newNew(s, l);
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		for(int i = 0; i < this.size(); i++) {
-			short r = this.get(i).acceptByte(ch);
+			short r = this.get(i).acceptByte(ch, option);
 			if(r != Unconsumed) {
 				return r;
 			}

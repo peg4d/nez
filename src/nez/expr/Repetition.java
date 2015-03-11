@@ -58,8 +58,8 @@ public class Repetition extends Unary {
 		}
 		return this;
 	}
-	@Override public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
+	@Override public short acceptByte(int ch, int option) {
+		short r = this.inner.acceptByte(ch, option);
 		if(r == Accept) {
 			return Accept;
 		}

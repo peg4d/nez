@@ -621,7 +621,7 @@ public abstract class Context implements Source {
 
 	// Specialization 
 	
-	public final Instruction opRByteMap(RByteMap op) {
+	public final Instruction opRByteMap(IRepeatedByteMap op) {
 		while(true) {
 			int c = this.byteAt(this.pos);
 			if(!op.byteMap[c]) {
@@ -632,7 +632,7 @@ public abstract class Context implements Source {
 		return op.next;
 	}
 
-	public final Instruction opNByteMap(NByteMap op) {
+	public final Instruction opNByteMap(INotByteMap op) {
 		int c = this.byteAt(this.pos);
 		if(!op.byteMap[c]) {
 			return op.next;
@@ -640,7 +640,7 @@ public abstract class Context implements Source {
 		return this.opIFail();
 	}
 
-	public final Instruction opNMultiChar(NMultiChar op) {
+	public final Instruction opNMultiChar(INotMultiChar op) {
 		if(!this.match(this.pos, op.utf8)) {
 			return op.next;
 		}

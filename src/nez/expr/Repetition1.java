@@ -27,8 +27,8 @@ public class Repetition1 extends Repetition {
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
-	@Override public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	@Override public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {

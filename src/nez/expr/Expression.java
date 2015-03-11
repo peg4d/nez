@@ -11,8 +11,8 @@ import nez.util.UMap;
 
 public abstract class Expression extends AbstractList<Expression> implements Recognizer {
 	public final static boolean ClassicMode = false;
-	SourcePosition s      = null;
-	public int    internId   = 0;
+	SourcePosition s = null;
+	int    internId   = 0;
 	public Expression optimized;
 
 	Expression(SourcePosition s) {
@@ -89,7 +89,7 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	public final static short Unconsumed = 0;
 	public final static short Accept = 1;
 	public final static short Reject = 2;
-	public abstract short acceptByte(int ch);
+	public abstract short acceptByte(int ch, int option);
 	
 	public Expression optimize(int option) {
 		return this;

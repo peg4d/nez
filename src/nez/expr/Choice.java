@@ -71,10 +71,10 @@ public class Choice extends SequentialExpression {
 		return Factory.newChoice(this.s, l);
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		boolean hasUnconsumed = false;
 		for(int i = 0; i < this.size(); i++) {
-			short r = this.get(i).acceptByte(ch);
+			short r = this.get(i).acceptByte(ch, option);
 			if(r == Accept) {
 				return r;
 			}
@@ -127,7 +127,7 @@ public class Choice extends SequentialExpression {
 			Expression[] matchCase = new Expression[257];
 			Expression fails = Factory.newFailure(s);
 			for(int ch = 0; ch <= 256; ch++) {
-				Expression selected = selectChoice(ch, fails);
+				Expression selected = selectChoice(ch, fails, option);
 				matchCase[ch] = selected;
 			}
 			this.matchCase = matchCase;
@@ -159,23 +159,23 @@ public class Choice extends SequentialExpression {
 		return true;
 	}
 
-	private Expression selectChoice(int ch, Expression failed) {
+	private Expression selectChoice(int ch, Expression failed, int option) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		selectChoice(ch, failed, l);
+		selectChoice(ch, failed, l, option);
 		if(l.size() == 0) {
 			return failed;
 		}
 		return Factory.newChoice(s, l);
 	}
 
-	private void selectChoice(int ch, Expression failed, UList<Expression> l) {
+	private void selectChoice(int ch, Expression failed, UList<Expression> l, int option) {
 		for(Expression e : this) {
 			e = Factory.resolveNonTerminal(e);
 			if(e instanceof Choice) {
-				((Choice)e).selectChoice(ch, failed, l);
+				((Choice)e).selectChoice(ch, failed, l, option);
 			}
 			else {
-				short r = e.acceptByte(ch);
+				short r = e.acceptByte(ch, option);
 				//System.out.println("~ " + GrammarFormatter.stringfyByte(ch) + ": r=" + r + " in " + e);
 				if(r != Expression.Reject) {
 					l.add(e);
@@ -192,7 +192,5 @@ public class Choice extends SequentialExpression {
 	protected void examplfy(GEP gep, StringBuilder sb, int p) {
 		this.get(p % size()).examplfy(gep, sb, p);
 	}
-
-
 
 }

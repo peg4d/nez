@@ -59,7 +59,7 @@ public class New extends Unconsumed {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return Unconsumed;
 	}
 	@Override

@@ -69,8 +69,8 @@ public class Compiler {
 
 	MemoPoint issueMemoPoint(String label, Expression e) {
 		if(this.enablePackratParsing()) {
-			Integer key = e.internId;
-			assert(e.internId != 0);
+			Integer key = e.getId();
+			assert(e.getId() != 0);
 			MemoPoint m = this.memoMap.get(key);
 			if(m == null) {
 				m = new MemoPoint(this.memoMap.size(), label, e, this.isContextSensitive(e));
@@ -211,11 +211,11 @@ public class Compiler {
 			Expression inner = p.get(0).optimize(option);
 			if(inner instanceof ByteChar) {
 				Verbose.noticeOptimize("Specialization", p, inner);
-				return new RByteMap((ByteChar)inner, next);
+				return new IRepeatedByteMap((ByteChar)inner, next);
 			}
 			if(inner instanceof ByteMap) {
 				Verbose.noticeOptimize("Specialization", p, inner);
-				return new RByteMap((ByteMap)inner, next);
+				return new IRepeatedByteMap((ByteMap)inner, next);
 			}
 		}
 		IFailSkip skip = p.possibleInfiniteLoop ? new IFailCheckSkip(p) : new IFailSkip(p);
@@ -254,15 +254,15 @@ public class Compiler {
 			Expression inn = p.get(0).optimize(option);
 			if(inn instanceof ByteMap) {
 				Verbose.noticeOptimize("Specilization", p);
-				return new NByteMap((ByteMap)inn, next);
+				return new INotByteMap((ByteMap)inn, next);
 			}
 			if(inn instanceof ByteChar) {
 				Verbose.noticeOptimize("Specilization", p);
-				return new NByteMap((ByteChar)inn, next);
+				return new INotByteMap((ByteChar)inn, next);
 			}
 			if(inn instanceof Sequence && ((Sequence)inn).isMultiChar()) {
 				Verbose.noticeOptimize("Specilization", p);
-				return new NMultiChar((Sequence)inn, next);
+				return new INotMultiChar((Sequence)inn, next);
 			}
 		}
 		Instruction fail = new IFailPop(p, new IFail(p));
@@ -332,7 +332,7 @@ public class Compiler {
 					/* this cause the repeated calls of the same matchers */
 					Expression common = this.makeCommonPrefix(p);
 					if(common != null) {
-						System.out.println("@common '" + (char)ch + "'("+ch+"): " + e + "\n=>\t" + common);
+						//System.out.println("@common '" + (char)ch + "'("+ch+"): " + e + "\n=>\t" + common);
 						inst = common.encode(this, next);
 					}
 					else {

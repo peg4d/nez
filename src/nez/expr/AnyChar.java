@@ -44,7 +44,7 @@ public class AnyChar extends Terminal {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return (ch == ParsingSource.EOF) ? Reject : Accept;
 	}
 	@Override

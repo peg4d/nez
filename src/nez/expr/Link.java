@@ -56,8 +56,8 @@ public class Link extends Unary {
 		return inner.removeASTOperator();
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {

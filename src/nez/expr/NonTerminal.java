@@ -127,8 +127,8 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public short acceptByte(int ch) {
-		return this.deReference().acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.deReference().acceptByte(ch, option);
 	}
 
 	@Override

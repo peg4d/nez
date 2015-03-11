@@ -52,8 +52,8 @@ public class DefSymbol extends Unary {
 		return (this.inner != e) ? Factory.newDefSymbol(this.s, this.table, e) : this;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {

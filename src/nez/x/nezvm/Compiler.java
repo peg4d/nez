@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import nez.Grammar;
+import nez.Production;
 import nez.expr.And;
 import nez.expr.AnyChar;
 import nez.expr.ByteChar;
@@ -14,9 +15,9 @@ import nez.expr.ByteMap;
 import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
-import nez.expr.GrammarVisitor;
 import nez.expr.Factory;
 import nez.expr.Failure;
+import nez.expr.GrammarVisitor;
 import nez.expr.LeftNew;
 import nez.expr.Link;
 import nez.expr.NewClosure;
@@ -772,7 +773,9 @@ public class Compiler extends GrammarVisitor {
 				checkChoice((Choice)e, c, l);
 			}
 			else {
-				short r = e.acceptByte(c);
+				// FIXME:
+				// AnyChar behaves differently in cases of Binary
+				short r = e.acceptByte(c, Production.Binary); 
 				if(r != Expression.Reject) {
 					l.add(e);
 				}
@@ -941,7 +944,7 @@ public class Compiler extends GrammarVisitor {
 				bb = new BasicBlock(this.func);
 				this.setCurrentBasicBlock(bb);
 				Expression caseElement = caseList.get(i);
-				choiceMap.put(caseElement.internId, bb);
+				choiceMap.put(caseElement.getId(), bb);
 				caseElement.visit(this);
 				bb = this.getCurrentBasicBlock();
 				if (caseElement instanceof Failure) {
@@ -960,7 +963,7 @@ public class Compiler extends GrammarVisitor {
 			this.setCurrentBasicBlock(end);
 			this.createPOPp(e, end);
 			for(int i = 0; i < matchCase.length; i++) {
-				inst.append(choiceMap.get(matchCase[i].internId));
+				inst.append(choiceMap.get(matchCase[i].getId()));
 			}
 		}
 	}

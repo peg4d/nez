@@ -40,8 +40,8 @@ public class Not extends Unary {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		short r = this.inner.acceptByte(ch, option);
 		/* the code below works only if a single character in !(e) */
 		/* we must accept 'i' for !'int' 'i' */
 //		if(r == Accept || r == LazyAccept) {

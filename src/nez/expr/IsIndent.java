@@ -27,7 +27,7 @@ public class IsIndent extends Terminal {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		if (ch == '\t' || ch == ' ') {
 			return Accept;
 		}

@@ -18,7 +18,7 @@ public class Failure extends Unconsumed {
 		return "!!";
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return Reject;
 	}
 	@Override

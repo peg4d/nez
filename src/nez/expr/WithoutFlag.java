@@ -51,8 +51,8 @@ public class WithoutFlag extends Unary {
 		return e;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {

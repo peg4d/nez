@@ -215,8 +215,8 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public short acceptByte(int ch) {
-		return this.body.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.body.acceptByte(ch, option);
 	}
 
 	public void addAnotation(String textAt, AST ast) {

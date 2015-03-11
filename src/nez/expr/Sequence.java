@@ -68,9 +68,9 @@ public class Sequence extends SequentialExpression {
 		return Factory.newSequence(s, l);
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		for(int i = 0; i < this.size(); i++) {
-			short r = this.get(i).acceptByte(ch);
+			short r = this.get(i).acceptByte(ch, option);
 			if(r != Unconsumed) {
 				return r;
 			}
@@ -113,6 +113,7 @@ public class Sequence extends SequentialExpression {
 	@Override
 	public Expression optimize(int option) {
 		//System.out.println("checking .. " + this);
+		
 		if(FlagUtils.is(option, Production.Optimization) && this.get(this.size() - 1) instanceof AnyChar) {
 			boolean byteMap[] = ByteMap.newMap();
 			if(isByteMap(option, byteMap)) {
@@ -155,7 +156,7 @@ public class Sequence extends SequentialExpression {
 			Expression p = this.get(i); //.optimize(option);
 			if(p instanceof Not) {
 				p = p.get(i).optimize(option);
-				predictByte(p, byteMap);
+				predictByte(p, byteMap, option);
 				continue;
 			}
 			return false;
@@ -164,14 +165,13 @@ public class Sequence extends SequentialExpression {
 		return true;
 	}
 
-	void predictByte(Expression e, boolean[] byteMap) {
+	void predictByte(Expression e, boolean[] byteMap, int option) {
 		for(int c = 0; c < 256; c++) {
-			if(e.acceptByte(c) != Expression.Reject) {
+			if(e.acceptByte(c, option) != Expression.Reject) {
 				byteMap[c] = true;
 			}
 		}
 	}
-	
 	
 	//			if(is(O_SpecString)) {
 //				byte[] u = new byte[holder.size()];

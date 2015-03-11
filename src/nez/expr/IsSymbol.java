@@ -48,7 +48,7 @@ public class IsSymbol extends Terminal {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return Accept;
 	}
 	@Override
