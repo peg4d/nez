@@ -331,12 +331,14 @@ public class Production {
 	public final static int PackratParsing  = 1 << 2;
 	public final static int Optimization    = 1 << 3;
 	public final static int Specialization  = 1 << 4;
-	public final static int Prediction      = 1 << 5;
-	public final static int New             = 1 << 6;
+	public final static int CommonPrefix    = 1 << 5;
+	public final static int Prediction      = 1 << 6;
+	public final static int New             = 1 << 7;
 	public final static int Binary = 1 << 10;
 	public final static int Profiling = 1 << 11;
 
-	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization | Specialization | Prediction ;
+	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization 
+											| Specialization | CommonPrefix | Prediction ;
 	public final static int SafeOption = ASTConstruction | Optimization;
 	
 	public final static String stringfyOption(int option, String delim) {
@@ -361,9 +363,13 @@ public class Production {
 			sb.append(delim);
 			sb.append("spe.");
 		}
+		if(FlagUtils.is(option, Production.CommonPrefix)) {
+			sb.append(delim);
+			sb.append("com.");
+		}
 		if(FlagUtils.is(option, Production.Prediction)) {
 			sb.append(delim);
-			sb.append("predict");
+			sb.append("pdt.");
 		}
 		if(FlagUtils.is(option, Production.Profiling)) {
 			sb.append(delim);
@@ -375,7 +381,5 @@ public class Production {
 		}
 		return s;
 	}
-
-
 
 }

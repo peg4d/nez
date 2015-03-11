@@ -169,9 +169,24 @@ public class CommandConfigure {
 					}
 				}
 			}
-			else if(argument.startsWith("-Xconfig")) {
-				ProductionOption = StringUtils.parseInt(argument.substring(9), Production.DefaultOption);
-				Verbose.println("configuration: " + Production.stringfyOption(ProductionOption, ", "));
+			else if(argument.startsWith("--enable:")) {
+				if(argument.endsWith("packrat")) {
+					this.ProductionOption |= Production.PackratParsing;
+				}
+				else if(argument.endsWith(":prediction")) {
+					this.ProductionOption |= Production.Prediction;
+				}
+				else if(argument.endsWith(":log")) {
+					RecorderFileName = "nezrec.csv";  // -Xrec
+				}
+			}
+			else if(argument.startsWith("--disable:")) {
+				if(argument.endsWith(":packrat")) {
+					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.PackratParsing);
+				}
+				else if(argument.endsWith(":prediction")) {
+					this.ProductionOption |= Production.Prediction;
+				}
 			}
 			else if(argument.startsWith("-Xrec")) {
 				RecorderFileName = "nezrec.csv";

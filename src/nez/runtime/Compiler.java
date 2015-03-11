@@ -330,22 +330,25 @@ public class Compiler {
 				if(e == p) {
 					/* this is a rare case where the selected choice is the parent choice */
 					/* this cause the repeated calls of the same matchers */
-//					Expression common = this.trimCommonPrefix(p);
-//					if(common != p) {
-//						System.out.println("@common:" + p + "\n=>\t" + common);
-//					}
-					inst = this.encodeUnoptimizedChoice(p, next);
+					Expression common = this.makeCommonPrefix(p);
+					if(common != null) {
+						System.out.println("@common '" + (char)ch + "'("+ch+"): " + e + "\n=>\t" + common);
+						inst = common.encode(this, next);
+					}
+					else {
+						inst = this.encodeUnoptimizedChoice(p, next);
+					}
 				}
 				else {
 					if(e instanceof Choice) {
-//						Expression common = this.trimCommonPrefix(p);
-//						if(common != p) {
-//							System.out.println("@common:" + p + "\n=>\t" + common);
-//						}
-//						if(checkStartingTerminal(common, ch)) {
-//							System.out.println("consumed 1: '" + (char)ch + "': " + e);
-//						}
-						inst = this.encodeUnoptimizedChoice((Choice)e, next);
+						Expression common = this.makeCommonPrefix((Choice)e);
+						if(common != null) {
+							//System.out.println("@common '" + (char)ch + "'("+ch+"): " + e + "\n=>\t" + common);
+							inst = common.encode(this, next);
+						}
+						else {
+							inst = this.encodeUnoptimizedChoice((Choice)e, next);
+						}
 					}
 					else {
 						inst = e.encode(this, next);
@@ -448,7 +451,10 @@ public class Compiler {
 		return Factory.newSequence(null, common);
 	}
 
-	private final Expression trimCommonPrefix(Choice p) {
+	private final Expression makeCommonPrefix(Choice p) {
+		if(!FlagUtils.is(this.option, Production.CommonPrefix)) {
+			return null;
+		}
 		int start = 0;
 		Expression common = null;
 		for(int i = 0; i < p.size() - 1; i++) {
@@ -461,7 +467,7 @@ public class Compiler {
 			}
 		}
 		if(common == null) {
-			return p;
+			return null;
 		}
 		UList<Expression> l = new UList<Expression>(new Expression[p.size()]);
 		for(int i = 0; i < start; i++) {
