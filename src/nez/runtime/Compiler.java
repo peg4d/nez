@@ -133,7 +133,7 @@ public class Compiler {
 			block.head = r.getExpression().encode(this, new IRet(r));
 			block.start = codeList.size();
 			this.ruleMap.put(uname, block);
-			encode(block.head);
+			verify(block.head);
 			block.end = codeList.size();
 		}
 		for(Instruction inst : codeList) {
@@ -145,16 +145,22 @@ public class Compiler {
 		return this.codeList.ArrayValues[0];
 	}
 
-	void encode(Instruction inst) {
+	void verify(Instruction inst) {
 		if(inst != null) {
 			if(inst.id == -1) {
 				inst.id = this.codeList.size();
 				this.codeList.add(inst);
-				encode(inst.next);
+				verify(inst.next);
 				if(inst.next != null && inst.id + 1 != inst.next.id) {
 					Instruction.labeling(inst.next);
 				}
-				encode(inst.branch());
+				verify(inst.branch());
+				if(inst instanceof IPrefetch) {
+					IPrefetch match = (IPrefetch)inst;
+					for(int ch = 0; ch < match.jumpTable.length; ch ++) {
+						verify(match.jumpTable[ch]);
+					}
+				}
 				//encode(inst.branch2());
 			}
 		}
@@ -292,9 +298,213 @@ public class Compiler {
 			Verbose.noticeOptimize("ByteMap", p, pp);
 			return encodeByteMap((ByteMap)pp, next);
 		}
+		if(p.matchCase != null) {
+			return encodePrefetchChoice(p, next);
+		}
 		return this.encodeUnoptimizedChoice(p, next);
 	}
+	
+	class IPrefetch extends Instruction {
+		Instruction[] jumpTable;
+		public IPrefetch(Expression e, Instruction next) {
+			super(e, next);
+			jumpTable = new Instruction[257];
+		}
+		@Override
+		Instruction exec(Context sc) throws TerminationException {
+			int ch = sc.byteAt(sc.getPosition());
+			//System.out.println("ch="+(char)ch);
+			return jumpTable[ch];
+		}
+	}
+	
+	private final Instruction encodePrefetchChoice(Choice p, Instruction next) {
+		HashMap<Integer, Instruction> m = new HashMap<>();
+		IPrefetch fetch = new IPrefetch(p, null);
+		for(int ch = 0; ch < p.matchCase.length; ch++) {
+			Expression e = p.matchCase[ch];
+			Integer key = e.getId();
+			Instruction inst = m.get(key);
+			if(inst == null) {
+				//System.out.println("creating '" + (char)ch + "'("+ch+"): " + e);
+				if(e == p) {
+					/* this is a rare case where the selected choice is the parent choice */
+					/* this cause the repeated calls of the same matchers */
+//					Expression common = this.trimCommonPrefix(p);
+//					if(common != p) {
+//						System.out.println("@common:" + p + "\n=>\t" + common);
+//					}
+					inst = this.encodeUnoptimizedChoice(p, next);
+				}
+				else {
+					if(e instanceof Choice) {
+//						Expression common = this.trimCommonPrefix(p);
+//						if(common != p) {
+//							System.out.println("@common:" + p + "\n=>\t" + common);
+//						}
+//						if(checkStartingTerminal(common, ch)) {
+//							System.out.println("consumed 1: '" + (char)ch + "': " + e);
+//						}
+						inst = this.encodeUnoptimizedChoice((Choice)e, next);
+					}
+					else {
+						inst = e.encode(this, next);
+					}
+				}
+				m.put(key, inst);
+			}
+			fetch.jumpTable[ch] = Instruction.labeling(inst);
+		}
+		return fetch;
+	}
+	
+	private final boolean checkStartingTerminal(Expression e, int ch) {
+		e = Factory.resolveNonTerminal(e);
+		if(e instanceof ByteChar) {
+			return (((ByteChar) e).byteChar == ch);
+		}
+		if(e instanceof Sequence) {
+			return checkStartingTerminal(e.get(0), ch);
+		}
+		if(e instanceof Choice) {
+			for(Expression p: e) {
+				if(!checkStartingTerminal(p, ch)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
 
+	private final Expression trimStartingTerminal(Expression e, int ch) {
+		if(e instanceof Sequence) {
+			UList<Expression> l = new UList<Expression>(new Expression[e.size()-1]);
+			for(int i = 1; i < e.size(); i++) {
+				l.add(e.get(i));
+			}
+			return Factory.newSequence(null, l);
+		}
+		if(e instanceof Choice) {
+			UList<Expression> l = new UList<Expression>(new Expression[e.size()]);
+			for(Expression p: e) {
+				Factory.addChoice(l, p);
+			}
+			return Factory.newChoice(null, l);
+		}
+		assert(e instanceof ByteChar);
+		return Factory.newEmpty(null);
+	}
+
+	private final Expression trimStartingTerminal(Expression e) {
+		if(e instanceof Sequence) {
+			UList<Expression> l = new UList<Expression>(new Expression[e.size()-1]);
+			for(int i = 1; i < e.size(); i++) {
+				l.add(e.get(i));
+			}
+			return Factory.newSequence(null, l);
+		}
+		if(e instanceof Choice) {
+			UList<Expression> l = new UList<Expression>(new Expression[e.size()]);
+			for(Expression p: e) {
+				Factory.addChoice(l, p);
+			}
+			return Factory.newChoice(null, l);
+		}
+		assert(e instanceof ByteChar);
+		return Factory.newEmpty(null);
+	}
+
+	private final Expression trimCommonPrefix(Expression e, Expression e2) {
+		int min = sizeAsSequence(e) < sizeAsSequence(e2) ? sizeAsSequence(e) : sizeAsSequence(e2);
+		int commonIndex = -1;
+		for(int i = 0; i < min; i++) {
+			Expression p = retrieveAsList(e, i);
+			Expression p2 = retrieveAsList(e2, i);
+			if(p.getId() != p2.getId()) {
+				break;
+			}
+			commonIndex = i + 1;
+		}
+		if(commonIndex == -1) {
+			return null;
+		}
+		UList<Expression> common = new UList<Expression>(new Expression[commonIndex]);
+		for(int i = 0; i < commonIndex; i++) {
+			common.add(retrieveAsList(e, i));
+		}
+		UList<Expression> l1 = new UList<Expression>(new Expression[sizeAsSequence(e)]);
+		for(int i = commonIndex; i < sizeAsSequence(e); i++) {
+			l1.add(retrieveAsList(e, i));
+		}
+		UList<Expression> l2 = new UList<Expression>(new Expression[sizeAsSequence(e2)]);
+		for(int i = commonIndex; i < sizeAsSequence(e2); i++) {
+			l2.add(retrieveAsList(e2, i));
+		}
+		UList<Expression> l3 = new UList<Expression>(new Expression[2]);
+		Factory.addChoice(l3, Factory.newSequence(null, l1));
+		Factory.addChoice(l3, Factory.newSequence(null, l2));
+		Factory.addSequence(common, Factory.newChoice(null, l3));
+		return Factory.newSequence(null, common);
+	}
+
+	private final Expression trimCommonPrefix(Choice p) {
+		int start = 0;
+		Expression common = null;
+		for(int i = 0; i < p.size() - 1; i++) {
+			Expression e = p.get(i);
+			Expression e2 = p.get(i+1);
+			if(retrieveAsList(e,0).getId() == retrieveAsList(e2,0).getId()) {
+				common = trimCommonPrefix(e, e2);
+				start = i;
+				break;
+			}
+		}
+		if(common == null) {
+			return p;
+		}
+		UList<Expression> l = new UList<Expression>(new Expression[p.size()]);
+		for(int i = 0; i < start; i++) {
+			Expression e = p.get(i);
+			l.add(e);
+		}
+		for(int i = start + 2; i < p.size(); i++) {
+			Expression e = p.get(i);
+			if(retrieveAsList(common, 0).getId() == retrieveAsList(e,0).getId()) {
+				e = trimCommonPrefix(common, e);
+				if(e != null) {
+					common = e;
+					continue;
+				}
+			}
+			l.add(common);
+			common = e;
+		}
+		l.add(common);
+		return Factory.newChoice(null, l);
+	}
+
+	private final int sizeAsSequence(Expression e) {
+		if(e instanceof NonTerminal) {
+			e = Factory.resolveNonTerminal(e);
+		}
+		if(e instanceof Sequence) {
+			return e.size();
+		}
+		return 1;
+	}
+
+	private final Expression retrieveAsList(Expression e, int index) {
+		if(e instanceof NonTerminal) {
+			e = Factory.resolveNonTerminal(e);
+		}
+		if(e instanceof Sequence) {
+			return e.get(index);
+		}
+		return e;
+	}
+
+	
 	public final Instruction encodeUnoptimizedChoice(Choice p, Instruction next) {
 		Instruction nextChoice = p.get(p.size()-1).encode(this, next);
 		for(int i = p.size() -2; i >= 0; i--) {

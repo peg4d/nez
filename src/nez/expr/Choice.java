@@ -13,8 +13,8 @@ import nez.util.UList;
 import nez.util.UMap;
 
 public class Choice extends SequentialExpression {
-	Choice(SourcePosition s, UList<Expression> l) {
-		super(s, l);
+	Choice(SourcePosition s, UList<Expression> l, int size) {
+		super(s, l, size);
 	}
 	@Override
 	public String getPredicate() {
@@ -106,39 +106,29 @@ public class Choice extends SequentialExpression {
 	}
 	
 	// optimize
-	Expression[] matchCase = null;
-	boolean selfChoice = false;
-	int startIndex = -1;
-	int endIndex = 257;
+	public Expression[] matchCase = null;
+//	boolean selfChoice = false;
+//	int startIndex = -1;
+//	int endIndex = 257;
+	
 	@Override
 	public final Expression optimize(int option) {
+		if(this.optimized != this) {
+			return optimized;
+		}
 		if(FlagUtils.is(option, Production.Optimization) && !(this.optimized instanceof ByteMap)) {
 			boolean byteMap[] = new boolean[257];
 			if(isByteMap(option, byteMap, 0)) {
-				return Factory.newByteMap(s, byteMap);
+				this.optimized = Factory.newByteMap(s, byteMap);
+				return optimized;
 			}
 		}
-		if(FlagUtils.is(option, Production.Prediction) && this.matchCase != null) {
+		if(FlagUtils.is(option, Production.Prediction) && this.matchCase == null) {
 			Expression[] matchCase = new Expression[257];
 			Expression fails = Factory.newFailure(s);
 			for(int ch = 0; ch <= 256; ch++) {
-				Expression sub = selectChoice(ch, fails);
-				if(startIndex == -1 && sub != fails) {
-					startIndex = ch;
-				}
-				if(startIndex != -1 && sub == fails) {
-					endIndex = ch;
-				}
-				if(sub instanceof Choice) {
-					if(sub == this) {
-						/* this is a rare case where the selected choice is the parent choice */
-						/* this cause the repeated calls of the same matchers */
-						this.selfChoice = true;
-					}
-					else {
-						((Choice)sub).optimize(option);
-					}
-				}
+				Expression selected = selectChoice(ch, fails);
+				matchCase[ch] = selected;
 			}
 			this.matchCase = matchCase;
 		}
@@ -173,7 +163,7 @@ public class Choice extends SequentialExpression {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		selectChoice(ch, failed, l);
 		if(l.size() == 0) {
-			l.add(failed);
+			return failed;
 		}
 		return Factory.newChoice(s, l);
 	}

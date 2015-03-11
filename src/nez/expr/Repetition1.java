@@ -28,11 +28,7 @@ public class Repetition1 extends Repetition {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
-		if(r == Accept) {
-			return Accept;
-		}
-		return Unconsumed;
+		return this.inner.acceptByte(ch);
 	}
 	@Override
 	public boolean match(SourceContext context) {

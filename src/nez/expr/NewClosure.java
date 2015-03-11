@@ -13,7 +13,7 @@ import nez.util.UMap;
 public class NewClosure extends SequentialExpression {
 	int prefetchIndex = 0;
 	NewClosure(SourcePosition s, UList<Expression> list) {
-		super(s, list);
+		super(s, list, list.size());
 	}
 	@Override
 	public String getPredicate() { 

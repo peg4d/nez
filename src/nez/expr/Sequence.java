@@ -13,7 +13,7 @@ import nez.util.UMap;
 
 public class Sequence extends SequentialExpression {
 	Sequence(SourcePosition s, UList<Expression> l) {
-		super(s, l);
+		super(s, l, l.size());
 	}
 	@Override
 	public String getPredicate() {

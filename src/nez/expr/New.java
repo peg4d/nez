@@ -58,7 +58,6 @@ public class New extends Unconsumed {
 	public Expression removeFlag(TreeMap<String, String> undefedFlags) {
 		return this;
 	}
-
 	@Override
 	public short acceptByte(int ch) {
 		return Unconsumed;
