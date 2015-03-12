@@ -126,8 +126,20 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		file.write(e.getLocalName() + " ");
 	}
 	
+	public String stringfyByte(int byteChar) {
+		char c = (char)byteChar;
+		switch(c) {
+		case '\n' : return("'\\n'"); 
+		case '\t' : return("'\\t'"); 
+		case '\r' : return("'\\r'"); 
+		case '\"' : return("\"\\\"\""); 
+		case '\\' : return("'\\\\'"); 
+		}
+		return "\"" + c + "\""; 
+	}
+	
 	public void visitByteChar(ByteChar e) {
-		file.write("lpeg.P" + StringUtils.stringfyByte(e.byteChar) + " ");
+		file.write("lpeg.P" + this.stringfyByte(e.byteChar) + " ");
 	}
 	
 	private int searchEndChar(boolean[] b, int s) {
@@ -148,9 +160,6 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		case '\'' : sb.append("'\\''"); 
 		case '\\' : sb.append("'\\\\'"); 
 		}
-		if(Character.isISOControl(c) || c > 127) {
-			sb.append(String.format("0x%02x", (int)c)); // Fix me
-		}
 		sb.append(c);
 	}
 
@@ -160,7 +169,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 			if(b[start]) {
 				int end = searchEndChar(b, start+1);
 				if (start == end) {
-					file.write("lpeg.P" + StringUtils.stringfyByte(start) + " ");
+					file.write("lpeg.P" + this.stringfyByte(start) + " ");
 				}
 				else {
 					StringBuilder sb = new StringBuilder();
