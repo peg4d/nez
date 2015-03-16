@@ -22,13 +22,16 @@ import nez.util.UList;
 
 public abstract class Instruction {
 	protected Expression  e;
+	protected boolean bitmap[];
 	public Instruction next;
 	public int id;
 	public boolean label = false;
+	
 	public Instruction(Expression e, Instruction next) {
 		this.e = e;
 		this.id = -1;
 		this.next = next;
+		//checkAcceptance(e, next == null ? null : next.bitmap);
 	}
 	
 	Instruction branch() {
@@ -60,7 +63,18 @@ public abstract class Instruction {
 		stringfy(sb);
 		return sb.toString();
 	}
+
+	final static boolean[] AlwaysAccept = ByteMap.newMap(true);
+	final static boolean[] AlwaysReject = ByteMap.newMap(false);
 	
+//	abstract void checkAcceptance(Exception e, boolean[] nextMap);
+
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = nextMap;
+//	}
+
+
 	boolean debug() {
 		return false;
 	}
@@ -131,6 +145,10 @@ class IFail extends Instruction implements StackOperation {
 	IFail(Expression e) {
 		super(e, null);
 	}
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = AlwaysReject;
+//	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIFail();
@@ -269,6 +287,10 @@ class IAnyChar extends Instruction {
 	IAnyChar(Expression e, Instruction next) {
 		super(e, next);
 	}
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = AlwaysAccept;
+//	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIAnyChar(this);
@@ -283,6 +305,10 @@ class IByteChar extends Instruction {
 		this.byteChar = e.byteChar;
 		this.optional = optional;
 	}
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = AlwaysAccept;
+//	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIByteChar(this);
@@ -303,12 +329,10 @@ class IByteMap extends Instruction {
 		this.byteMap = e.byteMap;
 		this.optional = optional;
 	}
-
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIByteMap(this);
 	}
-
 	@Override
 	protected void stringfy(StringBuilder sb) {
 		super.stringfy(sb);
@@ -708,7 +732,7 @@ class INotByteMap extends Instruction {
 	}
 	INotByteMap(ByteChar e, Instruction next) {
 		super(e, next);
-		this.byteMap = ByteMap.newMap();
+		this.byteMap = ByteMap.newMap(false);
 		this.byteMap[e.byteChar] = true;
 	}
 	@Override
@@ -730,7 +754,7 @@ class IRepeatedByteMap extends Instruction {
 	}
 	IRepeatedByteMap(ByteChar e, Instruction next) {
 		super(e, next);
-		this.byteMap = ByteMap.newMap();
+		this.byteMap = ByteMap.newMap(false);
 		this.byteMap[e.byteChar] = true;
 	}
 	@Override

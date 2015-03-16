@@ -377,6 +377,10 @@ public class Production {
 			sb.append(delim);
 			sb.append("tracing");
 		}
+		if(FlagUtils.is(option, Production.New)) {
+			sb.append(delim);
+			sb.append("new");
+		}
 		if(FlagUtils.is(option, Production.Profiling)) {
 			sb.append(delim);
 			sb.append("prof");

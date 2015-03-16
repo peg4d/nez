@@ -113,7 +113,7 @@ public class Sequence extends SequentialExpression {
 	@Override
 	void optimizeImpl(int option) {
 		if(FlagUtils.is(option, Production.Optimization) && this.get(this.size() - 1) instanceof AnyChar) {
-			boolean byteMap[] = ByteMap.newMap();
+			boolean byteMap[] = ByteMap.newMap(false);
 			if(isByteMap(option, byteMap)) {
 				this.optimized = Factory.newByteMap(s, byteMap);
 				return;

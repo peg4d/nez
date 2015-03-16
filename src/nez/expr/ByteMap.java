@@ -3,8 +3,8 @@ package nez.expr;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.FlagUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
@@ -13,7 +13,7 @@ public class ByteMap extends Terminal {
 	public boolean[] byteMap; // Immutable
 	ByteMap(SourcePosition s, int beginChar, int endChar) {
 		super(s);
-		this.byteMap = newMap();
+		this.byteMap = newMap(false);
 		appendRange(this.byteMap, beginChar, endChar);
 	}
 	ByteMap(SourcePosition s, boolean[] b) {
@@ -21,8 +21,14 @@ public class ByteMap extends Terminal {
 		this.byteMap = b;
 	}
 	
-	public final static boolean[] newMap() {
-		return new boolean[257];
+	public final static boolean[] newMap(boolean initValue) {
+		boolean[] b = new boolean[257];
+		if(initValue) {
+			for(int i = 0; i < b.length; i++) {
+				b[i] = initValue;
+			}
+		}
+		return b;
 	}
 
 	public final static void clear(boolean[] byteMap) {
