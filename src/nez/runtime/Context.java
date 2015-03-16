@@ -223,7 +223,7 @@ public abstract class Context implements Source {
 		}
 		SymbolTableEntry(Tag table, byte[] b) {
 			this.table = table;
-			this.utf8 = b;
+			this.utf8 = b == null ? new byte[0] : b;
 			this.len = utf8.length;
 		}
 		final boolean match(byte[] b) {
