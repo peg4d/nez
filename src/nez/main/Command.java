@@ -93,6 +93,7 @@ public abstract class Command {
 		load("rel", "nez.x.RelationCommand");
 		load("cc", "nez.cc.GeneratorCommand");
 		load("peg", "nez.cc.GrammarCommand");
+		load("conv", "nez.x.ConverterCommand");
 	}
 	
 	public static final Command getCommand(String name) {
