@@ -83,30 +83,38 @@ public class RegexConverter extends NodeVisitor{
 		return this.pi(e.get(0), k);
 	}
 
+	// pi(e, k) e: regular expression, k: continuation
+	// pi(e1|e2, k) = pi(e1, k) / pi(e2, k)
 	public Expression piOr(AST e, Expression k) {
 		return toChoice(e, pi(e.get(0), k), pi(e.get(1), k));
 	}
 
+	// pi(e1e2, k) = pi(e1, pi(e2, k))
 	public Expression piConcatenation(AST e, Expression k) {
 		return pi(e.get(0), pi(e.get(1), k));
 	}
 
+	// pi((?>e), k) = pi(e, "") k
 	public Expression piIndependentExpr(AST e, Expression k) {
 		return toSeq(e, pi(e.get(0), toEmpty(e)), k);
 	}
 
+	// pi((?=e), k) = &pi(e, "") k
 	public Expression piAnd(AST e, Expression k) {
 		return toAnd(e, k);
 	}
 
+	// pi((?!e), k) = !pi(e, "") k
 	public Expression piNot(AST e, Expression k) {
 		return toNot(e, k);
 	}
 
+	// pi(e*+, k) = pi(e*, "") k
 	public Expression piPossessiveRepetition(AST e, Expression k) {
 		return toSeq(e, piRepetition(e, toEmpty(e)), k);
 	}
 
+	// pi(e*?, k) = A, A <- k / pi(e, A)
 	public Expression piLazyQuantifiers(AST e, Expression k) {
 		String ruleName = "Repetition" + NonTerminalCount++;
 		Expression ne = Factory.newNonTerminal(e, this.grammar, ruleName);
@@ -114,6 +122,7 @@ public class RegexConverter extends NodeVisitor{
 		return ne;
 	}
 
+	// pi(e*, k) = A, A <- pi(e, A) / k
 	public Expression piRepetition(AST e, Expression k) {
 		String ruleName = "Repetition" + NonTerminalCount++;
 		Expression ne = Factory.newNonTerminal(e, this.grammar, ruleName);
@@ -146,75 +155,77 @@ public class RegexConverter extends NodeVisitor{
 		return toSeq(e, k);
 	}
 
-	public Expression piCharacter(AST e, Expression k) {
-		return toSeq(e, k);
+	// pi(c, k) = c k
+	// c: single character
+	public Expression piCharacter(AST c, Expression k) {
+		return toSeq(c, k);
 	}
 	
-	private Expression toExpression(AST node) {
-		return (Expression)this.visit("to", node);
+	private Expression toExpression(AST e) {
+		return (Expression)this.visit("to", e);
 	}
 	
-	public Expression toCharacter(AST node) {
-		String text = node.getText();
+	public Expression toCharacter(AST c) {
+		String text = c.getText();
 		byte[] utf8 = StringUtils.toUtf8(text);
 		if (utf8.length !=1) {
 			ConsoleUtils.exit(1, "Error: not Character Literal");
 		}
-		return Factory.newByteChar(node, utf8[0]);
+		return Factory.newByteChar(c, utf8[0]);
 	}
 	
 	boolean byteMap[];
 	boolean useByteMap = true;
-	public Expression toCharacterSet(AST node) {
-		UList<Expression> l = new UList<Expression>(new Expression[node.size()]);
+	public Expression toCharacterSet(AST e) {
+		UList<Expression> l = new UList<Expression>(new Expression[e.size()]);
 		byteMap = new boolean[257];
-		for(AST subnode: node) {
+		for(AST subnode: e) {
 			Factory.addChoice(l, toExpression(subnode));
 		}
 		if (useByteMap) {
-			return Factory.newByteMap(node, byteMap);
+			return Factory.newByteMap(e, byteMap);
 		}
 		else {
-			return Factory.newChoice(node, l);
+			return Factory.newChoice(e, l);
 		}
 	}
 	
-	public Expression toCharacterRange(AST node) {
-		byte[] begin = StringUtils.toUtf8(node.get(0).getText());
-		byte[] end = StringUtils.toUtf8(node.get(1).getText());
+	public Expression toCharacterRange(AST e) {
+		byte[] begin = StringUtils.toUtf8(e.get(0).getText());
+		byte[] end = StringUtils.toUtf8(e.get(1).getText());
 		for(byte i = begin[0]; i <= end[0]; i++) {
 			byteMap[i] = true;
 		}
-		return Factory.newCharSet(node, node.get(0).getText(), node.get(1).getText());
+		return Factory.newCharSet(e, e.get(0).getText(), e.get(1).getText());
 	}
 	
-	public Expression toCharacterSetItem(AST node) {
-		byte[] utf8 = StringUtils.toUtf8(node.getText());
+	public Expression toCharacterSetItem(AST c) {
+		byte[] utf8 = StringUtils.toUtf8(c.getText());
 		byteMap[utf8[0]] = true;
-		return Factory.newByteChar(node, utf8[0]);
+		return Factory.newByteChar(c, utf8[0]);
 	}
 	
 	public Expression toEmpty(AST node) {
 		return Factory.newEmpty(node);
 	}
 
-	public Expression toAny(AST node) {
-		return Factory.newAnyChar(node);
+	public Expression toAny(AST e) {
+		return Factory.newAnyChar(e);
 	}
 	
-	public Expression toAnd(AST node, Expression k) {
-		return toSeq(node, Factory.newAnd(node, pi(node.get(0), toEmpty(node))), k);
+	public Expression toAnd(AST e, Expression k) {
+		return toSeq(e, Factory.newAnd(e, pi(e.get(0), toEmpty(e))), k);
 	}
 	
-	public Expression toNot(AST node, Expression k) {
-		return toSeq(node, Factory.newNot(node, pi(node.get(0), toEmpty(node))), k);
+	public Expression toNot(AST e, Expression k) {
+		return toSeq(e, Factory.newNot(e, pi(e.get(0), toEmpty(e))), k);
 	}
 
-	public Expression toChoice(AST node, Expression left, Expression right) {
+	public Expression toChoice(AST node, Expression e, Expression k) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		Factory.addChoice(l, left);
-		if (right != null) {
-			Factory.addChoice(l, right);
+		Factory.addChoice(l, e);
+		if (k != null) {
+			Factory.addChoice(l, k);
 		}
 		else {
 			Factory.addChoice(l, toEmpty(node));
@@ -222,20 +233,20 @@ public class RegexConverter extends NodeVisitor{
 		return Factory.newChoice(node, l);
 	}
 
-	public Expression toSeq(AST node, Expression k) {
+	public Expression toSeq(AST e, Expression k) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		Factory.addSequence(l, toExpression(node));
+		Factory.addSequence(l, toExpression(e));
 		if(k != null) {
 			Factory.addSequence(l, k);
 		}
-		return Factory.newSequence(node, l);
+		return Factory.newSequence(e, l);
 	}
 	
-	public Expression toSeq(AST node, Expression left, Expression right) {
+	public Expression toSeq(AST node, Expression e, Expression k) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		Factory.addSequence(l, left);
-		if (right != null) {
-			Factory.addSequence(l, right);
+		Factory.addSequence(l, e);
+		if (k != null) {
+			Factory.addSequence(l, k);
 		}
 		return Factory.newSequence(node, l);
 	}
