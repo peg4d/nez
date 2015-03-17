@@ -38,7 +38,17 @@ public class ConverterCommand extends Command {
 				rec.log();
 			}
 			trans.transform(config.getOutputFileName(file), node);
-			RegexConverter conv = new RegexConverter(new Grammar(config.getOutputFileName()));
+			String outputfile = config.getOutputFileName();
+			if (outputfile == null) {
+				outputfile = file.getResourceName() + ".nez";
+				int index = outputfile.indexOf("/");
+				while(index > -1) {
+					outputfile = outputfile.substring(index+1);
+					index = outputfile.indexOf("/");
+				}
+				outputfile = "gen/" + outputfile;
+			}
+			RegexConverter conv = new RegexConverter(new Grammar(outputfile));
 			conv.convert((AST) node);
 		}
 	}
