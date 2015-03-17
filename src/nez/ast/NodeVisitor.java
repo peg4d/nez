@@ -8,7 +8,7 @@ public class NodeVisitor {
 	HashMap<Integer, Method> methodMap = new HashMap<Integer, Method>();
 	public final Object visit(String method, Node node) {
 		Tag tag = node.getTag();
-		Method m = lookupMethod(method, tag.id);
+		Method m = invokeMethod(method, tag.id);
 		if(m != null) {
 			try {
 				return m.invoke(this, node);
@@ -29,10 +29,10 @@ public class NodeVisitor {
 	}
 
 	public final boolean isSupported(String method, String tagName) {
-		return lookupMethod(method, Tag.tag(tagName).id) != null;
+		return invokeMethod(method, Tag.tag(tagName).id) != null;
 	}
 	
-	protected Method lookupMethod(String method, int tagId) {
+	protected Method invokeMethod(String method, int tagId) {
 		Integer key = tagId;
 		Method m = this.methodMap.get(key);
 		if(m == null) {
