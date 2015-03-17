@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-public abstract class ExpressionVisitor {
+public abstract class GrammarVisitor {
 	HashMap<Class<?>, Method> methodMap = new HashMap<Class<?>, Method>();
 	public final void visit(Expression e) {
 		Class<?> c = e.getClass();

@@ -2,8 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 
 public class Failure extends Unconsumed {
 	Failure(SourcePosition s) {
@@ -18,7 +18,7 @@ public class Failure extends Unconsumed {
 		return "!!";
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return Reject;
 	}
 	@Override
@@ -26,7 +26,7 @@ public class Failure extends Unconsumed {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeFail(this);
 	}
 	

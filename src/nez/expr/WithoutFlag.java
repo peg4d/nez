@@ -4,17 +4,17 @@ import java.util.TreeMap;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
-import nez.vm.Compiler;
 
 public class WithoutFlag extends Unary {
 	String flagName;
 	WithoutFlag(SourcePosition s, String flagName, Expression inner) {
 		super(s, inner);
 		this.flagName = flagName;
-		this.matcher = inner.matcher;
+		this.optimized = inner.optimized;
 	}
 	@Override
 	Expression dupUnary(Expression e) {
@@ -51,15 +51,15 @@ public class WithoutFlag extends Unary {
 		return e;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		return this.inner.matcher.match(context);
+		return this.inner.optimized.match(context);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return this.inner.encode(bc, next);
 	}
 	@Override

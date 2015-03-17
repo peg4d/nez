@@ -4,17 +4,17 @@ import java.util.TreeMap;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
-import nez.vm.Compiler;
 
 public class WithFlag extends Unary {
 	String flagName;
 	WithFlag(SourcePosition s, String flagName, Expression inner) {
 		super(s, inner);
 		this.flagName = flagName;
-		this.matcher = inner.matcher;
+		this.optimized = inner.optimized;
 	}
 	@Override
 	public String getPredicate() {
@@ -51,17 +51,17 @@ public class WithFlag extends Unary {
 		return e;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 
 	@Override
 	public boolean match(SourceContext context) {
-		return this.inner.matcher.match(context);
+		return this.inner.optimized.match(context);
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return this.inner.encode(bc, next);
 	}
 

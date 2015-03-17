@@ -3,10 +3,10 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Repetition extends Unary {
 	public boolean possibleInfiniteLoop = false;
@@ -27,9 +27,9 @@ public class Repetition extends Unary {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		if(checker != null) {
-			this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
-		}
+//		if(checker != null) {
+//			this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
+//		}
 		return false;
 	}
 	@Override
@@ -50,7 +50,7 @@ public class Repetition extends Unary {
 		Expression inn = this.inner.checkTypestate(checker, c);
 		if(required != Typestate.OperationType && c.required == Typestate.OperationType) {
 			checker.reportWarning(s, "unable to create objects in repetition => removed!!");
-			this.inner = inn.removeNodeOperator();
+			this.inner = inn.removeASTOperator();
 			c.required = required;
 		}
 		else {
@@ -58,8 +58,8 @@ public class Repetition extends Unary {
 		}
 		return this;
 	}
-	@Override public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
+	@Override public short acceptByte(int ch, int option) {
+		short r = this.inner.acceptByte(ch, option);
 		if(r == Accept) {
 			return Accept;
 		}
@@ -72,7 +72,7 @@ public class Repetition extends Unary {
 //		long f = context.rememberFailure();
 		while(ppos < pos) {
 			Node left = context.left;
-			if(!this.inner.matcher.match(context)) {
+			if(!this.inner.optimized.match(context)) {
 				context.left = left;
 				left = null;
 				break;
@@ -86,7 +86,7 @@ public class Repetition extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeRepetition(this, next);
 	}
 
@@ -103,6 +103,4 @@ public class Repetition extends Unary {
 			}
 		}
 	}
-
-
 }

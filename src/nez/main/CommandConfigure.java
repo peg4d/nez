@@ -10,11 +10,11 @@ import nez.ast.Transformer;
 import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
 import nez.expr.NezParserCombinator;
+import nez.runtime.MemoTable;
 import nez.util.ConsoleUtils;
 import nez.util.FlagUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
-import nez.vm.MemoTable;
 
 public class CommandConfigure {
 //	// -X specified
@@ -169,9 +169,30 @@ public class CommandConfigure {
 					}
 				}
 			}
-			else if(argument.startsWith("-Xconfig")) {
-				ProductionOption = StringUtils.parseInt(argument.substring(9), Production.DefaultOption);
-				Verbose.println("configuration: " + Production.stringfyOption(ProductionOption, ", "));
+			else if(argument.startsWith("--enable:")) {
+				if(argument.endsWith("packrat")) {
+					this.ProductionOption |= Production.PackratParsing;
+				}
+				else if(argument.endsWith(":prediction")) {
+					this.ProductionOption |= Production.Prediction;
+				}
+				else if(argument.endsWith(":tracing")) {
+					this.ProductionOption |= Production.Tracing;
+				}
+				else if(argument.endsWith(":log")) {
+					RecorderFileName = "nezrec.csv";  // -Xrec
+				}
+			}
+			else if(argument.startsWith("--disable:")) {
+				if(argument.endsWith(":packrat")) {
+					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.PackratParsing);
+				}
+				else if(argument.endsWith(":tracing")) {
+					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Tracing);
+				}
+				else if(argument.endsWith(":prediction")) {
+					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Prediction);
+				}
 			}
 			else if(argument.startsWith("-Xrec")) {
 				RecorderFileName = "nezrec.csv";
@@ -233,6 +254,22 @@ public class CommandConfigure {
 		}
 		ConsoleUtils.println("unspecifed grammar");
 		return NezParserCombinator.newGrammar();
+	}
+
+	public final Grammar newGrammar() {
+		if(GrammarFile != null) {
+			try {
+				NezParser p = new NezParser();
+				return p.load(SourceContext.loadSource(GrammarFile), new GrammarChecker(this.OptimizationLevel));
+			} catch (IOException e) {
+				ConsoleUtils.exit(1, "cannot open " + GrammarFile + "; " + e.getMessage());
+			}
+		}
+		if(GrammarText != null) {
+			NezParser p = new NezParser();
+			return p.load(SourceContext.newStringSourceContext(GrammarText), new GrammarChecker(this.OptimizationLevel));
+		}
+		return new Grammar("my");
 	}
 
 	public final Production getProduction(String start, int option) {

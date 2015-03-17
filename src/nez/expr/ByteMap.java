@@ -3,26 +3,32 @@ package nez.expr;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.FlagUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class ByteMap extends Terminal {
-	public boolean[] charMap; // Immutable
+	public boolean[] byteMap; // Immutable
 	ByteMap(SourcePosition s, int beginChar, int endChar) {
 		super(s);
-		this.charMap = newMap();
-		appendRange(this.charMap, beginChar, endChar);
+		this.byteMap = newMap(false);
+		appendRange(this.byteMap, beginChar, endChar);
 	}
 	ByteMap(SourcePosition s, boolean[] b) {
 		super(s);
-		this.charMap = b;
+		this.byteMap = b;
 	}
 	
-	public final static boolean[] newMap() {
-		return new boolean[257];
+	public final static boolean[] newMap(boolean initValue) {
+		boolean[] b = new boolean[257];
+		if(initValue) {
+			for(int i = 0; i < b.length; i++) {
+				b[i] = initValue;
+			}
+		}
+		return b;
 	}
 
 	public final static void clear(boolean[] byteMap) {
@@ -57,11 +63,11 @@ public class ByteMap extends Terminal {
 
 	@Override
 	public String getPredicate() {
-		return "byte " + StringUtils.stringfyByteMap(this.charMap);
+		return "byte " + StringUtils.stringfyByteMap(this.byteMap);
 	}
 	@Override
 	public String getInterningKey() { 
-		return "[" +  StringUtils.stringfyByteMap(this.charMap);
+		return "[" +  StringUtils.stringfyByteMap(this.byteMap);
 	}
 	
 	@Override
@@ -69,25 +75,25 @@ public class ByteMap extends Terminal {
 		return true;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return (charMap[ch]) ? Accept : Reject;
+	public short acceptByte(int ch, int option) {
+		return (byteMap[ch]) ? Accept : Reject;
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		if(this.charMap[context.byteAt(context.getPosition())]) {
+		if(this.byteMap[context.byteAt(context.getPosition())]) {
 			context.consume(1);
 			return true;
 		}
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeByteMap(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {
 		int c = 0;
-		for(boolean b: this.charMap) {
+		for(boolean b: this.byteMap) {
 			if(b) {
 				c += 1;
 			}
@@ -98,7 +104,7 @@ public class ByteMap extends Terminal {
 	protected void examplfy(GEP gep, StringBuilder sb, int p) {
 		int c = 0;
 		for(int ch = 0; ch < 127; ch++) {
-			if(this.charMap[ch]) {
+			if(this.byteMap[ch]) {
 				c += 1;
 			}
 			if(c == p) {

@@ -2,24 +2,35 @@ package nez.expr;
 import java.util.AbstractList;
 import java.util.TreeMap;
 
+import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public abstract class Expression extends AbstractList<Expression> implements Recognizer {
-	protected Expression(SourcePosition s) {
+	public final static boolean ClassicMode = false;
+	SourcePosition s = null;
+	int    internId   = 0;
+	
+	public Expression optimized;
+	int    optimizedOption = -1;
+	
+	Expression(SourcePosition s) {
 		this.s = s;
 		this.internId = 0;
-		this.matcher = this;
+		this.optimized = this;
 	}
 	
-	public abstract String getPredicate();
-	
-	public int    internId   = 0;
-	SourcePosition s      = null;
+	public final SourcePosition getSourcePosition() {
+		return this.s;
+	}
 
+	public final int getId() {
+		return this.internId;
+	}
+	
 	final boolean isInterned() {
 		return (this.internId > 0);
 	}
@@ -28,6 +39,7 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		return Factory.intern(this);
 	}
 
+	public abstract String getPredicate();
 	public abstract String getInterningKey();
 	
 	public final boolean isAlwaysConsumed() {
@@ -39,9 +51,11 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	}
 
 	public abstract boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack);
+	public void checkGrammar(GrammarChecker checker) { }
 	public abstract int inferTypestate(UMap<String> visited);
 	public abstract Expression checkTypestate(GrammarChecker checker, Typestate c);
-	public abstract Expression removeNodeOperator();
+
+	public abstract Expression removeASTOperator();
 	public abstract Expression removeFlag(TreeMap<String, String> undefedFlags);
 	
 	public static boolean hasReachableFlag(Expression e, String flagName, UMap<String> visited) {
@@ -77,14 +91,20 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	public final static short Unconsumed = 0;
 	public final static short Accept = 1;
 	public final static short Reject = 2;
-	public abstract short acceptByte(int ch);
+	public abstract short acceptByte(int ch, int option);
 	
-	public Expression optimize(int option) {
-		return this;
+	public final Expression optimize(int option) {
+		if(this.optimizedOption != option) {
+			optimizeImpl(option);
+			this.optimizedOption = option;
+		}
+		return this.optimized;
 	}
 	
-	public Recognizer matcher;
-		
+	void optimizeImpl(int option) {
+		this.optimized = this;
+	}
+
 	@Override
 	public String toString() {
 		return new GrammarFormatter().format(this);
@@ -102,8 +122,12 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		}
 		return l;
 	}
-	
-	public abstract Instruction encode(Compiler bc, Instruction next);
+
+	public final void visit(GrammarVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	public abstract Instruction encode(RuntimeCompiler bc, Instruction next);
 //	public Instruction encode(Compiler bc, Instruction next) {
 //		// todo
 //		return next;
@@ -112,8 +136,10 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	protected abstract int pattern(GEP gep);
 	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);
 
-	public final void visit(ExpressionVisitor visitor) {
-		visitor.visit(this);
+	@Override
+	public boolean match(SourceContext context) {
+		throw new RuntimeException("old one");
 	}
-	
+
+
 }

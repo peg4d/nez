@@ -5,10 +5,10 @@ import java.util.TreeMap;
 import nez.Grammar;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class NonTerminal extends Expression {
 	public Grammar peg;
@@ -60,17 +60,25 @@ public class NonTerminal extends Expression {
 	
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
+		if(checker != null) {
+			checkGrammar(checker);
+			if(startNonTerminal != null && startNonTerminal.equals(this.uniqueName)) {
+				checker.reportError(s, "left recursion: " + this.ruleName);
+				checker.foundFatalError();
+				return false;
+			}
+		}
+		Rule r = this.getRule();
+		return r.checkAlwaysConsumed(checker, startNonTerminal, stack);
+	}
+
+	@Override
+	public void checkGrammar(GrammarChecker checker) {
 		Rule r = this.getRule();
 		if(r == null) {
 			checker.reportWarning(s, "undefined rule: " + this.ruleName + " => created empty rule!!");
 			r = this.peg.newRule(this.ruleName, Factory.newEmpty(s));
 		}
-		if(startNonTerminal != null && startNonTerminal.equals(this.uniqueName)) {
-			checker.reportError(s, "left recursion: " + this.ruleName);
-			checker.foundFatalError();
-			return false;
-		}
-		return r.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 
 	@Override
@@ -88,7 +96,7 @@ public class NonTerminal extends Expression {
 		if(c.required == Typestate.ObjectType) {
 			if(t == Typestate.OperationType) {
 				checker.reportWarning(s, "unexpected AST operations => removed!!");
-				return this.removeNodeOperator();
+				return this.removeASTOperator();
 			}
 			c.required = Typestate.OperationType;
 			return this;
@@ -102,8 +110,8 @@ public class NonTerminal extends Expression {
 		return this;
 	}
 	@Override
-	public Expression removeNodeOperator() {
-		Rule r = (Rule)this.getRule().removeNodeOperator();
+	public Expression removeASTOperator() {
+		Rule r = (Rule)this.getRule().removeASTOperator();
 		if(!this.ruleName.equals(r.getLocalName())) {
 			return Factory.newNonTerminal(this.s, peg, r.getLocalName());
 		}
@@ -119,18 +127,18 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public short acceptByte(int ch) {
-		return this.deReference().acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.deReference().acceptByte(ch, option);
 	}
 
 	@Override
-	public Expression optimize(int option) {
+	void optimizeImpl(int option) {
 		Expression e = this;
 		while(e instanceof NonTerminal) {
 			NonTerminal nterm = (NonTerminal) e;
 			e = nterm.deReference().optimize(option);
 		}
-		return e;
+		this.optimized = e;
 	}
 
 	@Override
@@ -139,7 +147,7 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeNonTerminal(this, next);
 	}
 

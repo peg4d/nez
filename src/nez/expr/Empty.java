@@ -1,8 +1,8 @@
 package nez.expr;
 
 import nez.ast.SourcePosition;
-import nez.vm.Instruction;
-import nez.vm.Compiler;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 
 public class Empty extends Unconsumed {
 	Empty(SourcePosition s) {
@@ -18,7 +18,7 @@ public class Empty extends Unconsumed {
 		return "";
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return next;
 	}
 

@@ -3,12 +3,12 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
-public class IsSymbol extends Terminal implements ContextSensitive {
+public class IsSymbol extends Terminal {
 	public Tag table;
 	Expression symbolExpression = null;
 	public boolean checkLastSymbolOnly = false;
@@ -17,9 +17,12 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 		this.table = table;
 		this.checkLastSymbolOnly = false;
 	}
+	public final Expression getSymbolExpression() {
+		return this.symbolExpression;
+	}
 	@Override
 	public String getPredicate() {
-		return (checkLastSymbolOnly ? "is " : "isa ") + table.name;
+		return (checkLastSymbolOnly ? "is " : "isa ") + table.getName();
 	}
 	@Override
 	public String getInterningKey() {
@@ -35,16 +38,17 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 	}
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		if(this.symbolExpression == null) {
-			this.symbolExpression = checker.getSymbolExpression(table.name);
-			if(this.symbolExpression == null) { 
-				checker.reportError(s, "undefined table " + table.name);
-			}
+		String tableName = table.getName();
+		Expression e = checker.getSymbolExpresion(table.getName());
+		if(e == null) {
+			checker.reportError(this.s, "undefined table: " + tableName);
+			return Factory.newFailure(this.s);
 		}
+		this.symbolExpression = e;
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return Accept;
 	}
 	@Override
@@ -52,7 +56,7 @@ public class IsSymbol extends Terminal implements ContextSensitive {
 		return context.matchSymbolTable(table, this.checkLastSymbolOnly);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeIsSymbol(this, next);
 	}
 	@Override

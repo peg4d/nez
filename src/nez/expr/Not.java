@@ -3,10 +3,10 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Not extends Unary {
 	Not(SourcePosition s, Expression e) {
@@ -22,6 +22,9 @@ public class Not extends Unary {
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
+//		if(checker != null) {
+//			this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
+//		}
 		return false;
 	}
 	@Override
@@ -32,15 +35,21 @@ public class Not extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int t = this.inner.inferTypestate(null);
 		if(t == Typestate.ObjectType || t == Typestate.OperationType) {
-			this.inner = this.inner.removeNodeOperator();
+			this.inner = this.inner.removeASTOperator();
 		}
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
-		/* the code below works only if a single character in !(e) */
+	public short acceptByte(int ch, int option) {
+		/* The code below works only if a single character in !(e) */
 		/* we must accept 'i' for !'int' 'i' */
+		Expression p = this.inner.optimize(option);
+		if(p instanceof ByteChar) {
+			return ((ByteChar) p).byteChar == ch ? Reject : Accept;
+		}
+		if(p instanceof ByteMap) {
+			return ((ByteMap) p).byteMap[ch] ? Reject : Accept;
+		}
 //		if(r == Accept || r == LazyAccept) {
 //			return Reject;
 //		}
@@ -51,7 +60,7 @@ public class Not extends Unary {
 		long pos = context.getPosition();
 		//long f   = context.rememberFailure();
 		Node left = context.left;
-		if(this.inner.matcher.match(context)) {
+		if(this.inner.optimized.match(context)) {
 			context.rollback(pos);
 			context.failure2(this);
 			left = null;
@@ -71,7 +80,7 @@ public class Not extends Unary {
 	}
 
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeNot(this, next);
 	}
 	@Override

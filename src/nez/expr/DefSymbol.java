@@ -3,10 +3,10 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class DefSymbol extends Unary {
 	public final Tag table;
@@ -20,15 +20,21 @@ public class DefSymbol extends Unary {
 	}
 	@Override
 	public String getInterningKey() {
-		return "def " + table.name;
+		return "def " + table.getName();
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
-		if(!this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack) && checker != null) {
-			checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
-		}
+		this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 		return true;
 	}
+	@Override
+	public void checkGrammar(GrammarChecker checker) {
+		checker.setSymbolExpresion(table.getName(), this.inner);
+		if(!this.inner.isAlwaysConsumed()) {
+			checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
+		}
+	}
+
 	@Override
 	public int inferTypestate(UMap<String> visited) {
 		return Typestate.BooleanType;
@@ -37,7 +43,7 @@ public class DefSymbol extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int t = this.inner.inferTypestate(null);
 		if(t != Typestate.BooleanType) {
-			this.inner = this.inner.removeNodeOperator();
+			this.inner = this.inner.removeASTOperator();
 		}
 		return this;
 	}
@@ -46,13 +52,13 @@ public class DefSymbol extends Unary {
 		return (this.inner != e) ? Factory.newDefSymbol(this.s, this.table, e) : this;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {
 		long startIndex = context.getPosition();
-		if(this.inner.matcher.match(context)) {
+		if(this.inner.optimized.match(context)) {
 			long endIndex = context.getPosition();
 			String s = context.substring(startIndex, endIndex);
 			context.pushSymbolTable(table, s);
@@ -87,7 +93,7 @@ public class DefSymbol extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeDefSymbol(this, next);
 	}
 

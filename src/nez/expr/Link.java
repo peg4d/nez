@@ -3,10 +3,10 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Link extends Unary {
 	public int index;
@@ -38,7 +38,7 @@ public class Link extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "unexpected @ => removed");
-			return this.inner.removeNodeOperator();
+			return this.inner.removeASTOperator();
 		}
 		c.required = Typestate.ObjectType;
 		Expression inn = inner.checkTypestate(checker, c);
@@ -52,18 +52,18 @@ public class Link extends Unary {
 		return this;
 	}
 	@Override
-	public Expression removeNodeOperator() {
-		return inner.removeNodeOperator();
+	public Expression removeASTOperator() {
+		return inner.removeASTOperator();
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {
 		Node left = context.left;
 		int mark = context.startConstruction();
-		if(this.inner.matcher.match(context)) {
+		if(this.inner.optimized.match(context)) {
 			if(context.left != left) {
 				context.commitConstruction(mark, context.left);
 				context.lazyLink(left, this.index, context.left);
@@ -77,7 +77,7 @@ public class Link extends Unary {
 		return false;
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeLink(this, next);
 	}
 	@Override

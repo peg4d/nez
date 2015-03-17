@@ -26,26 +26,23 @@ import nez.expr.Tagging;
 import nez.expr.Unary;
 import nez.util.StringUtils;
 
-public class MouseGrammarGenerator extends GrammarGenerator {
-	public MouseGrammarGenerator(String fileName) {
+public class NezGrammarGenerator extends GrammarGenerator {
+	public NezGrammarGenerator(String fileName) {
 		super(fileName);
 	}
 	
 	@Override
 	public String getDesc() {
-		return "a PEG-style grammar for Mouse" ;
+		return "a Nez grammar" ;
 	}
 	
 	@Override
 	public void makeHeader() {
-		file.write("// Parsing Expression Grammars for Mouse");
-		file.writeIndent("// Translated from Nez");
+		file.write("// Parsing Expression Grammars for Nez");
+		file.write("// ");
 	}
 
 	String stringfyName(String s) {
-		if(s.equals("_")) {
-			return "SPACING";
-		}
 		return s;
 	}
 	
@@ -66,16 +63,15 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 		else {
 			visit(e);
 		}
-		file.writeIndent(";");
 		file.decIndent();
 	}	
 	
 	public void visitEmpty(Empty e) {
-		file.write("\"\"");
+		file.write("''");
 	}
 
 	public void visitFailure(Failure e) {
-		file.write("!\"\"/*failure*/");
+		file.write("!''/*failure*/");
 	}
 
 	public void visitNonTerminal(NonTerminal e) {
@@ -83,65 +79,15 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 	}
 	
 	public void visitByteChar(ByteChar e) {
-		file.write(stringfy("\"", e.byteChar, "\""));
+		file.write(StringUtils.stringfyByte(e.byteChar));
 	}
 
 	public void visitByteMap(ByteMap e) {
-		file.write(stringfy(e.byteMap));
+		file.write(StringUtils.stringfyCharClass(e.byteMap));
 	}
 	
 	public void visitAnyChar(AnyChar e) {
-		file.write("_");
-	}
-
-	private final String stringfy(String s, int ch, String e) {
-		char c = (char)ch;
-		switch(c) {
-		case '\n' : return s+ "\\n" + e; 
-		case '\t' : return s+ "\\t" + e; 
-		case '\r' : return s+ "\\r" + e; 
-		case '"' : return s+ "\\\"" + e; 
-		case '\\' : return s + "\\\\" + e; 
-		}
-		if(Character.isISOControl(c) || c > 127) {
-			return s + String.format("0x%02x", (int)c) + e;
-		}
-		return(s + c + e);
-	}
-	
-	private final String stringfy(boolean[] b) {
-		StringBuilder sb = new StringBuilder();
-		String delim = "";
-		for(int s = 0; s < 256; s++) {
-			if(b[s]) {
-				int e = searchEndChar(b, s+1);
-				if(s == e) {
-					sb.append(delim);
-					sb.append(stringfy("",s,""));
-					delim = " / ";
-				}
-				else {
-					sb.append(delim);
-					sb.append("[");
-					sb.append(stringfy("",s,""));
-					sb.append("-");
-					sb.append(stringfy("",e,""));
-					sb.append("]");
-					delim = " / ";
-					s = e;
-				}
-			}
-		}
-		return sb.toString();
-	}
-
-	private final static int searchEndChar(boolean[] b, int s) {
-		for(; s < 256; s++) {
-			if(!b[s]) {
-				return s-1;
-			}
-		}
-		return 255;
+		file.write(".");
 	}
 
 	protected void visit(String prefix, Unary e, String suffix) {
@@ -218,7 +164,7 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 			break;
 		}
 		if(s.length() > 1) {
-			file.write(StringUtils.quoteString('"', s, '"'));
+			file.write(StringUtils.quoteString('\'', s, '\''));
 		}
 		return end - 1;
 	}
@@ -249,41 +195,39 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 	}
 	
 	public void visitNew(New e) {
-
+		file.write(e.lefted ? "{@" : "{");
 	}
 
 	public void visitCapture(Capture e) {
-		
+		file.write("}");
 	}
 
 	public void visitTagging(Tagging e) {
-		file.write("/*#");
-		file.write(e.tag.toString());
-		file.write("*/");
+		file.write("#");
+		file.write(e.tag.getName());
 	}
 	
 	public void visitValue(Replace e) {
-		//file.write(StringUtils.quoteString('`', e.value, '`'));
+		file.write(StringUtils.quoteString('`', e.value, '`'));
 	}
 	
 	public void visitLink(Link e) {
-//		String predicate = "@";
-//		if(e.index != -1) {
-//			predicate += "[" + e.index + "]";
-//		}
-//		this.visit(predicate, e, null);
-		this.visit(e.get(0));
+		String predicate = "@";
+		if(e.index != -1) {
+			predicate += "[" + e.index + "]";
+		}
+		this.visit(predicate, e, null);
 	}
 
 	@Override
 	public void visitUndefined(Expression e) {
-		file.write("/* Mouse Unsupported <");
+		file.write("<");
 		file.write(e.getPredicate());
 		for(Expression se : e) {
 			file.write(" ");
 			visit(se);
 		}
-		file.write("> */");
+		file.write(">");
 	}
 
 }

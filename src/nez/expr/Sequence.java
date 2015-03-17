@@ -5,15 +5,15 @@ import java.util.TreeMap;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Sequence extends SequentialExpression {
 	Sequence(SourcePosition s, UList<Expression> l) {
-		super(s, l);
+		super(s, l, l.size());
 	}
 	@Override
 	public String getPredicate() {
@@ -33,10 +33,10 @@ public class Sequence extends SequentialExpression {
 		return false;
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
 		for(Expression e : this) {
-			Factory.addSequence(l, e.removeNodeOperator());
+			Factory.addSequence(l, e.removeASTOperator());
 		}
 		return Factory.newSequence(s, l);
 	}
@@ -68,9 +68,9 @@ public class Sequence extends SequentialExpression {
 		return Factory.newSequence(s, l);
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		for(int i = 0; i < this.size(); i++) {
-			short r = this.get(i).acceptByte(ch);
+			short r = this.get(i).acceptByte(ch, option);
 			if(r != Unconsumed) {
 				return r;
 			}
@@ -111,21 +111,23 @@ public class Sequence extends SequentialExpression {
 	}
 	
 	@Override
-	public Expression optimize(int option) {
-		//System.out.println("checking .. " + this);
+	void optimizeImpl(int option) {
 		if(FlagUtils.is(option, Production.Optimization) && this.get(this.size() - 1) instanceof AnyChar) {
-			boolean byteMap[] = ByteMap.newMap();
+			boolean byteMap[] = ByteMap.newMap(false);
 			if(isByteMap(option, byteMap)) {
-				return Factory.newByteMap(s, byteMap);
+				this.optimized = Factory.newByteMap(s, byteMap);
+				return;
 			}
+			// (!'ab' !'ac' .) => (^[a]) / (!'ab' !'ac' .)
 			if(FlagUtils.is(option, Production.Prediction)) {
 				ByteMap.clear(byteMap);
-				if(isPredictedByteMap(0, this.size() - 1, byteMap, option)) {
-					return Factory.newChoice(s, Factory.newByteMap(s, byteMap), this);
+				if(isPredictedNotByteMap(0, this.size() - 1, byteMap, option)) {
+					this.optimized = Factory.newChoice(s, Factory.newByteMap(s, byteMap), this);
+					return;
 				}
 			}
 		}
-		return this;
+		this.optimized = this;
 	}
 	
 	boolean isByteMap(int option, boolean[] byteMap) {
@@ -138,7 +140,7 @@ public class Sequence extends SequentialExpression {
 					continue;
 				}
 				if(p instanceof ByteMap) {
-					ByteMap.appendBitMap(byteMap, ((ByteMap) p).charMap);
+					ByteMap.appendBitMap(byteMap, ((ByteMap) p).byteMap);
 					continue;
 				}
 			}
@@ -148,14 +150,13 @@ public class Sequence extends SequentialExpression {
 		return true;
 	}
 
-	// (!'ab' !'ac' .) => !'a' / (!'ab' !'ac' .)
 	
-	boolean isPredictedByteMap(int start, int end, boolean[] byteMap, int option) {
+	boolean isPredictedNotByteMap(int start, int end, boolean[] byteMap, int option) {
 		for(int i = start; i < end; i++) {
 			Expression p = this.get(i); //.optimize(option);
 			if(p instanceof Not) {
 				p = p.get(i).optimize(option);
-				predictByte(p, byteMap);
+				predictByte(p, byteMap, option);
 				continue;
 			}
 			return false;
@@ -164,14 +165,13 @@ public class Sequence extends SequentialExpression {
 		return true;
 	}
 
-	void predictByte(Expression e, boolean[] byteMap) {
+	void predictByte(Expression e, boolean[] byteMap, int option) {
 		for(int c = 0; c < 256; c++) {
-			if(e.acceptByte(c) != Expression.Reject) {
+			if(e.acceptByte(c, option) != Expression.Reject) {
 				byteMap[c] = true;
 			}
 		}
 	}
-	
 	
 	//			if(is(O_SpecString)) {
 //				byte[] u = new byte[holder.size()];
@@ -196,7 +196,7 @@ public class Sequence extends SequentialExpression {
 		long pos = context.getPosition();
 		int mark = context.startConstruction();
 		for(int i = 0; i < this.size(); i++) {
-			if(!(this.get(i).matcher.match(context))) {
+			if(!(this.get(i).optimized.match(context))) {
 				context.abortConstruction(mark);
 				context.rollback(pos);
 				return false;
@@ -205,7 +205,7 @@ public class Sequence extends SequentialExpression {
 		return true;
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeSequence(this, next);
 	}
 	

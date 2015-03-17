@@ -3,10 +3,10 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Option extends Unary {
 	Option(SourcePosition s, Expression e) {
@@ -42,7 +42,7 @@ public class Option extends Unary {
 		Expression inn = this.inner.checkTypestate(checker, c);
 		if(required != Typestate.OperationType && c.required == Typestate.OperationType) {
 			checker.reportWarning(s, "unable to create objects in repetition => removed!!");
-			this.inner = inn.removeNodeOperator();
+			this.inner = inn.removeASTOperator();
 			c.required = required;
 		}
 		else {
@@ -51,8 +51,8 @@ public class Option extends Unary {
 		return this;
 	}
 	@Override 
-	public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		short r = this.inner.acceptByte(ch, option);
 		if(r == Accept) {
 			return Accept;
 		}
@@ -62,7 +62,7 @@ public class Option extends Unary {
 	public boolean match(SourceContext context) {
 		//long f = context.rememberFailure();
 		Node left = context.left;
-		if(!this.inner.matcher.match(context)) {
+		if(!this.inner.optimized.match(context)) {
 			context.left = left;
 			//context.forgetFailure(f);
 		}
@@ -71,7 +71,7 @@ public class Option extends Unary {
 	}
 
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeOption(this, next);
 	}
 

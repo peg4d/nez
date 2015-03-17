@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import nez.Grammar;
+import nez.Production;
 import nez.expr.And;
 import nez.expr.AnyChar;
 import nez.expr.ByteChar;
@@ -14,12 +15,12 @@ import nez.expr.ByteMap;
 import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
-import nez.expr.ExpressionVisitor;
 import nez.expr.Factory;
 import nez.expr.Failure;
+import nez.expr.GrammarVisitor;
 import nez.expr.LeftNew;
 import nez.expr.Link;
-import nez.expr.New;
+import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -32,7 +33,7 @@ import nez.expr.Unary;
 import nez.util.UList;
 
 
-public class Compiler extends ExpressionVisitor {
+public class Compiler extends GrammarVisitor {
 	
 	// Kind of optimize
 	boolean O_Inlining = false;
@@ -772,7 +773,9 @@ public class Compiler extends ExpressionVisitor {
 				checkChoice((Choice)e, c, l);
 			}
 			else {
-				short r = e.acceptByte(c);
+				// FIXME:
+				// AnyChar behaves differently in cases of Binary
+				short r = e.acceptByte(c, Production.Binary); 
 				if(r != Expression.Reject) {
 					l.add(e);
 				}
@@ -817,7 +820,7 @@ public class Compiler extends ExpressionVisitor {
 				this.depth = depth;
 				return false;
 			}
-			if(e instanceof Sequence || e instanceof Choice || e instanceof New) {
+			if(e instanceof Sequence || e instanceof Choice || e instanceof NewClosure) {
 				if (depth < 2) {
 					for(int i = 0; i < e.size(); i++) {
 						if (!checkSC(e.get(i))) {
@@ -898,7 +901,7 @@ public class Compiler extends ExpressionVisitor {
 			else if (e.get(i) instanceof ByteMap) {
 				ByteMap br = (ByteMap)e.get(i);
 				for(int c = 0; c < 256; c++) {
-					if(br.charMap[c]) {
+					if(br.byteMap[c]) {
 						inst.append(c);
 					}
 				}
@@ -941,7 +944,7 @@ public class Compiler extends ExpressionVisitor {
 				bb = new BasicBlock(this.func);
 				this.setCurrentBasicBlock(bb);
 				Expression caseElement = caseList.get(i);
-				choiceMap.put(caseElement.internId, bb);
+				choiceMap.put(caseElement.getId(), bb);
 				caseElement.visit(this);
 				bb = this.getCurrentBasicBlock();
 				if (caseElement instanceof Failure) {
@@ -960,7 +963,7 @@ public class Compiler extends ExpressionVisitor {
 			this.setCurrentBasicBlock(end);
 			this.createPOPp(e, end);
 			for(int i = 0; i < matchCase.length; i++) {
-				inst.append(choiceMap.get(matchCase[i].internId));
+				inst.append(choiceMap.get(matchCase[i].getId()));
 			}
 		}
 	}
@@ -1056,7 +1059,7 @@ public class Compiler extends ExpressionVisitor {
 			else if (e.get(i) instanceof ByteMap) {
 				ByteMap br = (ByteMap)e.get(i);
 				for(int c = 0; c < 256; c++) {
-					if(br.charMap[c]) {
+					if(br.byteMap[c]) {
 						inst.append(c);
 					}
 				}
@@ -1087,7 +1090,7 @@ public class Compiler extends ExpressionVisitor {
 			ByteMap br = (ByteMap)inner;
 			NOTCHARSET inst = this.createNOTCHARSET(inner, this.getCurrentBasicBlock(), this.jumpFailureJump());
 			for(int c = 0; c < 256; c++) {
-				if(br.charMap[c]) {
+				if(br.byteMap[c]) {
 					inst.append(c);
 				}
 			}
@@ -1178,7 +1181,7 @@ public class Compiler extends ExpressionVisitor {
 	private void writeOptionalByteMapCode(ByteMap e) {
 		OPTIONALCHARSET inst = this.createOPTIONALCHARSET(e, this.getCurrentBasicBlock());
 		for(int c = 0; c < 256; c++) {
-			if(e.charMap[c]) {
+			if(e.byteMap[c]) {
 				inst.append(c);
 			}
 		}
@@ -1193,7 +1196,7 @@ public class Compiler extends ExpressionVisitor {
 			else if (e.get(i) instanceof ByteMap) {
 				ByteMap br = (ByteMap)e.get(i);
 				for(int c = 0; c < 256; c++) {
-					if(br.charMap[c]) {
+					if(br.byteMap[c]) {
 						inst.append(c);
 					}
 				}
@@ -1311,7 +1314,7 @@ public class Compiler extends ExpressionVisitor {
 	
 	private void writeZeroMoreByteMapCode(ByteMap e, ZEROMORECHARSET inst) {
 		for(int c=0; c < 256; c++) {
-			if(e.charMap[c]) {
+			if(e.byteMap[c]) {
 				inst.append(c);
 			}
 		}
@@ -1435,7 +1438,7 @@ public class Compiler extends ExpressionVisitor {
 	public void visitByteMap(ByteMap e) {
 		CHARSET inst = this.createCHARSET(e, this.getCurrentBasicBlock(), this.jumpFailureJump());
 		for(int c = 0; c < 256; c++) {
-			if(e.charMap[c]) {
+			if(e.byteMap[c]) {
 				inst.append(c);
 			}
 		}
@@ -1589,7 +1592,7 @@ public class Compiler extends ExpressionVisitor {
 		}
 	}
 
-	public void visitNew(New e) {
+	public void visitNew(NewClosure e) {
 		if (PatternMatching) {
 			for(int i = 0; i < e.size(); i++) {
 				if (O_FusionInstruction) {

@@ -82,6 +82,13 @@ public class Factory {
 		return internImpl(s, new Repetition(s, p));
 	}
 
+	public final static Expression newRepetition1(SourcePosition s, Expression p) {
+		if(p.isInterned()) {
+			s = null;
+		}
+		return internImpl(s, new Repetition1(s, p));
+	}
+
 	public final static Expression newAnd(SourcePosition s, Expression p) {
 		if(p.isInterned()) {
 			s = null;
@@ -119,29 +126,31 @@ public class Factory {
 	}
 
 	public final static Expression newChoice(SourcePosition s, UList<Expression> l) {
-		if(l.size() == 1) {
-			return l.ArrayValues[0];
+		int size = l.size();
+		for(int i = 0; i < size; i++) {
+			if(l.ArrayValues[i] instanceof Empty) {
+				size = i + 1;
+				break;
+			}
 		}
-		if(l.size() == 2 && l.ArrayValues[1] instanceof Empty) {
-			return newOption(s, l.ArrayValues[0]);  //     e / '' => e?
+		if(size == 1) {
+			return l.ArrayValues[0];
 		}
 		if(s != null && isInterned(l)) {
 			s = null;
 		}
-		return internImpl(s, new Choice(s, l));
+		if(l.ArrayValues[size - 1] instanceof Empty) {
+			return newOption(s, new Choice(s, l, size-1));  //     e / '' => e?
+		}
+		return internImpl(s, new Choice(s, l, size));
 	}
 
 	public final static Expression newChoice(SourcePosition s, Expression p, Expression p2) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		l.add(p);
-		l.add(p2);
-		if(s != null && isInterned(l)) {
-			s = null;
-		}
-		return internImpl(s, new Choice(s, l));
+		addChoice(l, p);
+		addChoice(l, p2);
+		return newChoice(s, l);
 	}
-
-	
 	
 	public final static void addChoice(UList<Expression> l, Expression e) {
 		if(e instanceof Choice) {
@@ -149,7 +158,7 @@ public class Factory {
 				addChoice(l, e.get(i));
 			}
 		}
-		else {
+		else if (!(e instanceof Failure)) {
 			l.add(e);
 		}
 	}
@@ -306,14 +315,23 @@ public class Factory {
 		if(s != null && isInterned(l)) {
 			s = null;
 		}
-		return internImpl(s, new New(s, l));
+		return internImpl(s, new NewClosure(s, l));
 	}
 
-	public final static Expression newNewLeftLink(SourcePosition s, UList<Expression> l) {
+	public final static Expression newLeftNew(SourcePosition s, UList<Expression> l) {
 		if(s != null && isInterned(l)) {
 			s = null;
 		}
 		return internImpl(s, new LeftNew(s, l));
+	}
+
+	public final static Expression newNew(SourcePosition s, boolean lefted, Expression e) {
+		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
+		New p = new New(s, lefted, 0);
+		Factory.addSequence(l, p);
+		Factory.addSequence(l, e);
+		Factory.addSequence(l, new Capture(s, p, 0));
+		return newSequence(s, l);
 	}
 	
 	public final static UList<Expression> toSequenceList(Expression e) {

@@ -4,7 +4,7 @@ import nez.util.StringUtils;
 
 import org.peg4d.Utils;
 
-public class GrammarFormatter extends ExpressionVisitor {
+public class GrammarFormatter extends GrammarVisitor {
 	private StringBuilder sb = null;
 	private final static String NewIndent = "\n\t";
 
@@ -57,7 +57,7 @@ public class GrammarFormatter extends ExpressionVisitor {
 	}
 
 	public void visitByteMap(ByteMap e) {
-		sb.append(StringUtils.stringfyCharClass(e.charMap));
+		sb.append(StringUtils.stringfyCharClass(e.byteMap));
 	}
 	
 	public void visitAnyChar(AnyChar e) {
@@ -69,7 +69,7 @@ public class GrammarFormatter extends ExpressionVisitor {
 		sb.append(e.tag.toString());
 	}
 	
-	public void visitValue(Replace e) {
+	public void visitReplace(Replace e) {
 		sb.append(StringUtils.quoteString('`', e.value, '`'));
 	}
 	
@@ -77,7 +77,7 @@ public class GrammarFormatter extends ExpressionVisitor {
 		if(prefix != null) {
 			sb.append(prefix);
 		}
-		if(/*e.inner instanceof String ||*/ e.inner instanceof NonTerminal || e.inner instanceof New) {
+		if(/*e.inner instanceof String ||*/ e.inner instanceof NonTerminal || e.inner instanceof NewClosure) {
 			this.visit(e.inner);
 		}
 		else {
@@ -97,7 +97,11 @@ public class GrammarFormatter extends ExpressionVisitor {
 	public void visitRepetition(Repetition e) {
 		this.format(null, e, "*");
 	}
-	
+
+	public void visitRepetition1(Repetition1 e) {
+		this.format(null, e, "+");
+	}
+
 	public void visitAnd(And e) {
 		this.format( "&", e, null);
 	}
@@ -171,7 +175,7 @@ public class GrammarFormatter extends ExpressionVisitor {
 		}
 	}
 
-	public void visitNew(New e) {
+	public void visitNewClosure(NewClosure e) {
 		sb.append("{ ");
 		this.appendSequence(e);
 		sb.append(" }");
@@ -181,6 +185,14 @@ public class GrammarFormatter extends ExpressionVisitor {
 		sb.append("{@ ");
 		this.appendSequence(e);
 		sb.append(" }");
+	}
+
+	public void visitNew(New e) {
+		sb.append(e.lefted ? "{@ " : "{ ");
+	}
+
+	public void visitCapture(Capture e) {
+		sb.append("}");
 	}
 
 	@Override

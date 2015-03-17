@@ -74,7 +74,7 @@ attlist
 	= 'ATTLIST' _* {@Name _* (@AttDef)* #Attlist} _*
 
 AttDef
-	= { @Name _* attType _* defaultDecl _* #Def}
+	= { @Name _* attType _* defaultDecl _* }
 	 
 attType
 	=  @{'CDATA' #CDATA} / tokenized / @Enumerated
@@ -93,14 +93,16 @@ tokenized
 		/ @{'NMTOKEN' #NMTOKEN} 
 
 Enumerated
-	= { '(' _* @{ [-A-Za-z0-9:._%;]* #enumMember } _* ( OR  @{ [-A-Za-z0-9:._%;]* #EnumMember } )*   _* ')'  _* #Enum }
+	= { '(' _* @{ [-A-Za-z0-9:._%;]* #Name } _* ( OR  @{ [-A-Za-z0-9:._%;]* #Name } )*   _* ')'  _* #Enum }
 	
 defaultDecl
-	=  @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} /  @{'#FIXED' _* @DefaultValue #FIXED} / @DefaultValue 
+	=  '#REQUIRED' #REQUIRED / '#IMPLIED' #IMPLIED /  '#FIXED' _* @DefaultValue #FIXED / DEFAULTVALUE #Default 
 	
 DefaultValue
 	= ('"'{ (![<&"].)*#Value} '"') / ('\''{ (![<&"].)*#Value} '\'')
 	
+DEFAULTVALUE
+	= ('"' (![<&"].)* '"') / ('\'' (![<&"].)* '\'')
 
 entity
 	= 'ENTITY' _*  (gedecl/pedecl) _*

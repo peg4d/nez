@@ -1,13 +1,19 @@
 package nez.cc;
 
-import nez.vm.Compiler;
-import nez.vm.Instruction;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 
 class JavaParserGenerator extends ParserGenerator {
 	JavaParserGenerator(String fileName) {
 		super(fileName);
 	}
-	void generate(Compiler cc) {
+
+	@Override
+	public String getDesc() {
+		return "a Nez parser generator for Java" ;
+	}
+
+	void generate(RuntimeCompiler cc) {
 		file.writeIndent("public class NezParser {");
 		file.incIndent();
 		file.writeIndent("public final static boolean parse() {");

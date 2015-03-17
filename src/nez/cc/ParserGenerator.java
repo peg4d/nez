@@ -3,7 +3,7 @@ package nez.cc;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import nez.vm.Instruction;
+import nez.runtime.Instruction;
 
 public abstract class ParserGenerator extends GrammarGenerator {
 	ParserGenerator(String fileName) {

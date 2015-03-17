@@ -5,11 +5,11 @@ import java.util.TreeMap;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
-public class LeftNew extends New {
+public class LeftNew extends NewClosure {
 	LeftNew(SourcePosition s, UList<Expression> list) {
 		super(s, list);
 	}
@@ -25,7 +25,7 @@ public class LeftNew extends New {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		if(c.required != Typestate.OperationType) {
 			checker.reportWarning(s, "unexpected {@ .. => removed!!");
-			return this.removeNodeOperator();
+			return this.removeASTOperator();
 		}
 		c.required = Typestate.OperationType;
 		for(Expression p: this) {
@@ -40,14 +40,14 @@ public class LeftNew extends New {
 			Expression e = get(i).removeFlag(undefedFlags);
 			Factory.addSequence(l, e);
 		}
-		return Factory.newNewLeftLink(this.s, l);
+		return Factory.newLeftNew(this.s, l);
 	}
 	@Override
 	public boolean match(SourceContext context) {
 		long startIndex = context.getPosition();
 //		ParsingObject left = context.left;
 		for(int i = 0; i < this.prefetchIndex; i++) {
-			if(!this.get(i).matcher.match(context)) {
+			if(!this.get(i).optimized.match(context)) {
 				context.rollback(startIndex);
 				return false;
 			}
@@ -58,7 +58,7 @@ public class LeftNew extends New {
 		context.lazyLink(newnode, 0, context.left);
 		context.left = newnode;
 		for(int i = 0; i < this.size(); i++) {
-			if(!this.get(i).matcher.match(context)) {
+			if(!this.get(i).optimized.match(context)) {
 				context.abortConstruction(mark);
 				context.rollback(startIndex);
 				newnode = null;
@@ -74,7 +74,7 @@ public class LeftNew extends New {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeLeftNew(this, next);
 	}
 

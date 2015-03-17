@@ -2,9 +2,9 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class ByteChar extends Terminal {
 	public int byteChar;
@@ -25,7 +25,7 @@ public class ByteChar extends Terminal {
 		return true;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		return (byteChar == ch) ? Accept : Reject;
 	}
 	@Override
@@ -37,7 +37,7 @@ public class ByteChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeByteChar(this, next);
 	}
 	

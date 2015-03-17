@@ -1,4 +1,4 @@
-// PEG4d C2011 Grammar
+// Nez C Grammar
 // ===============
 //
 // Based on grammar from ISO/IEC 9899:2011 [1]. 
@@ -235,7 +235,7 @@ TypeDef
 	= { "typedef" _ @Type (_ @TypeDefName _ )? (',' _ @TypeDefName  _)* ";" #TypeDeclaration }
 
 TypeDefName
-	= <def TypeName (VarName / Name) >
+	= { <def TypeName (VarName / Name) > #Name }
 
 VariableDeclaration
 	= { @AnnotationList @Type @InitDecl ("," @InitDecl)*  ATTRIBUTE? ";" #Declaration }

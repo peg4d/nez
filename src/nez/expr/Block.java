@@ -2,10 +2,10 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Block extends Unary {
 	Block(SourcePosition s, Expression e) {
@@ -33,22 +33,22 @@ public class Block extends Unary {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {
 		int stateValue = context.stateValue;
 		String indent = context.getIndentText(context.getPosition());
 		int stackTop = context.pushSymbolTable(NezTag.Indent, indent);
-		boolean b = this.inner.matcher.match(context);
+		boolean b = this.inner.optimized.match(context);
 		context.popSymbolTable(stackTop);
 		context.stateValue = stateValue;
 		return b;
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeBlock(this, next);
 	}
 	

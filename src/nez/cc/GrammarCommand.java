@@ -1,13 +1,13 @@
 package nez.cc;
 
 import java.lang.reflect.Constructor;
+import java.util.TreeMap;
 
 import nez.Grammar;
 import nez.main.Command;
 import nez.main.CommandConfigure;
 import nez.main.Verbose;
 import nez.util.ConsoleUtils;
-import nez.util.UMap;
 
 public class GrammarCommand extends Command {
 
@@ -18,7 +18,7 @@ public class GrammarCommand extends Command {
 		gen.generate(peg);
 	}
 	
-	static UMap<Class<?>> classMap = new UMap<Class<?>>();
+	static private TreeMap<String, Class<?>> classMap = new TreeMap<String, Class<?>>();
 	static void regist(String type, String className) {
 		try {
 			Class<?> c = Class.forName(className);
@@ -29,6 +29,7 @@ public class GrammarCommand extends Command {
 	}
 	
 	static {
+		regist("nez", "nez.cc.NezGrammarGenerator");
 		regist("mouse", "nez.cc.MouseGrammarGenerator");
 		regist("lua",   "nez.cc.LPegGrammarGenerator");
 		regist("lpeg",  "nez.cc.LPegGrammarGenerator");
@@ -50,7 +51,7 @@ public class GrammarCommand extends Command {
 				try {
 					c = Class.forName(output);
 				} catch (ClassNotFoundException e) {
-					ConsoleUtils.exit(1, "unknown output type: " + output);
+					showOutputType(output);
 				}
 			}
 			try {
@@ -64,12 +65,25 @@ public class GrammarCommand extends Command {
 		}
 		return new NezGrammarGenerator(null);
 	}
-
-}
-
-class NezGrammarGenerator extends GrammarGenerator {
-	NezGrammarGenerator(String fileName) {
-		super(fileName);
-	}
 	
+	void showOutputType(String output) {
+		ConsoleUtils.println("Nez Grammar Generator");
+		try {
+			for(String n : this.classMap.keySet()) {
+				String dummy = null;
+				Class<?> c = this.classMap.get(n);
+				Constructor<?> ct = c.getConstructor(String.class);
+				GrammarGenerator g = (GrammarGenerator)ct.newInstance(dummy);
+				String s = String.format("%8s - %s", n, g.getDesc());
+				ConsoleUtils.println(s);
+			}
+			ConsoleUtils.exit(1, "Unknown output type ("+ output + ") => Try the above !!");
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			ConsoleUtils.exit(1, "killed");
+		}
+	}
+
 }
+

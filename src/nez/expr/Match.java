@@ -2,10 +2,10 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Instruction;
-import nez.vm.Compiler;
 
 public class Match extends Unary {
 	Match(SourcePosition s, Expression inner) {
@@ -33,19 +33,19 @@ public class Match extends Unary {
 	}
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		return this.inner.removeNodeOperator();
+		return this.inner.removeASTOperator();
 	}
 	@Override
-	public short acceptByte(int ch) {
-		return this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.inner.acceptByte(ch, option);
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		return this.inner.matcher.match(context);
+		return this.inner.optimized.match(context);
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return this.inner.encode(bc, next);
 	}
 

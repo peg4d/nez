@@ -3,12 +3,11 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.StringUtils;
-import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
-public class Tagging extends Unconsumed {
+public class Tagging extends ASTOperation {
 	public Tag tag;
 	Tagging(SourcePosition s, Tag tag) {
 		super(s);
@@ -19,47 +18,23 @@ public class Tagging extends Unconsumed {
 	}
 	@Override
 	public String getPredicate() {
-		return "tag " + StringUtils.quoteString('"', tag.name, '"');
+		return "tag " + StringUtils.quoteString('"', tag.getName(), '"');
 	}
 	@Override
 	public String getInterningKey() {
-		return "#" + this.tag.toString();
-	}
-	@Override
-	public int inferTypestate(UMap<String> visited) {
-		return Typestate.OperationType;
+		return "#" + this.tag.getName();
 	}
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
-		if(c.required != Typestate.OperationType) {
-			checker.reportWarning(s, "unexpected #" + tag.toString() + " => removed!!");
-			return Factory.newEmpty(this.s);
-		}
-		return this;
+		return this.checkTypestate(checker, c, "#" + tag.getName());
 	}
-	@Override
-	public Expression removeNodeOperator() {
-		return Factory.newEmpty(null);
-	}
-	
 	@Override
 	public boolean match(SourceContext context) {
 		context.left.setTag(this.tag);
 		return true;
 	}
-	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeTagging(this, next);
 	}
-
-	@Override
-	protected int pattern(GEP gep) {
-		return 0;
-	}
-
-	@Override
-	protected void examplfy(GEP gep, StringBuilder sb, int p) {
-	}
-
 }

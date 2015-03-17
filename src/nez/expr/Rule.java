@@ -6,10 +6,10 @@ import nez.Grammar;
 import nez.SourceContext;
 import nez.ast.AST;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Rule extends Expression {
 	Grammar    grammar;
@@ -23,7 +23,7 @@ public class Rule extends Expression {
 		this.name = name;
 		this.uname = grammar.uniqueName(name);
 		this.body = (body == null) ? Factory.newEmpty(s) : body;
-		this.definedRule = definedRule;
+		this.definedRule = this;
 	}
 	
 	public final Grammar getGrammar() {
@@ -82,6 +82,7 @@ public class Rule extends Expression {
 	public final boolean isPurePEG() {
 		return this.transType == Typestate.BooleanType;
 	}
+	
 	private Rule definedRule;  // defined
 
 	@Override
@@ -146,7 +147,7 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		if(this.inferTypestate(null) == Typestate.BooleanType) {
 			return this;
 		}
@@ -156,7 +157,7 @@ public class Rule extends Expression {
 			r = this.grammar.newRule(name, this.body);
 			r.definedRule = this;
 			r.transType = Typestate.BooleanType;
-			r.body = this.body.removeNodeOperator();
+			r.body = this.body.removeASTOperator();
 		}
 		return r;
 	}
@@ -214,8 +215,8 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public short acceptByte(int ch) {
-		return this.body.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		return this.body.acceptByte(ch, option);
 	}
 
 	public void addAnotation(String textAt, AST ast) {
@@ -223,7 +224,7 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return this.getExpression().encode(bc, next);
 	}
 

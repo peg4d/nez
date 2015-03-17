@@ -6,15 +6,15 @@ import nez.Production;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
+import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class Choice extends SequentialExpression {
-	Choice(SourcePosition s, UList<Expression> l) {
-		super(s, l);
+	Choice(SourcePosition s, UList<Expression> l, int size) {
+		super(s, l, size);
 	}
 	@Override
 	public String getPredicate() {
@@ -55,10 +55,10 @@ public class Choice extends SequentialExpression {
 		return Factory.newChoice(this.s, l);
 	}
 	@Override
-	public Expression removeNodeOperator() {
+	public Expression removeASTOperator() {
 		UList<Expression> l = newList();
 		for(Expression e : this) {
-			Factory.addChoice(l, e.removeNodeOperator());
+			Factory.addChoice(l, e.removeASTOperator());
 		}
 		return Factory.newChoice(this.s, l);
 	}
@@ -71,10 +71,10 @@ public class Choice extends SequentialExpression {
 		return Factory.newChoice(this.s, l);
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		boolean hasUnconsumed = false;
 		for(int i = 0; i < this.size(); i++) {
-			short r = this.get(i).acceptByte(ch);
+			short r = this.get(i).acceptByte(ch, option);
 			if(r == Accept) {
 				return r;
 			}
@@ -90,7 +90,7 @@ public class Choice extends SequentialExpression {
 		Node left = context.left;
 		for(int i = 0; i < this.size(); i++) {
 			context.left = left;
-			if(this.get(i).matcher.match(context)) {
+			if(this.get(i).optimized.match(context)) {
 				//context.forgetFailure(f);
 				left = null;
 				return true;
@@ -101,51 +101,37 @@ public class Choice extends SequentialExpression {
 		return false;
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeChoice(this, next);
 	}
 	
 	// optimize
-	Expression[] matchCase = null;
-	boolean selfChoice = false;
-	int startIndex = -1;
-	int endIndex = 257;
+	public Expression[] matchCase = null;
+//	boolean selfChoice = false;
+//	int startIndex = -1;
+//	int endIndex = 257;
+	
 	@Override
-	public final Expression optimize(int option) {
-		if(FlagUtils.is(option, Production.Optimization) && !(this.matcher instanceof ByteMap)) {
+	void optimizeImpl(int option) {
+		if(FlagUtils.is(option, Production.Optimization) && !(this.optimized instanceof ByteMap)) {
 			boolean byteMap[] = new boolean[257];
-			if(isByteMap(option, byteMap, 0)) {
-				return Factory.newByteMap(s, byteMap);
+			if(toByteMap(option, byteMap, 0)) {
+				this.optimized = Factory.newByteMap(s, byteMap);
+				return;
 			}
 		}
-		if(FlagUtils.is(option, Production.Prediction) && this.matchCase != null) {
-			Expression[] matchCase = new Expression[257];
+		if(FlagUtils.is(option, Production.Prediction)) {
 			Expression fails = Factory.newFailure(s);
+			this.matchCase = new Expression[257];
 			for(int ch = 0; ch <= 256; ch++) {
-				Expression sub = selectChoice(ch, fails);
-				if(startIndex == -1 && sub != fails) {
-					startIndex = ch;
-				}
-				if(startIndex != -1 && sub == fails) {
-					endIndex = ch;
-				}
-				if(sub instanceof Choice) {
-					if(sub == this) {
-						/* this is a rare case where the selected choice is the parent choice */
-						/* this cause the repeated calls of the same matchers */
-						this.selfChoice = true;
-					}
-					else {
-						((Choice)sub).optimize(option);
-					}
-				}
+				Expression selected = selectChoice(ch, fails, option);
+				matchCase[ch] = selected;
 			}
-			this.matchCase = matchCase;
+			this.optimized = this;
 		}
-		return this;
 	}
 	
-	private final boolean isByteMap(int option, boolean[] byteMap, int level) {
+	private final boolean toByteMap(int option, boolean[] byteMap, int level) {
 		for(Expression e : this) {
 			e = e.optimize(option);
 			if(e instanceof ByteChar) {
@@ -153,12 +139,12 @@ public class Choice extends SequentialExpression {
 				continue;
 			}
 			if(e instanceof ByteMap) {
-				ByteMap.appendBitMap(byteMap, ((ByteMap)e).charMap);
+				ByteMap.appendBitMap(byteMap, ((ByteMap)e).byteMap);
 				continue;
 			}
 			if(e instanceof Choice) {
 				if(level < 8) {
-					if(!((Choice)e).isByteMap(option, byteMap, level+1)) {
+					if(!((Choice)e).toByteMap(option, byteMap, level+1)) {
 						return false;
 					}
 					continue;
@@ -169,23 +155,23 @@ public class Choice extends SequentialExpression {
 		return true;
 	}
 
-	private Expression selectChoice(int ch, Expression failed) {
+	private Expression selectChoice(int ch, Expression failed, int option) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		selectChoice(ch, failed, l);
+		selectChoice(ch, failed, l, option);
 		if(l.size() == 0) {
-			l.add(failed);
+			return failed;
 		}
 		return Factory.newChoice(s, l);
 	}
 
-	private void selectChoice(int ch, Expression failed, UList<Expression> l) {
+	private void selectChoice(int ch, Expression failed, UList<Expression> l, int option) {
 		for(Expression e : this) {
 			e = Factory.resolveNonTerminal(e);
 			if(e instanceof Choice) {
-				((Choice)e).selectChoice(ch, failed, l);
+				((Choice)e).selectChoice(ch, failed, l, option);
 			}
 			else {
-				short r = e.acceptByte(ch);
+				short r = e.acceptByte(ch, option);
 				//System.out.println("~ " + GrammarFormatter.stringfyByte(ch) + ": r=" + r + " in " + e);
 				if(r != Expression.Reject) {
 					l.add(e);
@@ -202,7 +188,5 @@ public class Choice extends SequentialExpression {
 	protected void examplfy(GEP gep, StringBuilder sb, int p) {
 		this.get(p % size()).examplfy(gep, sb, p);
 	}
-
-
 
 }

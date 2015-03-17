@@ -2,10 +2,10 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
 public class And extends Unary {
 	And(SourcePosition s, Expression e) {
@@ -41,8 +41,8 @@ public class And extends Unary {
 	}
 
 	@Override
-	public short acceptByte(int ch) {
-		short r = this.inner.acceptByte(ch);
+	public short acceptByte(int ch, int option) {
+		short r = this.inner.acceptByte(ch, option);
 		if(r == Accept || r == Unconsumed) {
 			return Unconsumed;
 		}
@@ -51,7 +51,7 @@ public class And extends Unary {
 	@Override
 	public boolean match(SourceContext context) {
 		long pos = context.getPosition();
-		boolean b = this.inner.matcher.match(context);
+		boolean b = this.inner.optimized.match(context);
 		context.rollback(pos);
 		return b;
 	}
@@ -61,7 +61,7 @@ public class And extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeAnd(this, next);
 	}
 	

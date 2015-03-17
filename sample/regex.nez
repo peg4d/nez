@@ -1,36 +1,90 @@
-// Simple regular expression grammar
-// author: Kimio Kuramitsu
+/*
+
+  Nez Regex Grammar
+
+  Author:
+    Shun Honda (https://github.com/shun-honda)
+    
+*/
 
 File
-	= Expr _ !.
+	= Chunk
 
 Chunk
-	= _ Expr _ 
+	= Pattern
+
+Pattern
+	= { @Expr #Pattern }
 
 Expr
-	= Sequence {@ ('|' @Sequence)+ #Choice }?
+	= Concatenation {@ ('|' @Concatenation)+ #Or }?
 
-Sequence
-	= Suffix {@ (@Suffix)+ #Sequence }?
+Concatenation
+	= IndependentExpr {@ (@IndependentExpr)+ #Concatenation }?
 
-Suffix
-	= Term {@ &'' addQualifier }*
+IndependentExpr
+	= { '?>' @SuffixTerminal #IndependentExpr }
+	/ Predicate
 
-addQualifier
-        = '*' #ZeroMore
-        / '+' #OneMore
-        / '?' #Option
+Predicate
+	= { ('?=' #And / '?!' #Not) @SuffixTerminal }
+	/ SuffixTerminal
 
-Term
-	= { LETTER+ #Terminal }
+SuffixTerminal
+	= Terminal {@ addQuantifiers }?
+
+addQuantifiers
+	= '*+' #PossessiveRepetition
+	/ '*?' #LazyQuantifiers
+	/ '*' #Repetition
+	/ '+' #OneMoreRepetition
+
+Terminal
+	= CharacterSet
+	/ { '.' #Any }
 	/ '(' Expr ')'
+	/ Character
 
-LETTER
-	= [A-Za-z0-9] / SYMBOL
+CharacterSet
+	= '[^' { @CharacterRange (@CharacterRange)* #NegativeCharacterSet} ']'
+	/'[' !'^' CharacterRange {@ (@CharacterRange)+ #CharacterSet}? ']' 
 
-SYMBOL
-        = '&' !'&' / '/' / '@' / '_' / '#' / '%' / ',' / '-'
-        / ':' / ';' / '<' / '>' / '=' / '~' / '`' / '"'
-_
-	= [ \t]*
+CharacterRange
+	= CharacterSetItem {@ '-' @CharacterSetItem #CharacterRange }?
+
+CharacterSetItem
+	= { CHARACTER_SET_ITEM #Character }
+
+CHARACTER_SET_ITEM
+	= '\\u' HEX HEX HEX HEX
+	/ '\\n'
+	/ '\\t'
+	/ '\\\\'
+	/ '\\r'
+	/ '\\f'
+	/ '\\['
+	/ '\\]'
+	/ '\\-'
+	/ !([-\[\]]) .
+
+HEX
+	= [0-9A-Fa-f]
+
+Character
+	= { CHARACTER #Character }
+
+CHARACTER
+	= '\\u' HEX HEX HEX HEX
+	/ '\\n'
+	/ '\\t'
+	/ '\\\\'
+	/ '\\r'
+	/ '\\f'
+	/ '\\' METACHARACTER
+	/ !METACHARACTER !'\n' .
+
+METACHARACTER
+	= '+' / '*' / '?' / '.' / '^' / '$' / '|' / '/'
+	/ '(' / ')' / '[' / ']' / '{' / '}' / '-'
+
 

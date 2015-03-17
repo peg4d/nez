@@ -63,6 +63,12 @@ EOS
 EOF
     = !.
 
+HEX
+    = [A-Fa-f0-9]
+
+DIGIT
+    = [0-9]
+
 //Operator
 //==========
 
@@ -438,16 +444,24 @@ StringLiteral
     [example: [==[foo[bar]123]==]]
     = ["] { (!["] QUOTED_STRING_CHAR)* #String } ["]
     / ['] { (!['] QUOTED_STRING_CHAR)* #String } [']
-    / <block '[' <name BracketStringEquals [=]*> '[' LINE_TERMINATOR_SEQUENCE? { BS_CHAR* #String } BS_TERMINATOR >
+    / '[[' LINE_TERMINATOR_SEQUENCE? { BS_CHAR_NOBLOCK* #String } ']]'
+    / <block '[' <def BracketStringEquals [=]+> '[' LINE_TERMINATOR_SEQUENCE? { BS_CHAR* #String } BS_TERMINATOR >
 
 BRACKET_STRING_COMMENT
-    = <block '[' <name BracketStringEquals [=]*> '[' LINE_TERMINATOR_SEQUENCE? BS_COMMENT_CHAR* BS_TERMINATOR >
+    = '[[' LINE_TERMINATOR_SEQUENCE? BS_COMMENT_CHAR_NOBLOCK* ']]'
+    / <block '[' <def BracketStringEquals [=]+> '[' LINE_TERMINATOR_SEQUENCE? BS_COMMENT_CHAR* BS_TERMINATOR >
 
 QUOTED_STRING_CHAR
     = !('\\' / LINE_TERMINATOR) . / '\\' ESCAPE_SEQUENCE
 
+BS_CHAR_NOBLOCK
+    = !']]' (LINE_TERMINATOR_SEQUENCE / .)
+
 BS_CHAR
     = !BS_TERMINATOR (LINE_TERMINATOR_SEQUENCE / .)
+
+BS_COMMENT_CHAR_NOBLOCK
+    = !']]' (!LINE_TERMINATOR_SEQUENCE . / <if MultiLineBracketString> LINE_TERMINATOR_SEQUENCE)
 
 BS_COMMENT_CHAR
     = !BS_TERMINATOR (!LINE_TERMINATOR_SEQUENCE . / <if MultiLineBracketString> LINE_TERMINATOR_SEQUENCE)

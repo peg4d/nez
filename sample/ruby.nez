@@ -325,8 +325,8 @@ PN_BODY
     / PN_BRAKET
     / PN_ANGLE
     / <if PNSpace> " " (!" " .)* " "
-    / <if PNSpace> <name EON LINE_TERMINATOR_SEQUENCE> (!<isa EON> .)* <isa EON>
-    / <name EON PN_PAIR> (!<isa EON> .)* <isa EON>
+    / <if PNSpace> <def EON LINE_TERMINATOR_SEQUENCE> (!<isa EON> .)* <isa EON>
+    / <def EON PN_PAIR> (!<isa EON> .)* <isa EON>
 
 PN_PAREN
     = "(" (PN_PAREN / ![()] .)* ")"
@@ -345,18 +345,18 @@ PN_PAIR
 
 HereDocument
     = { "<<" "-"? (
-          ["] <name HereDocID IDENTIFIER> ["]
-        / ['] <name HereDocID IDENTIFIER> [']
-        / [`] <name HereDocID IDENTIFIER> [`]
-        / <name HereDocID IDENTIFIER>) (!HD_NEWLINE .)* HD_NEWLINE
+          ["] <def HereDocID IDENTIFIER> ["]
+        / ['] <def HereDocID IDENTIFIER> [']
+        / [`] <def HereDocID IDENTIFIER> [`]
+        / <def HereDocID IDENTIFIER>) (!HD_NEWLINE .)* HD_NEWLINE
       (!(_ <isa HereDocID>) (!HD_NEWLINE .)* HD_NEWLINE)*
       _ <isa HereDocID> HD_NEWLINE
       #HereDocument
     }/* / { "<<" (
-          ["] <name HereDocID IDENTIFIER> ["]
-        / ['] <name HereDocID IDENTIFIER> [']
-        / [`] <name HereDocID IDENTIFIER> [`]
-        / <name HereDocID IDENTIFIER>) HD_NEWLINE
+          ["] <def HereDocID IDENTIFIER> ["]
+        / ['] <def HereDocID IDENTIFIER> [']
+        / [`] <def HereDocID IDENTIFIER> [`]
+        / <def HereDocID IDENTIFIER>) HD_NEWLINE
       (!<isa HereDocID> (!HD_NEWLINE .)* HD_NEWLINE)*
       <isa HereDocID> HD_NEWLINE
       #HereDocument

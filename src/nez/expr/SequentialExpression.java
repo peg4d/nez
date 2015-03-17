@@ -4,10 +4,10 @@ import nez.util.UList;
 
 public abstract class SequentialExpression extends Expression {
 	Expression[] inners;
-	SequentialExpression(SourcePosition s, UList<Expression> list) {
+	SequentialExpression(SourcePosition s, UList<Expression> list, int size) {
 		super(s);
-		this.inners = new Expression[list.size()];
-		for(int i = 0; i < list.size(); i++) {
+		this.inners = new Expression[size];
+		for(int i = 0; i < size; i++) {
 			this.inners[i] = list.get(i);
 		}
 	}

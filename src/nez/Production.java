@@ -7,15 +7,14 @@ import nez.expr.NonTerminal;
 import nez.expr.Rule;
 import nez.main.Recorder;
 import nez.main.Verbose;
+import nez.runtime.Instruction;
+import nez.runtime.MemoPoint;
+import nez.runtime.MemoTable;
+import nez.runtime.RuntimeCompiler;
 import nez.util.ConsoleUtils;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
-import nez.vm.MemoPoint;
-import nez.vm.MemoTable;
-//import nez.x.PEG;
 
 public class Production {
 	Rule start;
@@ -31,6 +30,15 @@ public class Production {
 		//dump();
 	}
 
+	public Rule getRule() {
+		return this.start;
+	}
+
+	public UList<Rule> getRuleList() {
+		return this.ruleList;
+	}
+
+	
 	private void add(int pos, Rule r) {
 		if(!ruleMap.hasKey(r.getUniqueName())) {
 			ruleList.add(r);
@@ -160,7 +168,7 @@ public class Production {
 
 	public final Instruction compile() {
 		if(compiledCode == null) {
-			Compiler bc = new Compiler(this.option);
+			RuntimeCompiler bc = new RuntimeCompiler(this.option);
 			compiledCode = bc.encode(this.ruleList);
 			this.InstructionSize  = bc.getInstructionSize();
 			this.memoPointSize = bc.getMemoPointSize();
@@ -174,8 +182,8 @@ public class Production {
 		return compiledCode;
 	}
 	
-	public Compiler cc() {
-		Compiler bc = new Compiler(this.option);
+	public RuntimeCompiler cc() {
+		RuntimeCompiler bc = new RuntimeCompiler(this.option);
 		bc.encode(ruleList);
 		return bc;
 	}
@@ -323,12 +331,16 @@ public class Production {
 	public final static int PackratParsing  = 1 << 2;
 	public final static int Optimization    = 1 << 3;
 	public final static int Specialization  = 1 << 4;
-	public final static int Prediction      = 1 << 5;
-	public final static int New             = 1 << 6;
+	public final static int CommonPrefix    = 1 << 5;
+	public final static int Prediction      = 1 << 6;
+	public final static int New             = 1 << 7;
+	public final static int Tracing         = 1 << 8;	
 	public final static int Binary = 1 << 10;
-	public final static int Profiling = 1 << 11;
+	public final static int Utf8   = 1 << 11;	
+	public final static int Profiling = 1 << 12;
 
-	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization | Specialization | Prediction ;
+	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization 
+											| Specialization | CommonPrefix | Prediction | Tracing;
 	public final static int SafeOption = ASTConstruction | Optimization;
 	
 	public final static String stringfyOption(int option, String delim) {
@@ -353,9 +365,21 @@ public class Production {
 			sb.append(delim);
 			sb.append("spe.");
 		}
+		if(FlagUtils.is(option, Production.CommonPrefix)) {
+			sb.append(delim);
+			sb.append("com.");
+		}
 		if(FlagUtils.is(option, Production.Prediction)) {
 			sb.append(delim);
-			sb.append("predict");
+			sb.append("pdt.");
+		}
+		if(FlagUtils.is(option, Production.Tracing)) {
+			sb.append(delim);
+			sb.append("tracing");
+		}
+		if(FlagUtils.is(option, Production.New)) {
+			sb.append(delim);
+			sb.append("new");
 		}
 		if(FlagUtils.is(option, Production.Profiling)) {
 			sb.append(delim);
@@ -367,6 +391,5 @@ public class Production {
 		}
 		return s;
 	}
-
 
 }

@@ -1,4 +1,4 @@
-package nez.vm;
+package nez.runtime;
 
 import java.util.HashMap;
 
@@ -22,13 +22,16 @@ import nez.util.UList;
 
 public abstract class Instruction {
 	protected Expression  e;
+	protected boolean bitmap[];
 	public Instruction next;
 	public int id;
 	public boolean label = false;
+	
 	public Instruction(Expression e, Instruction next) {
 		this.e = e;
 		this.id = -1;
 		this.next = next;
+		//checkAcceptance(e, next == null ? null : next.bitmap);
 	}
 	
 	Instruction branch() {
@@ -60,7 +63,18 @@ public abstract class Instruction {
 		stringfy(sb);
 		return sb.toString();
 	}
+
+	final static boolean[] AlwaysAccept = ByteMap.newMap(true);
+	final static boolean[] AlwaysReject = ByteMap.newMap(false);
 	
+//	abstract void checkAcceptance(Exception e, boolean[] nextMap);
+
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = nextMap;
+//	}
+
+
 	boolean debug() {
 		return false;
 	}
@@ -131,6 +145,10 @@ class IFail extends Instruction implements StackOperation {
 	IFail(Expression e) {
 		super(e, null);
 	}
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = AlwaysReject;
+//	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIFail();
@@ -269,6 +287,10 @@ class IAnyChar extends Instruction {
 	IAnyChar(Expression e, Instruction next) {
 		super(e, next);
 	}
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = AlwaysAccept;
+//	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIAnyChar(this);
@@ -283,6 +305,10 @@ class IByteChar extends Instruction {
 		this.byteChar = e.byteChar;
 		this.optional = optional;
 	}
+//	@Override
+//	void checkAcceptance(Exception e, boolean[] nextMap) {
+//		this.bitmap = AlwaysAccept;
+//	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIByteChar(this);
@@ -300,15 +326,13 @@ class IByteMap extends Instruction {
 	public final boolean[] byteMap;
 	IByteMap(ByteMap e, boolean optional, Instruction next) {
 		super(e, next);
-		this.byteMap = e.charMap;
+		this.byteMap = e.byteMap;
 		this.optional = optional;
 	}
-
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIByteMap(this);
 	}
-
 	@Override
 	protected void stringfy(StringBuilder sb) {
 		super.stringfy(sb);
@@ -423,13 +447,56 @@ interface Memoization {
 
 }
 
+class IMonitoredSwitch extends Instruction {
+	final static IMonitoredSwitch dummyMonitor = new IMonitoredSwitch(null, null);
+	boolean isActivated;
+	Instruction activatedNext = null;
+	int used = 0;
+	int stored = 0;
+	IMonitoredSwitch(Expression e, Instruction next) {
+		super(e, next);
+		this.isActivated = true;
+	}
+	void setActivatedNext(Instruction inst) {
+		this.activatedNext = labeling(inst);
+	}
+	@Override
+	Instruction branch() {
+		return this.activatedNext;
+	}
+	final void stored() {
+		stored++;
+		this.checked();
+	}
+	final void used() {
+		used++;
+	}
+	final void checked() {
+		if(this.isActivated) {
+			if(stored % 32 == 0) {
+				double r = used / (double)stored;
+				//System.out.println("monitor: " + this.used + "/" + this.stored + ", " + r);
+				if(r < 0.0361) {  /* this is a magic number */
+					this.isActivated = false;
+				}
+			}
+		}
+	}
+	@Override
+	Instruction exec(Context sc) throws TerminationException {
+		return this.isActivated ? this.activatedNext : this.next;
+	}
+}
+
 class ILookup extends IFailPush implements Memoization {
 	final MemoPoint memoPoint;
 	final Instruction skip;
-	ILookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+	final IMonitoredSwitch monitor;
+	ILookup(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
 		super(e, failjump, next);
 		this.memoPoint = m;
 		this.skip = labeling(skip);
+		this.monitor = monitor;
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -443,8 +510,8 @@ class ILookup extends IFailPush implements Memoization {
 }
 
 class IStateLookup extends ILookup {
-	IStateLookup(Expression e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
-		super(e, m, next, skip, failjump);
+	IStateLookup(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		super(e, monitor, m, next, skip, failjump);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
@@ -453,9 +520,11 @@ class IStateLookup extends ILookup {
 }
 
 class IMemoize extends Instruction implements Memoization {
+	final IMonitoredSwitch monitor;
 	final MemoPoint memoPoint;
-	IMemoize(Expression e, MemoPoint m, Instruction next) {
+	IMemoize(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
 		super(e, next);
+		this.monitor = monitor;
 		this.memoPoint = m;
 	}
 	@Override
@@ -469,8 +538,8 @@ class IMemoize extends Instruction implements Memoization {
 }
 
 class IStateMemoize extends IMemoize {
-	IStateMemoize(Expression e, MemoPoint m, Instruction next) {
-		super(e, m, next);
+	IStateMemoize(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
+		super(e, monitor, m, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
@@ -479,10 +548,12 @@ class IStateMemoize extends IMemoize {
 }
 
 class IMemoizeFail extends IFail implements Memoization {
-	MemoPoint memoPoint;
-	IMemoizeFail(Expression e, MemoPoint m) {
+	final MemoPoint memoPoint;
+	final IMonitoredSwitch monitor;
+	IMemoizeFail(Expression e, IMonitoredSwitch monitor, MemoPoint m) {
 		super(e);
 		this.memoPoint = m;
+		this.monitor = monitor;
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -495,8 +566,8 @@ class IMemoizeFail extends IFail implements Memoization {
 }
 
 class IStateMemoizeFail extends IMemoizeFail {
-	IStateMemoizeFail(Expression e, MemoPoint m) {
-		super(e, m);
+	IStateMemoizeFail(Expression e, IMonitoredSwitch monitor, MemoPoint m) {
+		super(e, monitor, m);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
@@ -506,33 +577,35 @@ class IStateMemoizeFail extends IMemoizeFail {
 
 class ILookupNode extends ILookup {
 	final int index;
-	ILookupNode(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
-		super(e, m, next, skip, failjump);
+	ILookupNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		super(e, monitor, m, next, skip, failjump);
 		this.index = e.index;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opLookupNode(this);
+		return sc.opILookupNode(this);
 	}
 }
 
-class LookupNode2 extends ILookupNode {
+class IStateLookupNode extends ILookupNode {
 	final int index;
-	LookupNode2(Link e, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
-		super(e, m, next, skip, failjump);
+	IStateLookupNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
+		super(e, monitor, m, next, skip, failjump);
 		this.index = e.index;
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opLookupNode2(this);
+		return sc.opIStateLookupNode(this);
 	}
 }
 
-class MemoizeNode extends INodeStore implements Memoization {
+class IMemoizeNode extends INodeStore implements Memoization {
 	final MemoPoint memoPoint;
-	MemoizeNode(Link e, MemoPoint m, Instruction next) {
+	final IMonitoredSwitch monitor;
+	IMemoizeNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
 		super(e, next);
 		this.memoPoint = m;
+		this.monitor = monitor;
 	}
 	@Override
 	protected void stringfy(StringBuilder sb) {
@@ -540,17 +613,17 @@ class MemoizeNode extends INodeStore implements Memoization {
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoizeNode(this);
+		return sc.opIMemoizeNode(this);
 	}
 }
 
-class MemoizeNode2 extends MemoizeNode {
-	MemoizeNode2(Link e, MemoPoint m, Instruction next) {
-		super(e, m, next);
+class IStateMemoizeNode extends IMemoizeNode {
+	IStateMemoizeNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next) {
+		super(e, monitor, m, next);
 	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
-		return sc.opMemoizeNode2(this);
+		return sc.opIStateMemoizeNode(this);
 	}
 }
 
@@ -651,15 +724,15 @@ class ITablePop extends Instruction {
 
 /* Specialization */
 
-class NByteMap extends Instruction {
+class INotByteMap extends Instruction {
 	public final boolean[] byteMap;
-	NByteMap(ByteMap e, Instruction next) {
+	INotByteMap(ByteMap e, Instruction next) {
 		super(e, next);
-		this.byteMap = e.charMap;
+		this.byteMap = e.byteMap;
 	}
-	NByteMap(ByteChar e, Instruction next) {
+	INotByteMap(ByteChar e, Instruction next) {
 		super(e, next);
-		this.byteMap = ByteMap.newMap();
+		this.byteMap = ByteMap.newMap(false);
 		this.byteMap[e.byteChar] = true;
 	}
 	@Override
@@ -673,15 +746,15 @@ class NByteMap extends Instruction {
 	}
 }
 
-class RByteMap extends Instruction {
+class IRepeatedByteMap extends Instruction {
 	public final boolean[] byteMap;
-	RByteMap(ByteMap e, Instruction next) {
+	IRepeatedByteMap(ByteMap e, Instruction next) {
 		super(e, next);
-		this.byteMap = e.charMap;
+		this.byteMap = e.byteMap;
 	}
-	RByteMap(ByteChar e, Instruction next) {
+	IRepeatedByteMap(ByteChar e, Instruction next) {
 		super(e, next);
-		this.byteMap = ByteMap.newMap();
+		this.byteMap = ByteMap.newMap(false);
 		this.byteMap[e.byteChar] = true;
 	}
 	@Override
@@ -721,8 +794,8 @@ class IMultiChar extends Instruction {
 	}
 }
 
-class NMultiChar extends IMultiChar {
-	NMultiChar(Sequence e, Instruction next) {
+class INotMultiChar extends IMultiChar {
+	INotMultiChar(Sequence e, Instruction next) {
 		super(e, false, next);
 	}
 	@Override

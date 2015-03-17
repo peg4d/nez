@@ -2,11 +2,11 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
+import nez.runtime.RuntimeCompiler;
+import nez.runtime.Instruction;
 import nez.util.UList;
-import nez.vm.Compiler;
-import nez.vm.Instruction;
 
-public class IsIndent extends Terminal implements ContextSensitive {
+public class IsIndent extends Terminal {
 	IsIndent(SourcePosition s) {
 		super(s);
 	}
@@ -27,7 +27,7 @@ public class IsIndent extends Terminal implements ContextSensitive {
 		return this;
 	}
 	@Override
-	public short acceptByte(int ch) {
+	public short acceptByte(int ch, int option) {
 		if (ch == '\t' || ch == ' ') {
 			return Accept;
 		}
@@ -38,7 +38,7 @@ public class IsIndent extends Terminal implements ContextSensitive {
 		return context.matchSymbolTable(NezTag.Indent, true);
 	}
 	@Override
-	public Instruction encode(Compiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeIsIndent(this, next);
 	}
 	@Override

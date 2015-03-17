@@ -12,8 +12,9 @@ import nez.util.UList;
 
 public class NezParser extends NodeVisitor {
 
-	Grammar loaded;
 	Production product;
+	Grammar loaded;
+	GrammarChecker checker;
 	
 	public NezParser() {
 		product = NezParserCombinator.newGrammar().getProduction("Chunk", Production.SafeOption);
@@ -21,39 +22,52 @@ public class NezParser extends NodeVisitor {
 	
 	public Grammar load(SourceContext sc, GrammarChecker checker) {
 		this.loaded = new Grammar(sc.getResourceName());
+		this.checker = checker;
 		while(sc.hasUnconsumed()) {
 			AST ast = product.parse(sc, new AST());
 			if(ast == null) {
 				ConsoleUtils.exit(1, sc.getSyntaxErrorMessage());
 			}
-			if(!this.parse(ast, checker)) {
+			if(!this.parse(ast)) {
 				break;
 			}
 		}
 		checker.verify(loaded);
 		return loaded;
 	}
+
+	public Rule parseRule(Grammar peg, String res, int linenum, String text) {
+		SourceContext sc = SourceContext.newStringSourceContext(res, linenum, text);
+		this.loaded = peg;
+		this.checker = null;
+		AST ast = product.parse(sc, new AST());
+		if(ast == null || !ast.is(NezTag.Rule)) {
+			return null;
+		}
+		return toRule(ast);
+	}
 	
-	private boolean parse(AST ast, GrammarChecker checker) {
+	private boolean parse(AST ast) {
 		//System.out.println("DEBUG? parsed: " + ast);
 		if(ast.is(NezTag.Rule)) {
-			if(ast.size() > 3) {
-				System.out.println("DEBUG? parsed: " + ast);		
-			}
-			String ruleName = ast.textAt(0, "");
-			if(ast.get(0).is(NezTag.String)) {
-				ruleName = quote(ruleName);
-			}
-			Rule rule = loaded.getRule(ruleName);
-			Expression e = toExpression(ast.get(1));
-			if(rule != null) {
-				checker.reportWarning(ast, "duplicated rule name: " + ruleName);
-				rule = null;
-			}
-			rule = loaded.defineRule(ast.get(0), ruleName, e);
-			if(ast.size() >= 3) {
-				readAnnotations(rule, ast.get(2));
-			}
+			toRule(ast);
+//			if(ast.size() > 3) {
+//				System.out.println("DEBUG? parsed: " + ast);		
+//			}
+//			String ruleName = ast.textAt(0, "");
+//			if(ast.get(0).is(NezTag.String)) {
+//				ruleName = quote(ruleName);
+//			}
+//			Rule rule = loaded.getRule(ruleName);
+//			Expression e = toExpression(ast.get(1));
+//			if(rule != null) {
+//				checker.reportWarning(ast, "duplicated rule name: " + ruleName);
+//				rule = null;
+//			}
+//			rule = loaded.defineRule(ast.get(0), ruleName, e);
+//			if(ast.size() >= 3) {
+//				readAnnotations(rule, ast.get(2));
+//			}
 			return true;
 		}
 //		if(ast.is(NezTag.Import)) {
@@ -74,15 +88,6 @@ public class NezParser extends NodeVisitor {
 		return false;
 	}
 	
-	private void readAnnotations(Rule rule, AST pego) {
-		for(int i = 0; i < pego.size(); i++) {
-			AST p = pego.get(i);
-			if(p.is(NezTag.Annotation)) {
-				rule.addAnotation(p.textAt(0, ""), p.get(1));
-			}
-		}
-	}
-
 //	private String searchPegFilePath(Source s, String filePath) {
 //		String f = s.getFilePath(filePath);
 //		if(new File(f).exists()) {
@@ -97,7 +102,34 @@ public class NezParser extends NodeVisitor {
 	Expression toExpression(AST po) {
 		return (Expression)this.visit(po);
 	}
-
+	
+	public Rule toRule(AST ast) {
+		String ruleName = ast.textAt(0, "");
+		if(ast.get(0).is(NezTag.String)) {
+			ruleName = quote(ruleName);
+		}
+		Rule rule = loaded.getRule(ruleName);
+		Expression e = toExpression(ast.get(1));
+		if(rule != null) {
+			checker.reportWarning(ast, "duplicated rule name: " + ruleName);
+			rule = null;
+		}
+		rule = loaded.defineRule(ast.get(0), ruleName, e);
+		if(ast.size() >= 3) {
+			readAnnotations(rule, ast.get(2));
+		}
+		return rule;
+	}
+	
+	private void readAnnotations(Rule rule, AST pego) {
+		for(int i = 0; i < pego.size(); i++) {
+			AST p = pego.get(i);
+			if(p.is(NezTag.Annotation)) {
+				rule.addAnotation(p.textAt(0, ""), p.get(1));
+			}
+		}
+	}
+	
 	public Expression toNonTerminal(AST ast) {
 		String symbol = ast.getText();
 //		if(ruleName.equals(symbol)) {
@@ -125,14 +157,17 @@ public class NezParser extends NodeVisitor {
 		if(r != null) {
 			return r.getExpression();
 		}
-		return Factory.newString(ast, StringUtils.unquoteString(ast.getText()));
-	}
-
-	public Expression toCharacterSequence(AST ast) {
+		else {
+			this.checker.reportNotice(ast, "undefined terminal: " + name);
+		}
 		return Factory.newString(ast, StringUtils.unquoteString(ast.getText()));
 	}
 
 	public Expression toCharacter(AST ast) {
+		return Factory.newString(ast, StringUtils.unquoteString(ast.getText()));
+	}
+
+	public Expression toClass(AST ast) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		if(ast.size() > 0) {
 			for(int i = 0; i < ast.size(); i++) {
@@ -140,10 +175,9 @@ public class NezParser extends NodeVisitor {
 				if(o.is(NezTag.List)) {  // range
 					l.add(Factory.newCharSet(ast, o.textAt(0, ""), o.textAt(1, "")));
 				}
-				if(o.is(NezTag.Character)) {  // single
+				if(o.is(NezTag.Class)) {  // single
 					l.add(Factory.newCharSet(ast, o.getText(), o.getText()));
 				}
-				//System.out.println("u=" + u + " by " + o);
 			}
 		}
 		return Factory.newChoice(ast, l);
@@ -198,11 +232,16 @@ public class NezParser extends NodeVisitor {
 		return Factory.newOption(ast, toExpression(ast.get(0)));
 	}
 
-	public Expression toOneMoreRepetition(AST ast) {
-		UList<Expression> l = new UList<Expression>(new Expression[2]);
-		l.add(toExpression(ast.get(0)));
-		l.add(Factory.newRepetition(ast, toExpression(ast.get(0))));
-		return Factory.newSequence(ast, l);
+	public Expression toRepetition1(AST ast) {
+		if(Expression.ClassicMode) {
+			UList<Expression> l = new UList<Expression>(new Expression[2]);
+			l.add(toExpression(ast.get(0)));
+			l.add(Factory.newRepetition(ast, toExpression(ast.get(0))));
+			return Factory.newSequence(ast, l);
+		}
+		else {
+			return Factory.newRepetition1(ast, toExpression(ast.get(0)));
+		}
 	}
 
 	public Expression toRepetition(AST ast) {
@@ -221,17 +260,29 @@ public class NezParser extends NodeVisitor {
 
 	// PEG4d TransCapturing
 
-	public Expression toConstructor(AST ast) {
-		Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-		return Factory.newNew(ast, seq.toList());
+	public Expression toNew(AST ast) {
+		if(Expression.ClassicMode) {
+			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, seq.toList());
+		}
+		else {
+			Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, false, p);
+		}
 	}
 
-	public Expression toLeftJoin(AST ast) {
-		Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-		return Factory.newNewLeftLink(ast, seq.toList());
+	public Expression toLeftNew(AST ast) {
+		if(Expression.ClassicMode) {
+			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, seq.toList());
+		}
+		else {
+			Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+			return Factory.newNew(ast, true, p);
+		}
 	}
 
-	public Expression toConnector(AST ast) {
+	public Expression toLink(AST ast) {
 		int index = -1;
 		if(ast.size() == 2) {
 			index = StringUtils.parseInt(ast.textAt(1, ""), -1);
@@ -243,7 +294,7 @@ public class NezParser extends NodeVisitor {
 		return Factory.newTagging(ast, Tag.tag(ast.getText()));
 	}
 
-	public Expression toValue(AST ast) {
+	public Expression toReplace(AST ast) {
 		return Factory.newReplace(ast, ast.getText());
 	}
 
@@ -309,30 +360,4 @@ public class NezParser extends NodeVisitor {
 //		return Factory.newRepeat(toExpression(ast.get(0)));
 //	}
 	
-//	public final static Grammar load(SourceContext sc) {
-//		Grammar nez = NezParserCombinator.newGrammar();
-//		Production p = nez.getProduction("Chunk");
-////		this.name = fileName;
-////		if(fileName.indexOf('/') > 0) {
-////			this.name = fileName.substring(fileName.lastIndexOf('/')+1);
-////		}
-//		Grammar peg = new Grammar(sc.getResourceName());
-//		NezParser builder = new NezParser(peg);
-//		while(sc.hasUnconsumed()) {
-//			AST ast = p.parse(sc, new AST());
-//			if(ast != null) {
-//				if(!builder.parse(ast, null /*FIXME*/)) {
-//					System.out.println("parse failed");
-//					return peg;
-//				}
-//			}
-////			if(context.isFailure()) {
-////				String msg = context.source.formatPositionLine("error", context.fpos, context.getErrorMessage());
-////				Main._Exit(1, msg);
-////				return false;
-////			}
-//		}
-//		return peg;
-//	}
-
 }

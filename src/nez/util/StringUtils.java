@@ -281,7 +281,7 @@ public abstract class StringUtils {
 	
 	
 	public static final boolean[] parseByteMap(String text) {
-		boolean[] b = ByteMap.newMap();
+		boolean[] b = ByteMap.newMap(false);
 		CharReader r = new CharReader(text);
 		char ch = r.readChar();
 		while(ch != 0) {

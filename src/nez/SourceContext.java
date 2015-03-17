@@ -11,12 +11,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import nez.runtime.ClassicContext;
 import nez.util.StringUtils;
-import nez.vm.ClassicContext;
 
 public abstract class SourceContext extends ClassicContext {
-//	public final static int TextEOF   = 0;
-//	public final static int BinaryEOF = 256; 
 	
 	private String     fileName;
 	protected long     startLineNum = 1;
