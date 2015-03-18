@@ -8,24 +8,19 @@ import java.util.HashMap;
 import nez.Grammar;
 import nez.ast.AST;
 import nez.ast.Node;
-import nez.ast.NodeVisitor;
 import nez.ast.Tag;
 import nez.expr.Expression;
 import nez.expr.Factory;
 import nez.expr.Rule;
 import nez.util.ConsoleUtils;
-import nez.util.FileBuilder;
 import nez.util.StringUtils;
 import nez.util.UList;
 
-public class RegexConverter extends NodeVisitor{
-	final protected FileBuilder file;
+public class RegexConverter extends GrammarConverter{
 	HashMap<Integer, Method> methodMap = new HashMap<Integer, Method>();
 	int NonTerminalCount = 0;
-	Grammar grammar;
 	public RegexConverter(Grammar grammar) {
-		this.grammar = grammar;
-		this.file = new FileBuilder(grammar.getResourceName());
+		super(grammar);
 	}
 	
 	public final Expression pi(Node expr, Expression k) {
@@ -249,5 +244,10 @@ public class RegexConverter extends NodeVisitor{
 			Factory.addSequence(l, k);
 		}
 		return Factory.newSequence(node, l);
+	}
+
+	@Override
+	public String getDesc() {
+		return "regex";
 	}
 }
