@@ -8,8 +8,8 @@ import nez.util.FileBuilder;
 public abstract class GrammarConverter extends NodeVisitor {
 	final protected FileBuilder file;
 	final protected Grammar grammar;
-	public GrammarConverter(Grammar peg) {
-		this.file = new FileBuilder(peg.getResourceName());
+	public GrammarConverter(Grammar peg, String name) {
+		this.file = new FileBuilder(name);
 		this.grammar = peg;
 	}
 	public abstract String getDesc();

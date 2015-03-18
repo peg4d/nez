@@ -19,8 +19,8 @@ import nez.util.UList;
 public class RegexConverter extends GrammarConverter{
 	HashMap<Integer, Method> methodMap = new HashMap<Integer, Method>();
 	int NonTerminalCount = 0;
-	public RegexConverter(Grammar grammar) {
-		super(grammar);
+	public RegexConverter(Grammar grammar, String name) {
+		super(grammar, name);
 	}
 	
 	public final Expression pi(Node expr, Expression k) {

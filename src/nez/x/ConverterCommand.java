@@ -52,7 +52,7 @@ public class ConverterCommand extends Command {
 				}
 				outputfile = "gen/" + outputfile;
 			}
-			GrammarConverter conv = loadConverter(new Grammar(file.getResourceName()));
+			GrammarConverter conv = loadConverter(new Grammar(file.getResourceName()), outputfile);
 			conv.convert((AST) node);
 		}
 	}
@@ -72,7 +72,7 @@ public class ConverterCommand extends Command {
 		regist("dtd", "nez.x.DTDConverter");
 	}
 	
-	final GrammarConverter loadConverter(Grammar peg) {
+	final GrammarConverter loadConverter(Grammar peg, String name) {
 		String input = peg.getResourceName();
 		if(input != null) {
 			GrammarConverter conv = null;
@@ -90,8 +90,8 @@ public class ConverterCommand extends Command {
 				}
 			}
 			try {
-				Constructor<?> ct = c.getConstructor(Grammar.class);
-				conv = (GrammarConverter)ct.newInstance(peg);
+				Constructor<?> ct = c.getConstructor(Grammar.class, String.class);
+				conv = (GrammarConverter)ct.newInstance(peg, name);
 			}
 			catch(Exception e) {
 				ConsoleUtils.exit(1, "unable to load: " + input + " due to " + e);
@@ -106,10 +106,9 @@ public class ConverterCommand extends Command {
 		ConsoleUtils.println("Nez Grammar Generator");
 		try {
 			for(String n : this.classMap.keySet()) {
-				String dummy = null;
 				Class<?> c = this.classMap.get(n);
-				Constructor<?> ct = c.getConstructor(Grammar.class);
-				GrammarConverter g = (GrammarConverter)ct.newInstance(dummy);
+				Constructor<?> ct = c.getConstructor(Grammar.class, String.class);
+				GrammarConverter g = (GrammarConverter)ct.newInstance(null, null);
 				String s = String.format("%8s - %s", n, g.getDesc());
 				ConsoleUtils.println(s);
 			}

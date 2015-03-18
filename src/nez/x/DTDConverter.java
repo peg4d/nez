@@ -20,8 +20,8 @@ public class DTDConverter extends GrammarConverter {
 	List<Integer> impList;
 	
 
-	DTDConverter(Grammar grammar) {
-		super(grammar);
+	DTDConverter(Grammar grammar, String name) {
+		super(grammar, name);
 	}
 	
 	@Override
