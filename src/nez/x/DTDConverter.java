@@ -7,10 +7,9 @@ import java.util.Map;
 
 import nez.Grammar;
 import nez.ast.AST;
-import nez.ast.NodeVisitor;
 import nez.expr.Expression;
 
-public class DTDConverter extends NodeVisitor {
+public class DTDConverter extends GrammarConverter {
 	int attID;
 	int attDefCount = 0;
 	int elementCount = 0;
@@ -21,9 +20,13 @@ public class DTDConverter extends NodeVisitor {
 	List<Integer> impList;
 	
 
-	Grammar grammar;
-	DTDConverter(Grammar grammar) {
-		this.grammar = grammar;
+	DTDConverter(Grammar grammar, String name) {
+		super(grammar, name);
+	}
+	
+	@Override
+	public void convert(AST node) {
+		this.visit("visit", node);
 	}
 	
 	public void initAttCounter() {
@@ -401,6 +404,11 @@ public class DTDConverter extends NodeVisitor {
 	private int[][] perm(int[] attlist) {
 		Permutation permutation = new Permutation(attlist);
 		return permutation.getPermList();
+	}
+
+	@Override
+	public String getDesc() {
+		return "dtd";
 	}
 
 }
