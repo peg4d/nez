@@ -23,11 +23,11 @@ Concatenation
 	= IndependentExpr {@ (@IndependentExpr)+ #Concatenation }?
 
 IndependentExpr
-	= { '?>' @SuffixTerminal #IndependentExpr }
+	= { '(?>' @Concatenation ')' #IndependentExpr }
 	/ Predicate
 
 Predicate
-	= { ('?=' #And / '?!' #Not) @SuffixTerminal }
+	= { '(' ('?=' #And / '?!' #Not) @Concatenation ')' }
 	/ SuffixTerminal
 
 SuffixTerminal
