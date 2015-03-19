@@ -128,6 +128,11 @@ public class RegexConverter extends GrammarConverter{
 		grammar.defineRule(e, ruleName, toChoice(e, pi(e.get(0), ne), k));
 		return ne;
 	}
+	
+	// pi(e?, k) = pi(e, k) / k
+	public Expression piOption(AST e, Expression k) {
+		return toChoice(e, pi(e.get(0), k), k);
+	}
 
 	public Expression piOneMoreRepetition(AST e, Expression k) {
 		return pi(e.get(0), piRepetition(e, k));
@@ -229,7 +234,7 @@ public class RegexConverter extends GrammarConverter{
 		else {
 			Factory.addChoice(l, toEmpty(node));
 		}
-		return Factory.newChoice(node, l);
+		return Factory.newDirectChoice(node, l);
 	}
 
 	public Expression toSeq(AST e, Expression k) {

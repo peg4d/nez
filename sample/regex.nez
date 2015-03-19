@@ -38,6 +38,7 @@ addQuantifiers
 	/ '*?' #LazyQuantifiers
 	/ '*' #Repetition
 	/ '+' #OneMoreRepetition
+	/ '?' #Option
 
 Terminal
 	= CharacterSet

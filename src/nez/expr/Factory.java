@@ -144,6 +144,24 @@ public class Factory {
 		}
 		return internImpl(s, new Choice(s, l, size));
 	}
+	
+	// FIXME
+	public final static Expression newDirectChoice(SourcePosition s, UList<Expression> l) {
+		int size = l.size();
+		for(int i = 0; i < size; i++) {
+			if(l.ArrayValues[i] instanceof Empty) {
+				size = i + 1;
+				break;
+			}
+		}
+		if(size == 1) {
+			return l.ArrayValues[0];
+		}
+		if(s != null && isInterned(l)) {
+			s = null;
+		}
+		return internImpl(s, new Choice(s, l, size));
+	}
 
 	public final static Expression newChoice(SourcePosition s, Expression p, Expression p2) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
