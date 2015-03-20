@@ -16,14 +16,15 @@ import nez.main.Verbose;
 import nez.util.ConsoleUtils;
 
 public class ConverterCommand extends Command {
+	@Override
+	public String getDesc() {
+		return "converter? FIXME";
+	}
 
 	@Override
 	public void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();
 		Production p = config.getProduction(config.StartingPoint);
-		if(p == null) {
-			ConsoleUtils.exit(1, "undefined nonterminal: " + config.StartingPoint);
-		}
 		p.record(rec);
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();

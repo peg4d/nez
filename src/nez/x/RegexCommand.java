@@ -19,6 +19,11 @@ public class RegexCommand extends Command {
 	UList<String> inputFileList;
 
 	@Override
+	public String getDesc() {
+		return "regex";
+	}
+
+	@Override
 	public void exec(CommandConfigure config) {
 		init(config);
 		Recorder rec = config.getRecorder();
