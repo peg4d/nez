@@ -146,7 +146,7 @@ public class Grammar {
 	public final Expression newChoice(Expression ... seq) {
 		UList<Expression> l = new UList<Expression>(new Expression[8]);
 		for(Expression p: seq) {
-			Factory.addSequence(l, p);
+			Factory.addChoice(l, p);
 		}
 		return Factory.newChoice(src(), l);
 	}

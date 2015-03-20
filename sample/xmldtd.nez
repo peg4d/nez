@@ -120,7 +120,7 @@ PEDEF
 	= STRING / EXID
 
 EntityValue
-	= {'"' (!["].)* '"'#EntValue}
+	= '"'{ (!["].)* #EntValue}'"'
 
 EXID 
 	= ('SYSTEM' _* SLITERAL)
