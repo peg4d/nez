@@ -93,6 +93,8 @@ public abstract class Command {
 		load("rel", "nez.x.RelationCommand");
 		load("cc", "nez.cc.GeneratorCommand");
 		load("peg", "nez.cc.GrammarCommand");
+		load("conv", "nez.x.ConverterCommand");
+		load("regex", "nez.x.RegexCommand");
 		load("demo", "nez.x.DemoCommand");
 		load("type", "nez.x.TypeCommand");
 	}

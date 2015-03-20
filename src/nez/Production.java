@@ -341,6 +341,8 @@ public class Production {
 
 	public final static int DefaultOption = ASTConstruction | PackratParsing | Optimization 
 											| Specialization | CommonPrefix | Prediction | Tracing;
+	public final static int RegexOption = ASTConstruction | PackratParsing | Optimization
+											| Specialization | Prediction | Tracing;
 	public final static int SafeOption = ASTConstruction | Optimization;
 	
 	public final static String stringfyOption(int option, String delim) {
