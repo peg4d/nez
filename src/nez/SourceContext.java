@@ -214,10 +214,13 @@ public abstract class SourceContext extends ClassicContext {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(Stream));
 		StringBuilder builder = new StringBuilder();
 		String line = reader.readLine();
-		while(line != null) {
+		while(true) {
 			builder.append(line);
-			builder.append("\n");
 			line = reader.readLine();
+			if (line == null) {
+				break;
+			}
+			builder.append("\n");
 		}
 		reader.close();
 		return new StringSourceContext(fileName, 1, builder.toString());

@@ -17,17 +17,17 @@ Pattern
 	= { @Expr #Pattern }
 
 Expr
-	= Concatenation {@ ('|' @Concatenation)+ #Or }?
+	= Concatenation {@ ('|' @Concatenation) #Or }*
 
 Concatenation
-	= IndependentExpr {@ (@IndependentExpr)+ #Concatenation }?
+	= IndependentExpr {@ (@IndependentExpr) #Concatenation }*
 
 IndependentExpr
-	= { '?>' @SuffixTerminal #IndependentExpr }
+	= { '(?>' @Concatenation ')' #IndependentExpr }
 	/ Predicate
 
 Predicate
-	= { ('?=' #And / '?!' #Not) @SuffixTerminal }
+	= { '(' ('?=' #And / '?!' #Not) @Concatenation ')' }
 	/ SuffixTerminal
 
 SuffixTerminal
@@ -38,11 +38,12 @@ addQuantifiers
 	/ '*?' #LazyQuantifiers
 	/ '*' #Repetition
 	/ '+' #OneMoreRepetition
+	/ '?' #Option
 
 Terminal
 	= CharacterSet
 	/ { '.' #Any }
-	/ '(' Expr ')'
+	/ '(' { @Expr #Capture } ')'
 	/ Character
 
 CharacterSet
@@ -65,7 +66,7 @@ CHARACTER_SET_ITEM
 	/ '\\['
 	/ '\\]'
 	/ '\\-'
-	/ !([-\[\]]) .
+	/ !('-'/'['/']') .
 
 HEX
 	= [0-9A-Fa-f]
