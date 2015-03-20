@@ -9,6 +9,11 @@ import nez.util.UList;
 
 class ParseCommand extends Command {
 	@Override
+	public String getDesc() {
+		return "AST parser";
+	}
+
+	@Override
 	public void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();
 		Production p = config.getProduction();
@@ -35,6 +40,11 @@ class ParseCommand extends Command {
 }
 
 class CheckCommand extends Command {
+	@Override
+	public String getDesc() {
+		return "grammar validator";
+	}
+
 	@Override
 	public
 	void exec(CommandConfigure config) {
@@ -76,19 +86,7 @@ class CheckCommand extends Command {
 			ConsoleUtils.exit(1, "failed: " + failedInput);
 		}
 	}
+
 }
 
-//class GrammarCommand extends Command {
-//	@Override
-//	void exec(CommandConfigure config) {
-//		Recorder rec = config.getRecorder();
-//		Grammar peg = config.getGrammar();
-//		grammar.record(rec);
-//		GrammarWriter w = loadGrammarWriter(config.getOuputFileType());
-//		w.write(peg, config.StartingPoint);
-//		if(rec != null) {
-//			rec.record();
-//		}
-//	}
-//}
 

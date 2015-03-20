@@ -7,6 +7,12 @@ import nez.main.Command;
 import nez.main.CommandConfigure;
 
 public class TypeCommand extends Command {
+
+	@Override
+	public String getDesc() {
+		return "grammar type checker";
+	}
+
 	@Override
 	public void exec(CommandConfigure config) {
 		Grammar peg = config.getGrammar();

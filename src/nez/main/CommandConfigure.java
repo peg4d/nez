@@ -76,13 +76,7 @@ public class CommandConfigure {
 		ConsoleUtils.println("  -X <class>                 Specify an extension class");
 		ConsoleUtils.println("");
 		ConsoleUtils.println("The most commonly used nez commands are:");
-		ConsoleUtils.println("  parse        Parse -i input or -s string to -o output");
-		ConsoleUtils.println("  check        Parse -i input or -s string");
-		ConsoleUtils.println("  shell        Try parsing in an interactive way");
-		ConsoleUtils.println("  rel          Convert -f file to relations (csv file)");
-		ConsoleUtils.println("  nezex        Convert -i regex to peg");
-		ConsoleUtils.println("  conv         Convert PEG4d rules to the specified format in -o");
-		ConsoleUtils.println("  find         Search nonterminals that can match inputs");
+		Command.showList();
 		ConsoleUtils.exit(0, Message);
 	}
 	
@@ -172,6 +166,7 @@ public class CommandConfigure {
 			else if(argument.startsWith("--enable:")) {
 				if(argument.endsWith("packrat")) {
 					this.ProductionOption |= Production.PackratParsing;
+					defaultTable = MemoTable.newPackratHashTable(0, 0, 0);
 				}
 				else if(argument.endsWith(":prediction")) {
 					this.ProductionOption |= Production.Prediction;
@@ -184,7 +179,7 @@ public class CommandConfigure {
 				}
 			}
 			else if(argument.startsWith("--disable:")) {
-				if(argument.endsWith(":packrat")) {
+				if(argument.endsWith(":packrat") || argument.endsWith(":memo")) {
 					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.PackratParsing);
 				}
 				else if(argument.endsWith(":tracing")) {

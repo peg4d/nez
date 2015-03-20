@@ -9,6 +9,12 @@ import nez.main.Recorder;
 import nez.util.ConsoleUtils;
 
 public class RelationCommand extends Command {
+
+	@Override
+	public String getDesc() {
+		return "relational extracker";
+	}
+
 	@Override
 	public void exec(CommandConfigure config) {
 		Recorder rec = config.getRecorder();

@@ -22,10 +22,10 @@ Element  = {A #A}
          / {C #C}
          / {G #G}
 
-A = "A"
-U = "U"
-C = "C"
-G = "G"
+A = 'A'
+U = 'U'
+C = 'C'
+G = 'G'
 
 _
 	= S*

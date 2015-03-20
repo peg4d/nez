@@ -12,6 +12,11 @@ import nez.util.ConsoleUtils;
 public class GrammarCommand extends Command {
 
 	@Override
+	public String getDesc() {
+		return "grammar converter";
+	}
+
+	@Override
 	public void exec(CommandConfigure config) {
 		Grammar peg = config.getGrammar();
 		GrammarGenerator gen = loadGenerator(config.getOutputFileName());

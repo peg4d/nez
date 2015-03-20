@@ -7,6 +7,11 @@ import nez.main.CommandConfigure;
 public class GeneratorCommand extends Command {
 
 	@Override
+	public String getDesc() {
+		return "parser generator";
+	}
+
+	@Override
 	public void exec(CommandConfigure config) {
 		Production p = config.getProduction();
 //		int labelId = 0;

@@ -1,9 +1,10 @@
 package nez.main;
 
 import java.io.IOException;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import nez.util.ConsoleUtils;
-import nez.util.UMap;
 
 
 public abstract class Command {
@@ -74,7 +75,7 @@ public abstract class Command {
 
 	// command database 
 	
-	private static UMap<Command> commandTable = new UMap<Command>();
+	private static TreeMap<String,Command> commandTable = new TreeMap<String,Command>();
 
 	public static void load(String name, String className) {
 		try {
@@ -99,6 +100,15 @@ public abstract class Command {
 	public static final Command getCommand(String name) {
 		return commandTable.get(name);
 	}
-	
+
+	public static void showList() {
+		for(Entry<String,Command> e : commandTable.entrySet()) {
+			Command c = e.getValue();
+			ConsoleUtils.println(String.format("  %8s - %s", e.getKey(), c.getDesc()));
+		}
+	}
+
+	public abstract String getDesc();
+
 }
 

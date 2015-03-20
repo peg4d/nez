@@ -14,6 +14,11 @@ import nez.util.ConsoleUtils;
 
 public class DemoCommand extends Command {
 	@Override
+	public String getDesc() {
+		return "Don't try this";
+	}
+
+	@Override
 	public void exec(CommandConfigure config) {
 		Production product = config.getProduction();
 		Grammar peg = product.getRule().getGrammar();
