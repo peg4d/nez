@@ -61,8 +61,8 @@ public class RegexConverter extends GrammarConverter{
 	
 	public void convert(AST e) {
 		grammar.defineRule(e, "File", pi(e, null));
-		System.out.println("\nConverted Rule: " + grammar.getResourceName());
-		grammar.dump();
+		//System.out.println("\nConverted Rule: " + grammar.getResourceName());
+		//grammar.dump();
 		makeFile(e);
 	}
 	
@@ -175,7 +175,7 @@ public class RegexConverter extends GrammarConverter{
 		if (utf8.length !=1) {
 			ConsoleUtils.exit(1, "Error: not Character Literal");
 		}
-		return Factory.newByteChar(c, utf8[0]);
+		return Factory.newByteChar(null, utf8[0]);
 	}
 	
 	boolean byteMap[];
@@ -187,10 +187,10 @@ public class RegexConverter extends GrammarConverter{
 			Factory.addChoice(l, toExpression(subnode));
 		}
 		if (useByteMap) {
-			return Factory.newByteMap(e, byteMap);
+			return Factory.newByteMap(null, byteMap);
 		}
 		else {
-			return Factory.newChoice(e, l);
+			return Factory.newChoice(null, l);
 		}
 	}
 	
@@ -200,29 +200,29 @@ public class RegexConverter extends GrammarConverter{
 		for(byte i = begin[0]; i <= end[0]; i++) {
 			byteMap[i] = true;
 		}
-		return Factory.newCharSet(e, e.get(0).getText(), e.get(1).getText());
+		return Factory.newCharSet(null, e.get(0).getText(), e.get(1).getText());
 	}
 	
 	public Expression toCharacterSetItem(AST c) {
 		byte[] utf8 = StringUtils.toUtf8(c.getText());
 		byteMap[utf8[0]] = true;
-		return Factory.newByteChar(c, utf8[0]);
+		return Factory.newByteChar(null, utf8[0]);
 	}
 	
 	public Expression toEmpty(AST node) {
-		return Factory.newEmpty(node);
+		return Factory.newEmpty(null);
 	}
 
 	public Expression toAny(AST e) {
-		return Factory.newAnyChar(e);
+		return Factory.newAnyChar(null);
 	}
 	
 	public Expression toAnd(AST e, Expression k) {
-		return toSeq(e, Factory.newAnd(e, pi(e.get(0), toEmpty(e))), k);
+		return toSeq(e, Factory.newAnd(null, pi(e.get(0), toEmpty(e))), k);
 	}
 	
 	public Expression toNot(AST e, Expression k) {
-		return toSeq(e, Factory.newNot(e, pi(e.get(0), toEmpty(e))), k);
+		return toSeq(e, Factory.newNot(null, pi(e.get(0), toEmpty(e))), k);
 	}
 
 	public Expression toChoice(AST node, Expression e, Expression k) {
@@ -234,7 +234,7 @@ public class RegexConverter extends GrammarConverter{
 		else {
 			Factory.addChoice(l, toEmpty(node));
 		}
-		return Factory.newDirectChoice(node, l);
+		return Factory.newDirectChoice(null, l);
 	}
 
 	public Expression toSeq(AST e, Expression k) {
@@ -243,7 +243,7 @@ public class RegexConverter extends GrammarConverter{
 		if(k != null) {
 			Factory.addSequence(l, k);
 		}
-		return Factory.newSequence(e, l);
+		return Factory.newSequence(null, l);
 	}
 	
 	public Expression toSeq(AST node, Expression e, Expression k) {
@@ -252,7 +252,7 @@ public class RegexConverter extends GrammarConverter{
 		if (k != null) {
 			Factory.addSequence(l, k);
 		}
-		return Factory.newSequence(node, l);
+		return Factory.newSequence(null, l);
 	}
 
 	@Override

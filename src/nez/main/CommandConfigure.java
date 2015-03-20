@@ -302,6 +302,11 @@ public class CommandConfigure {
 		return this.InputText != null || this.InputFileIndex < this.InputFileLists.size();
 	}
 	
+	public final void setInputFileList(UList<String> list) {
+		this.InputFileIndex = 0;
+		this.InputFileLists = list;
+	}
+
 	public final SourceContext getInputSourceContext() {
 		if(this.InputText != null) {
 			String text = this.InputText;
