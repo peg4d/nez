@@ -168,10 +168,10 @@ public class CommandConfigure {
 					this.ProductionOption |= Production.PackratParsing;
 					defaultTable = MemoTable.newPackratHashTable(0, 0, 0);
 				}
-				else if(argument.endsWith(":prediction")) {
+				else if(argument.endsWith(":prediction") || argument.endsWith(":predict")) {
 					this.ProductionOption |= Production.Prediction;
 				}
-				else if(argument.endsWith(":tracing")) {
+				else if(argument.endsWith(":tracing") || argument.endsWith(":trace")) {
 					this.ProductionOption |= Production.Tracing;
 				}
 				else if(argument.endsWith(":log")) {
@@ -182,10 +182,10 @@ public class CommandConfigure {
 				if(argument.endsWith(":packrat") || argument.endsWith(":memo")) {
 					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.PackratParsing);
 				}
-				else if(argument.endsWith(":tracing")) {
+				else if(argument.endsWith(":tracing") || argument.endsWith(":trace")) {
 					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Tracing);
 				}
-				else if(argument.endsWith(":prediction")) {
+				else if(argument.endsWith(":prediction") || argument.endsWith(":predict")) {
 					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Prediction);
 				}
 			}
