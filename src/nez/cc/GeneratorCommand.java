@@ -25,7 +25,7 @@ public class GeneratorCommand extends Command {
 //			}
 //		}
 		JavaParserGenerator cc = new JavaParserGenerator(null);
-		cc.generate(p.cc());
+		//cc.generate(p);
 	}
 
 }
