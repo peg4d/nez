@@ -87,8 +87,8 @@ public class ByteMap extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeByteMap(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeByteMap(this, next, dfa);
 	}
 	@Override
 	protected int pattern(GEP gep) {

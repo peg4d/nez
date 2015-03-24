@@ -2,8 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.StringUtils;
 
 public class Replace extends ASTOperation {
@@ -30,7 +30,7 @@ public class Replace extends ASTOperation {
 		return true;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeReplace(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeReplace(this, next, dfa);
 	}
 }

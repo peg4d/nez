@@ -2,8 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 
 public class ByteChar extends Terminal {
@@ -37,8 +37,8 @@ public class ByteChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeByteChar(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeByteChar(this, next, dfa);
 	}
 	
 	@Override

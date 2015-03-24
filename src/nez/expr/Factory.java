@@ -340,7 +340,7 @@ public class Factory {
 		if(s != null && isInterned(l)) {
 			s = null;
 		}
-		return internImpl(s, new LeftNew(s, l));
+		return internImpl(s, new LeftNewClosure(s, l));
 	}
 
 	public final static Expression newNew(SourcePosition s, boolean lefted, Expression e) {

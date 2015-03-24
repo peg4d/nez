@@ -80,8 +80,8 @@ public class Not extends Unary {
 	}
 
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeNot(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeNot(this, next, dfa);
 	}
 	@Override
 	protected int pattern(GEP gep) {

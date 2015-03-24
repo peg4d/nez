@@ -9,7 +9,7 @@ import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
 import nez.expr.Failure;
-import nez.expr.LeftNew;
+import nez.expr.LeftNewClosure;
 import nez.expr.Link;
 import nez.expr.New;
 import nez.expr.NewClosure;
@@ -242,7 +242,7 @@ public class MouseGrammarGenerator extends GrammarGenerator {
 		file.write(" )");
 	}
 
-	public void visitLeftNew(LeftNew e) {
+	public void visitLeftNew(LeftNewClosure e) {
 		file.write("( ");
 		this.visitSequenceImpl(e);
 		file.write(" )");

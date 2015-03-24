@@ -3,8 +3,8 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 
 public class Repetition1 extends Repetition {
@@ -54,8 +54,8 @@ public class Repetition1 extends Repetition {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeRepetition1(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeRepetition1(this, next, dfa);
 	}
 
 	@Override

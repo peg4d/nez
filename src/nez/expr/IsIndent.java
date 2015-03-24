@@ -2,8 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 
 public class IsIndent extends Terminal {
@@ -38,8 +38,8 @@ public class IsIndent extends Terminal {
 		return context.matchSymbolTable(NezTag.Indent, true);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeIsIndent(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeIsIndent(this, next, dfa);
 	}
 	@Override
 	protected int pattern(GEP gep) {

@@ -127,7 +127,7 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		visitor.visit(this);
 	}
 
-	public abstract Instruction encode(RuntimeCompiler bc, Instruction next);
+	public abstract Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa);
 //	public Instruction encode(Compiler bc, Instruction next) {
 //		// todo
 //		return next;

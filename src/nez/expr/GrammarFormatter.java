@@ -181,7 +181,7 @@ public class GrammarFormatter extends GrammarVisitor {
 		sb.append(" }");
 	}
 
-	public void visitLeftNew(LeftNew e) {
+	public void visitLeftNew(LeftNewClosure e) {
 		sb.append("{@ ");
 		this.appendSequence(e);
 		sb.append(" }");

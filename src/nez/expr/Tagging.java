@@ -3,8 +3,8 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.StringUtils;
 
 public class Tagging extends ASTOperation {
@@ -34,7 +34,7 @@ public class Tagging extends ASTOperation {
 		return true;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeTagging(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeTagging(this, next, dfa);
 	}
 }

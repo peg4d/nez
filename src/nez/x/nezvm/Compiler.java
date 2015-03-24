@@ -18,7 +18,7 @@ import nez.expr.Expression;
 import nez.expr.Factory;
 import nez.expr.Failure;
 import nez.expr.GrammarVisitor;
-import nez.expr.LeftNew;
+import nez.expr.LeftNewClosure;
 import nez.expr.Link;
 import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
@@ -1642,7 +1642,7 @@ public class Compiler extends GrammarVisitor {
 		}
 	}
 
-	public void visitLeftNew(LeftNew e) {
+	public void visitLeftNew(LeftNewClosure e) {
 		if (PatternMatching) {
 			for(int i = 0; i < e.size(); i++) {
 				if (O_FusionInstruction) {

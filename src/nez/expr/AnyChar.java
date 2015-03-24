@@ -6,8 +6,8 @@ import nez.Production;
 import nez.SourceContext;
 import nez.ast.Source;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.FlagUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -63,8 +63,8 @@ public class AnyChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeMatchAny(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeMatchAny(this, next, dfa);
 	}
 	@Override
 	protected int pattern(GEP gep) {

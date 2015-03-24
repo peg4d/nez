@@ -333,7 +333,7 @@ public class Production {
 	public final static int Specialization  = 1 << 4;
 	public final static int CommonPrefix    = 1 << 5;
 	public final static int Prediction      = 1 << 6;
-	public final static int New             = 1 << 7;
+	public final static int DFA             = 1 << 7;
 	public final static int Tracing         = 1 << 8;	
 	public final static int Binary = 1 << 10;
 	public final static int Utf8   = 1 << 11;	
@@ -379,9 +379,9 @@ public class Production {
 			sb.append(delim);
 			sb.append("tracing");
 		}
-		if(FlagUtils.is(option, Production.New)) {
+		if(FlagUtils.is(option, Production.DFA)) {
 			sb.append(delim);
-			sb.append("new");
+			sb.append("dfa");
 		}
 		if(FlagUtils.is(option, Production.Profiling)) {
 			sb.append(delim);

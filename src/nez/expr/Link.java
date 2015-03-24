@@ -3,8 +3,8 @@ package nez.expr;
 import nez.SourceContext;
 import nez.ast.Node;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -77,8 +77,8 @@ public class Link extends Unary {
 		return false;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeLink(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeLink(this, next, dfa);
 	}
 	@Override
 	protected int pattern(GEP gep) {

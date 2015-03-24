@@ -26,7 +26,7 @@ public class Failure extends Unconsumed {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
 		return bc.encodeFail(this);
 	}
 	

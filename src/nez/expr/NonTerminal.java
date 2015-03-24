@@ -147,8 +147,8 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeNonTerminal(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeNonTerminal(this, next, dfa);
 	}
 
 	@Override

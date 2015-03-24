@@ -22,7 +22,6 @@ import nez.util.UList;
 
 public abstract class Instruction {
 	protected Expression  e;
-	protected boolean bitmap[];
 	public Instruction next;
 	public int id;
 	public boolean label = false;
@@ -63,17 +62,6 @@ public abstract class Instruction {
 		stringfy(sb);
 		return sb.toString();
 	}
-
-	final static boolean[] AlwaysAccept = ByteMap.newMap(true);
-	final static boolean[] AlwaysReject = ByteMap.newMap(false);
-	
-//	abstract void checkAcceptance(Exception e, boolean[] nextMap);
-
-//	@Override
-//	void checkAcceptance(Exception e, boolean[] nextMap) {
-//		this.bitmap = nextMap;
-//	}
-
 
 	boolean debug() {
 		return false;
@@ -145,10 +133,6 @@ class IFail extends Instruction implements StackOperation {
 	IFail(Expression e) {
 		super(e, null);
 	}
-//	@Override
-//	void checkAcceptance(Exception e, boolean[] nextMap) {
-//		this.bitmap = AlwaysReject;
-//	}
 	@Override
 	Instruction exec(Context sc) throws TerminationException {
 		return sc.opIFail();

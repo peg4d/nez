@@ -2,8 +2,8 @@ package nez.expr;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 
 public class DefIndent extends Unconsumed {
 	DefIndent(SourcePosition s) {
@@ -20,8 +20,8 @@ public class DefIndent extends Unconsumed {
 		return true;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeDefIndent(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeDefIndent(this, next, dfa);
 	}
 	@Override
 	protected int pattern(GEP gep) {

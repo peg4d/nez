@@ -1,8 +1,8 @@
 package nez.expr;
 
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 
 public class Capture extends ASTOperation {
 	public final New begin;
@@ -26,7 +26,7 @@ public class Capture extends ASTOperation {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeCapture(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeCapture(this, next, dfa);
 	}
 }

@@ -1,5 +1,6 @@
 package nez.runtime;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -17,7 +18,7 @@ import nez.expr.Expression;
 import nez.expr.Factory;
 import nez.expr.IsIndent;
 import nez.expr.IsSymbol;
-import nez.expr.LeftNew;
+import nez.expr.LeftNewClosure;
 import nez.expr.Link;
 import nez.expr.New;
 import nez.expr.NewClosure;
@@ -59,11 +60,11 @@ public class RuntimeCompiler {
 		}
 	}
 	
-	private final boolean enablePackratParsing() {
+	protected final boolean enablePackratParsing() {
 		return FlagUtils.is(this.option, Production.PackratParsing);
 	}
 
-	private final boolean enableASTConstruction() {
+	protected final boolean enableASTConstruction() {
 		return FlagUtils.is(this.option, Production.ASTConstruction);
 	}
 
@@ -130,7 +131,7 @@ public class RuntimeCompiler {
 			if(Verbose.Debug) {
 				Verbose.debug("compiling .. " + r);
 			}
-			block.head = r.getExpression().encode(this, new IRet(r));
+			block.head = encodeDfa(r.getExpression(), new IRet(r));
 			block.start = codeList.size();
 			this.ruleMap.put(uname, block);
 			verify(block.head);
@@ -188,18 +189,55 @@ public class RuntimeCompiler {
 		}
 	}
 	
-	// encoding 
+	private void updateDfa(Expression e, boolean[] dfa) {
+		if(dfa != null) {
+			for(int ch = 0; ch < dfa.length; ch++) {
+				short a = e.acceptByte(ch, this.option);
+				if(a == Expression.Reject) {
+					dfa[ch] = false;
+				}
+				else if(a == Expression.Accept) {
+					dfa[ch] = true;
+				}
+				else { /* Unconsumed */
+					// dfa[ch] = true;
+				}
+			}
+		}
+	}
 
-	public final Instruction encodeMatchAny(AnyChar p, Instruction next) {
-		
+	private boolean[] dupDfa(boolean[] dfa) {
+		return (dfa != null) ? dfa.clone() : null;
+	}
+
+	// encoding
+
+	private Instruction failed = new IFail(null);
+	
+	public final Instruction encodeDfa(Expression e, Instruction next) {
+		boolean[] dfa = null;
+		if(FlagUtils.is(this.option, Production.DFA)) {
+			dfa = ByteMap.newMap(true);
+		}
+		return this.encodeDfa(e, next, dfa);
+	}
+
+	public final Instruction encodeDfa(Expression e, Instruction next, boolean[] dfa) {
+		return e.encode(this, next, dfa);
+	}
+	
+	public final Instruction encodeMatchAny(AnyChar p, Instruction next, boolean[] dfa) {
+		updateDfa(p, dfa);
 		return new IAnyChar(p, next);
 	}
 
-	public final Instruction encodeByteChar(ByteChar p, Instruction next) {
+	public final Instruction encodeByteChar(ByteChar p, Instruction next, boolean[] dfa) {
+		updateDfa(p, dfa);
 		return new IByteChar(p, false, next);
 	}
 
-	public final Instruction encodeByteMap(ByteMap p, Instruction next) {
+	public final Instruction encodeByteMap(ByteMap p, Instruction next, boolean[] dfa) {
+		updateDfa(p, dfa);
 		return new IByteMap(p, false, next);
 	}
 
@@ -207,29 +245,33 @@ public class RuntimeCompiler {
 		return new IFail(p);
 	}
 
-	public final Instruction encodeRepetition(Repetition p, Instruction next) {
-		if(FlagUtils.is(option, Production.Specialization)) {
-			Expression inner = p.get(0).optimize(option);
-			if(inner instanceof ByteChar) {
-				Verbose.noticeOptimize("Specialization", p, inner);
-				return new IRepeatedByteMap((ByteChar)inner, next);
-			}
-			if(inner instanceof ByteMap) {
-				Verbose.noticeOptimize("Specialization", p, inner);
-				return new IRepeatedByteMap((ByteMap)inner, next);
+	public final boolean isDisjoint(boolean[] dfa, boolean[] dfa2) {
+		for(int i = 0; i < dfa.length; i++) {
+			if(dfa[i] && dfa2[i]) {
+				return false;
 			}
 		}
-		IFailSkip skip = p.possibleInfiniteLoop ? new IFailCheckSkip(p) : new IFailSkip(p);
-		Instruction start = p.get(0).encode(this, skip);
-		skip.next = start;
-		return new IFailPush(p, next, start);
+		return true;
 	}
 
-	public final Instruction encodeRepetition1(Repetition1 p, Instruction next) {
-		return p.get(0).encode(this, this.encodeRepetition(p, next));
-	}
-
-	public final Instruction encodeOption(Option p, Instruction next) {
+	public final Instruction encodeOption(Option p, Instruction next, boolean[] dfa) {
+		if(dfa != null) {
+			boolean[] optdfa = dfa.clone();
+			updateDfa(p.get(0), optdfa);
+			if(isDisjoint(dfa, optdfa)) {
+				Instruction opt = encodeDfa(p.get(0), next, dfa.clone());
+				IPrefetch match = new IPrefetch(p, failed);
+				for(int ch = 0; ch < dfa.length; ch++) {
+					if(optdfa[ch]) {
+						match.setJumpTable(ch, opt);
+					}
+					if(dfa[ch]) {
+						match.setJumpTable(ch, next);
+					}
+				}
+				return match;
+			}
+		}
 		if(FlagUtils.is(option, Production.Specialization)) {
 			Expression inner = p.get(0).optimize(option);
 			if(inner instanceof ByteChar) {
@@ -242,15 +284,55 @@ public class RuntimeCompiler {
 			}
 		}
 		Instruction pop = new IFailPop(p, next);
-		return new IFailPush(p, next, p.get(0).encode(this, pop));
+		return new IFailPush(p, next, p.get(0).encode(this, pop, dfa));
 	}
 
-	public final Instruction encodeAnd(And p, Instruction next) {
-		Instruction inner = p.get(0).encode(this, new IPosBack(p, next));
+	
+	public final Instruction encodeRepetition(Repetition p, Instruction next, boolean[] dfa) {
+		if(dfa != null && !p.possibleInfiniteLoop) {
+			boolean[] optdfa = dfa.clone();
+			updateDfa(p.get(0), optdfa);
+			if(isDisjoint(dfa, optdfa)) {
+				IPrefetch match = new IPrefetch(p, failed);
+				Instruction opt = encodeDfa(p.get(0), match, dfa.clone());
+				for(int ch = 0; ch < dfa.length; ch++) {
+					if(optdfa[ch]) {
+						match.setJumpTable(ch, opt);
+					}
+					if(dfa[ch]) {
+						match.setJumpTable(ch, next);
+					}
+				}
+				return match;
+			}
+		}
+		if(FlagUtils.is(option, Production.Specialization)) {
+			Expression inner = p.get(0).optimize(option);
+			if(inner instanceof ByteChar) {
+				Verbose.noticeOptimize("Specialization", p, inner);
+				return new IRepeatedByteMap((ByteChar)inner, next);
+			}
+			if(inner instanceof ByteMap) {
+				Verbose.noticeOptimize("Specialization", p, inner);
+				return new IRepeatedByteMap((ByteMap)inner, next);
+			}
+		}
+		IFailSkip skip = p.possibleInfiniteLoop ? new IFailCheckSkip(p) : new IFailSkip(p);
+		Instruction start = encodeDfa(p.get(0), skip, dfa);
+		skip.next = start;
+		return new IFailPush(p, next, start);
+	}
+
+	public final Instruction encodeRepetition1(Repetition1 p, Instruction next, boolean[] dfa) {
+		return encodeDfa(p.get(0), this.encodeRepetition(p, next, dfa), dfa);
+	}
+
+	public final Instruction encodeAnd(And p, Instruction next, boolean[] dfa) {
+		Instruction inner = p.get(0).encode(this, new IPosBack(p, next), dfa);
 		return new IPosPush(p, inner);
 	}
 
-	public final Instruction encodeNot(Not p, Instruction next) {
+	public final Instruction encodeNot(Not p, Instruction next, boolean[] dfa) {
 		if(FlagUtils.is(option, Production.Specialization)) {
 			Expression inn = p.get(0).optimize(option);
 			if(inn instanceof ByteMap) {
@@ -267,21 +349,21 @@ public class RuntimeCompiler {
 			}
 		}
 		Instruction fail = new IFailPop(p, new IFail(p));
-		return new IFailPush(p, next, p.get(0).encode(this, fail));
+		return new IFailPush(p, next, p.get(0).encode(this, fail, dfa));
 	}
 
-	public final Instruction encodeSequence(Expression p, Instruction next) {
+	public final Instruction encodeSequence(Expression p, Instruction next, boolean[] dfa) {
 		Expression pp = p.optimize(option);
 		if(pp != p) {
 			if(pp instanceof ByteMap) {
 				Verbose.noticeOptimize("ByteMap", p, pp);
-				return encodeByteMap((ByteMap)pp, next);
+				return encodeByteMap((ByteMap)pp, next, dfa);
 			}
 		}
 		Instruction nextStart = next;
 		for(int i = p.size() -1; i >= 0; i--) {
 			Expression e = p.get(i);
-			nextStart = e.encode(this, nextStart);
+			nextStart = e.encode(this, nextStart, dfa);
 		}
 //		if(pp != p) { 	// (!'ab' !'ac' .) => (!'a' .) / (!'ab' !'ac' .)
 		if(pp instanceof Choice && pp.get(0) instanceof ByteMap) {
@@ -302,16 +384,16 @@ public class RuntimeCompiler {
 		return nextStart;
 	}
 
-	public final Instruction encodeChoice(Choice p, Instruction next) {
+	public final Instruction encodeChoice(Choice p, Instruction next, boolean[] dfa) {
 		Expression pp = p.optimize(option);
 		if(pp instanceof ByteMap) {
 			Verbose.noticeOptimize("ByteMap", p, pp);
-			return encodeByteMap((ByteMap)pp, next);
+			return encodeByteMap((ByteMap)pp, next, dfa);
 		}
 		if(p.matchCase != null) {
-			return encodePrefetchChoice(p, next);
+			return encodePrefetchChoice(p, next, dfa);
 		}
-		return this.encodeUnoptimizedChoice(p, next);
+		return this.encodeUnoptimizedChoice(p, next, dfa);
 	}
 	
 	class IPrefetch extends Instruction {
@@ -319,6 +401,7 @@ public class RuntimeCompiler {
 		public IPrefetch(Expression e, Instruction next) {
 			super(e, next);
 			jumpTable = new Instruction[257];
+			Arrays.fill(jumpTable, next);
 		}
 		void setJumpTable(int ch, Instruction inst) {
 			jumpTable[ch] = Instruction.labeling(inst);
@@ -331,7 +414,7 @@ public class RuntimeCompiler {
 		}
 	}
 	
-	private final Instruction encodePrefetchChoice(Choice p, Instruction next) {
+	private final Instruction encodePrefetchChoice(Choice p, Instruction next, boolean[] dfa) {
 		HashMap<Integer, Instruction> m = new HashMap<>();
 		IPrefetch fetch = new IPrefetch(p, null);
 		for(int ch = 0; ch < p.matchCase.length; ch++) {
@@ -346,10 +429,10 @@ public class RuntimeCompiler {
 					Expression common = this.makeCommonPrefix(p);
 					if(common != null) {
 						//System.out.println("@common '" + (char)ch + "'("+ch+"): " + e + "\n=>\t" + common);
-						inst = common.encode(this, next);
+						inst = common.encode(this, next, dfa);
 					}
 					else {
-						inst = this.encodeUnoptimizedChoice(p, next);
+						inst = this.encodeUnoptimizedChoice(p, next, dfa);
 					}
 				}
 				else {
@@ -357,14 +440,14 @@ public class RuntimeCompiler {
 						Expression common = this.makeCommonPrefix((Choice)e);
 						if(common != null) {
 							//System.out.println("@common '" + (char)ch + "'("+ch+"): " + e + "\n=>\t" + common);
-							inst = common.encode(this, next);
+							inst = common.encode(this, next, dfa);
 						}
 						else {
-							inst = this.encodeUnoptimizedChoice((Choice)e, next);
+							inst = this.encodeUnoptimizedChoice((Choice)e, next, dfa);
 						}
 					}
 					else {
-						inst = e.encode(this, next);
+						inst = e.encode(this, next, dfa);
 					}
 				}
 				m.put(key, inst);
@@ -523,22 +606,23 @@ public class RuntimeCompiler {
 		return e;
 	}
 
-	
-	public final Instruction encodeUnoptimizedChoice(Choice p, Instruction next) {
-		Instruction nextChoice = p.get(p.size()-1).encode(this, next);
+	public final Instruction encodeUnoptimizedChoice(Choice p, Instruction next, boolean[] dfa) {
+		Instruction nextChoice = p.get(p.size()-1).encode(this, next, dupDfa(dfa));
 		for(int i = p.size() -2; i >= 0; i--) {
 			Expression e = p.get(i);
-			nextChoice = new IFailPush(e, nextChoice, e.encode(this, new IFailPop(e, next)));
+			nextChoice = new IFailPush(e, nextChoice, e.encode(this, new IFailPop(e, next), dupDfa(dfa)));
 		}
+		updateDfa(p, dfa);
 		return nextChoice;
 	}
 
-	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next) {
+	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next, boolean[] dfa) {
 		Expression pp = p.optimize(option);
 		if(pp instanceof ByteChar || pp instanceof ByteMap || pp instanceof AnyChar) {
 			Verbose.noticeOptimize("Inlining", p, pp);
-			return pp.encode(this, next);
+			return encodeDfa(pp, next, dfa);
 		}
+		updateDfa(p, dfa);
 		if(this.enablePackratParsing()) {
 			Rule r = p.getRule();
 			if(!this.enableASTConstruction() || r.isPurePEG()) {
@@ -583,25 +667,25 @@ public class RuntimeCompiler {
 	
 	// AST Construction
 	
-	public final Instruction encodeLink(Link p, Instruction next) {
+	public final Instruction encodeLink(Link p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {
 			if(this.enablePackratParsing()) {
 				Expression inner = Factory.resolveNonTerminal(p.get(0));
 				MemoPoint m = this.issueMemoPoint(p.toString(), inner);
 				if(m != null) {
 					if(FlagUtils.is(option, Production.Tracing)) {
-						IMonitoredSwitch monitor = new IMonitoredSwitch(p, p.get(0).encode(this, next));
-						Instruction inside = p.get(0).encode(this, newMemoizeNode(p, monitor, m, next));
+						IMonitoredSwitch monitor = new IMonitoredSwitch(p, p.get(0).encode(this, next, dfa));
+						Instruction inside = p.get(0).encode(this, newMemoizeNode(p, monitor, m, next), dfa);
 						monitor.setActivatedNext(newLookupNode(p, monitor, m, inside, next, new IMemoizeFail(p, monitor, m)));
 						return monitor;
 					}
-					Instruction inside = p.get(0).encode(this, newMemoizeNode(p, IMonitoredSwitch.dummyMonitor, m, next));
+					Instruction inside = p.get(0).encode(this, newMemoizeNode(p, IMonitoredSwitch.dummyMonitor, m, next), dfa);
 					return newLookupNode(p, IMonitoredSwitch.dummyMonitor, m, inside, next, new IMemoizeFail(p, IMonitoredSwitch.dummyMonitor, m));
 				}
 			}
-			return new INodePush(p, p.get(0).encode(this, new INodeStore(p, next)));
+			return new INodePush(p, p.get(0).encode(this, new INodeStore(p, next), dfa));
 		}
-		return p.get(0).encode(this, next);
+		return p.get(0).encode(this, next, dfa);
 	}
 
 	private Instruction newLookupNode(Link e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {
@@ -619,65 +703,70 @@ public class RuntimeCompiler {
 	}
 
 	
-	public final Instruction encodeNew(NewClosure p, Instruction next) {
+	public final Instruction encodeNewClosure(NewClosure p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {
-			return new INew(p, this.encodeSequence(p, new ICapture(p, next)));
+			return new INew(p, this.encodeSequence(p, new ICapture(p, next), dfa));
 		}
-		return this.encodeSequence(p, next);
+		return this.encodeSequence(p, next, dfa);
 	}
 
-	public final Instruction encodeLeftNew(LeftNew p, Instruction next) {
+	public final Instruction encodeLeftNewClosure(LeftNewClosure p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {
-			return new ILeftNew(p, this.encodeSequence(p, new ICapture(p, next)));
+			return new ILeftNew(p, this.encodeSequence(p, new ICapture(p, next), dfa));
 		}
-		return this.encodeSequence(p, next);
+		return this.encodeSequence(p, next, dfa);
 	}
 
-	public final Instruction encodeNew(New p, Instruction next) {
+	public final Instruction encodeNew(New p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {
 			return p.lefted ? new ILeftNew(p, next) : new INew(p, next);
 		}
 		return next;
 	}
 
-	public final Instruction encodeCapture(Capture p, Instruction next) {
+	public final Instruction encodeCapture(Capture p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {
 			return new ICapture(p, next);
 		}
 		return next;
 	}
 	
-	public final Instruction encodeTagging(Tagging p, Instruction next) {
+	public final Instruction encodeTagging(Tagging p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {
 			return new ITag(p, next);
 		}
 		return next;
 	}
 
-	public final Instruction encodeReplace(Replace p, Instruction next) {
+	public final Instruction encodeReplace(Replace p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {
 			return new IReplace(p, next);
 		}
 		return next;
 	}
 	
-	public final Instruction encodeBlock(Block p, Instruction next) {
+	public final Instruction encodeBlock(Block p, Instruction next, boolean[] dfa) {
 		Instruction failed = new ITablePop(p, new IFail(p));
-		Instruction inner = p.get(0).encode(this, new IFailPop(p, new ITablePop(p, next)));
+		Instruction inner = p.get(0).encode(this, new IFailPop(p, new ITablePop(p, next)), dfa);
 		return new ITablePush(p, new IFailPush(p, failed, inner));
 	}
-	public final Instruction encodeDefSymbol(DefSymbol p, Instruction next) {
-		Instruction inner = p.get(0).encode(this, new IDefSymbol(p, next));
+	
+	public final Instruction encodeDefSymbol(DefSymbol p, Instruction next, boolean[] dfa) {
+		Instruction inner = p.get(0).encode(this, new IDefSymbol(p, next), dfa);
 		return new IPosPush(p, inner);
 	}
-	public final Instruction encodeIsSymbol(IsSymbol p, Instruction next) {
-		Instruction inner = p.getSymbolExpression().encode(this, new IIsSymbol(p, p.checkLastSymbolOnly, next));
+	
+	public final Instruction encodeIsSymbol(IsSymbol p, Instruction next, boolean[] dfa) {
+		Instruction inner = p.getSymbolExpression().encode(this, new IIsSymbol(p, p.checkLastSymbolOnly, next), dfa);
 		return new IPosPush(p, inner);
 	}
-	public final Instruction encodeDefIndent(DefIndent p, Instruction next) {
+	
+	public final Instruction encodeDefIndent(DefIndent p, Instruction next, boolean[] dfa) {
 		return new IDefIndent(p, next);
 	}
-	public final Instruction encodeIsIndent(IsIndent p, Instruction next) {
+	
+	public final Instruction encodeIsIndent(IsIndent p, Instruction next, boolean[] dfa) {
+		updateDfa(p, dfa);
 		return new IIsIndent(p, next);
 	}
 

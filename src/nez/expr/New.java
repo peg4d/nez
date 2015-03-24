@@ -3,8 +3,8 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -63,8 +63,8 @@ public class New extends Unconsumed {
 		return Unconsumed;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeNew(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeNew(this, next, dfa);
 	}
 	@Override
 	protected int pattern(GEP gep) {

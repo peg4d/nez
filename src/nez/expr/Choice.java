@@ -101,8 +101,8 @@ public class Choice extends SequentialExpression {
 		return false;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next) {
-		return bc.encodeChoice(this, next);
+	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+		return bc.encodeChoice(this, next, dfa);
 	}
 	
 	// optimize
