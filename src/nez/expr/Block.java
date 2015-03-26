@@ -37,6 +37,14 @@ public class Block extends Unary {
 		return this.inner.acceptByte(ch, option);
 	}
 	@Override
+	public boolean predict(int option, int ch, boolean k) {
+		return Prediction.predictUnary(this, option, ch, k);
+	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		Prediction.predictUnary(this, option, dfa);
+	}
+	@Override
 	public boolean match(SourceContext context) {
 		int stateValue = context.stateValue;
 		String indent = context.getIndentText(context.getPosition());

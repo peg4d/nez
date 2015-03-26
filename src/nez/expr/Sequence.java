@@ -7,7 +7,7 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
-import nez.util.FlagUtils;
+import nez.util.UFlag;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -67,15 +67,18 @@ public class Sequence extends SequentialExpression {
 		}
 		return Factory.newSequence(s, l);
 	}
+
 	@Override
 	public short acceptByte(int ch, int option) {
-		for(int i = 0; i < this.size(); i++) {
-			short r = this.get(i).acceptByte(ch, option);
-			if(r != Unconsumed) {
-				return r;
-			}
-		}
-		return Unconsumed;
+		return Prediction.acceptSequence(this, ch, option);
+	}
+	@Override
+	public boolean predict(int option, int ch, boolean k) {
+		return Prediction.predictSequence(this, option, ch, k);
+	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		Prediction.predictSequence(this, option, dfa);
 	}
 
 	public final boolean isMultiChar() {
@@ -112,14 +115,14 @@ public class Sequence extends SequentialExpression {
 	
 	@Override
 	void optimizeImpl(int option) {
-		if(FlagUtils.is(option, Production.Optimization) && this.get(this.size() - 1) instanceof AnyChar) {
+		if(UFlag.is(option, Production.Optimization) && this.get(this.size() - 1) instanceof AnyChar) {
 			boolean byteMap[] = ByteMap.newMap(false);
 			if(isByteMap(option, byteMap)) {
 				this.optimized = Factory.newByteMap(s, byteMap);
 				return;
 			}
 			// (!'ab' !'ac' .) => (^[a]) / (!'ab' !'ac' .)
-			if(FlagUtils.is(option, Production.Prediction)) {
+			if(UFlag.is(option, Production.Prediction)) {
 				ByteMap.clear(byteMap);
 				if(isPredictedNotByteMap(0, this.size() - 1, byteMap, option)) {
 					this.optimized = Factory.newChoice(s, Factory.newByteMap(s, byteMap), this);
@@ -167,7 +170,7 @@ public class Sequence extends SequentialExpression {
 
 	void predictByte(Expression e, boolean[] byteMap, int option) {
 		for(int c = 0; c < 256; c++) {
-			if(e.acceptByte(c, option) != Expression.Reject) {
+			if(e.acceptByte(c, option) != Prediction.Reject) {
 				byteMap[c] = true;
 			}
 		}

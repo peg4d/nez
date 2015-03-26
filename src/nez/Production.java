@@ -12,7 +12,7 @@ import nez.runtime.MemoPoint;
 import nez.runtime.MemoTable;
 import nez.runtime.RuntimeCompiler;
 import nez.util.ConsoleUtils;
-import nez.util.FlagUtils;
+import nez.util.UFlag;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -134,7 +134,7 @@ public class Production {
 		if(this.option != option) {
 			this.compiledCode = null; // recompile
 		}
-		if(FlagUtils.is(option, PackratParsing) && this.defaultMemoTable == null) {
+		if(UFlag.is(option, PackratParsing) && this.defaultMemoTable == null) {
 			this.defaultMemoTable = MemoTable.newElasticTable(0, 0, 0);
 		}
 		this.option = option;
@@ -145,7 +145,7 @@ public class Production {
 	}
 
 	public final void disable(int option) {
-		setOption(FlagUtils.unsetFlag(this.option, option));
+		setOption(UFlag.unsetFlag(this.option, option));
 	}
 
 	private MemoTable defaultMemoTable;
@@ -190,7 +190,7 @@ public class Production {
 		
 	public final boolean match(SourceContext s) {
 		boolean matched;
-		if(FlagUtils.is(this.option, Production.ClassicMode)) {
+		if(UFlag.is(this.option, Production.ClassicMode)) {
 			matched = this.start.match(s);
 		}
 		else {
@@ -347,43 +347,43 @@ public class Production {
 	
 	public final static String stringfyOption(int option, String delim) {
 		StringBuilder sb = new StringBuilder();
-		if(FlagUtils.is(option, Production.ClassicMode)) {
+		if(UFlag.is(option, Production.ClassicMode)) {
 			sb.append(delim);
 			sb.append("classic");
 		}
-		if(FlagUtils.is(option, Production.ASTConstruction)) {
+		if(UFlag.is(option, Production.ASTConstruction)) {
 			sb.append(delim);
 			sb.append("ast");
 		}
-		if(FlagUtils.is(option, Production.PackratParsing)) {
+		if(UFlag.is(option, Production.PackratParsing)) {
 			sb.append(delim);
 			sb.append("memo");
 		}
-		if(FlagUtils.is(option, Production.Optimization)) {
+		if(UFlag.is(option, Production.Optimization)) {
 			sb.append(delim);
 			sb.append("opt.");
 		}
-		if(FlagUtils.is(option, Production.Specialization)) {
+		if(UFlag.is(option, Production.Specialization)) {
 			sb.append(delim);
 			sb.append("spe.");
 		}
-		if(FlagUtils.is(option, Production.CommonPrefix)) {
+		if(UFlag.is(option, Production.CommonPrefix)) {
 			sb.append(delim);
 			sb.append("com.");
 		}
-		if(FlagUtils.is(option, Production.Prediction)) {
+		if(UFlag.is(option, Production.Prediction)) {
 			sb.append(delim);
 			sb.append("pdt.");
 		}
-		if(FlagUtils.is(option, Production.Tracing)) {
+		if(UFlag.is(option, Production.Tracing)) {
 			sb.append(delim);
 			sb.append("tracing");
 		}
-		if(FlagUtils.is(option, Production.DFA)) {
+		if(UFlag.is(option, Production.DFA)) {
 			sb.append(delim);
 			sb.append("dfa");
 		}
-		if(FlagUtils.is(option, Production.Profiling)) {
+		if(UFlag.is(option, Production.Profiling)) {
 			sb.append(delim);
 			sb.append("prof");
 		}

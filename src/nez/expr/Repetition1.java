@@ -28,7 +28,10 @@ public class Repetition1 extends Repetition {
 		return this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 	}
 	@Override public short acceptByte(int ch, int option) {
-		return this.inner.acceptByte(ch, option);
+		return Prediction.acceptUnary(this, ch, option);
+	}
+	@Override public void predict(int option, boolean[] dfa) {
+		Prediction.predictUnary(this, option, dfa);
 	}
 	@Override
 	public boolean match(SourceContext context) {

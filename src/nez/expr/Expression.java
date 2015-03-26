@@ -88,10 +88,9 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 		return hasReachableFlag(e, flagName, new UMap<String>());
 	}
 
-	public final static short Unconsumed = 0;
-	public final static short Accept = 1;
-	public final static short Reject = 2;
 	public abstract short acceptByte(int ch, int option);
+	public  boolean predict(int option, int ch, boolean k) {return false;}  // 
+	public abstract void predict(int option, boolean[] dfa);
 	
 	public final Expression optimize(int option) {
 		if(this.optimizedOption != option) {

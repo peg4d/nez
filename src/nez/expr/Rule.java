@@ -6,8 +6,10 @@ import nez.Grammar;
 import nez.SourceContext;
 import nez.ast.AST;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
+import nez.main.Verbose;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
+import nez.util.StringUtils;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -219,6 +221,98 @@ public class Rule extends Expression {
 		return this.body.acceptByte(ch, option);
 	}
 
+	private boolean[] pdfa = null, ndfa = null;
+	private boolean isPredicting = false;
+	public void initPrediction(int option) {
+		pdfa = null;
+		ndfa = null;
+		isPredicting = false;
+		predict(option, null);
+		if(Verbose.SelfTesting) {
+			selfTesting(option);
+		}
+	}
+	
+	private void selfTesting(int option) {
+		Expression e = this.getExpression();
+		boolean found = false;
+		for(int c = 0; c < 256; c++) {
+			short a = e.acceptByte(c, option);
+			if(a == Prediction.Accept && (!pdfa[c] || !ndfa[c])) {
+				found = true;
+				break;
+			}
+			if(a == Prediction.Reject && (pdfa[c] || ndfa[c])) {
+				found = true;
+				break;
+			}
+			if(a == Prediction.Unconsumed && (!pdfa[c] || ndfa[c])) {
+				found = true;
+				break;
+			}
+		}
+		if(found) {
+			Verbose.printSelfTesting("\nTesting prediction " + this.getLocalName() + " = " + e + " .. ");
+			for(int c = 0; c < 256; c++) {
+				short a = e.acceptByte(c, option);
+				if(a == Prediction.Accept && (!pdfa[c] || !ndfa[c])) {
+					Verbose.printSelfTestingIndent("[Failed] Accept " + StringUtils.formatChar(c) + ": " + pdfa[c] + "," + ndfa[c]);
+				}
+				if(a == Prediction.Reject && (pdfa[c] || ndfa[c])) {
+					Verbose.printSelfTestingIndent("[Failed] Reject " + StringUtils.formatChar(c) + ": " + pdfa[c] + "," + ndfa[c]);
+				}
+				if(a == Prediction.Unconsumed && (!pdfa[c] || ndfa[c])) {
+					Verbose.printSelfTestingIndent("[Failed] Unconsumed " + StringUtils.formatChar(c) + ": " + pdfa[c] + "," + ndfa[c]);
+				}
+			}
+			Verbose.printSelfTesting("\nPlease report the above to " + Verbose.BugsReport1);
+		}
+	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		if(isPredicting) {
+			adhocUpdate(option, dfa);
+			return;
+		}
+		if(pdfa == null) {
+			isPredicting = true;
+			pdfa = ByteMap.newMap(true);
+			this.getExpression().predict(option, pdfa);
+		}
+		if(ndfa == null) {
+			ndfa = ByteMap.newMap(false);
+			this.getExpression().predict(option, ndfa);
+			isPredicting = false;
+		}
+		if(isPredicting) {
+			adhocUpdate(option, dfa);
+			return;
+		}
+		if(dfa != null) {
+			for(int c = 0; c < dfa.length; c++) {
+				if(pdfa[c]) {
+					if(ndfa[c]) dfa[c] = true;
+				}
+				else {
+					if(!ndfa[c]) dfa[c] = false;
+				}
+			}
+		}
+	}
+	
+	private void adhocUpdate(int option, boolean[] dfa) {
+		Expression e = this.getExpression();
+		for(int c = 0; c < dfa.length; c++) {
+			short a = e.acceptByte(c, option);
+			if(a == Prediction.Accept) {
+				dfa[c] = true;
+			}
+			if(a == Prediction.Reject) {
+				dfa[c] = false;
+			}
+		}
+	}
+	
 	public void addAnotation(String textAt, AST ast) {
 		// TODO Auto-generated method stub
 	}

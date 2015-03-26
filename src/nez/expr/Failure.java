@@ -19,7 +19,7 @@ public class Failure extends Unconsumed {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		return Reject;
+		return Prediction.Reject;
 	}
 	@Override
 	public boolean match(SourceContext context) {

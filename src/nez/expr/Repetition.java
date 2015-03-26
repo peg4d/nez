@@ -58,13 +58,16 @@ public class Repetition extends Unary {
 		}
 		return this;
 	}
+
 	@Override public short acceptByte(int ch, int option) {
-		short r = this.inner.acceptByte(ch, option);
-		if(r == Accept) {
-			return Accept;
-		}
-		return Unconsumed;
+		return Prediction.acceptOption(this, ch, option);
 	}
+	
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		Prediction.predictOption(this, option, dfa);
+	}
+	
 	@Override
 	public boolean match(SourceContext context) {
 		long ppos = -1;

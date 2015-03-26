@@ -8,7 +8,7 @@ import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
-import nez.util.FlagUtils;
+import nez.util.UFlag;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -75,15 +75,32 @@ public class Choice extends SequentialExpression {
 		boolean hasUnconsumed = false;
 		for(int i = 0; i < this.size(); i++) {
 			short r = this.get(i).acceptByte(ch, option);
-			if(r == Accept) {
+			if(r == Prediction.Accept) {
 				return r;
 			}
-			if(r == Unconsumed) {
+			if(r == Prediction.Unconsumed) {
 				hasUnconsumed = true;
 			}
 		}
-		return hasUnconsumed ? Unconsumed : Reject;
+		return hasUnconsumed ? Prediction.Unconsumed : Prediction.Reject;
 	}
+
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		boolean[] clone = dfa.clone();
+		this.get(0).predict(option, dfa);
+		for(int i = 1; i < this.size(); i++) {
+			boolean[] dfai = clone.clone();
+			this.get(i).predict(option, dfai);
+			for(int c = 0; c < dfai.length; c++) {
+				if(dfai[c]) {
+					dfa[c] = true;
+				}
+			}
+		}
+	}
+
+	
 	@Override
 	public boolean match(SourceContext context) {
 		//long f = context.rememberFailure();
@@ -113,14 +130,14 @@ public class Choice extends SequentialExpression {
 	
 	@Override
 	void optimizeImpl(int option) {
-		if(FlagUtils.is(option, Production.Optimization) && !(this.optimized instanceof ByteMap)) {
+		if(UFlag.is(option, Production.Optimization) && !(this.optimized instanceof ByteMap)) {
 			boolean byteMap[] = new boolean[257];
 			if(toByteMap(option, byteMap, 0)) {
 				this.optimized = Factory.newByteMap(s, byteMap);
 				return;
 			}
 		}
-		if(FlagUtils.is(option, Production.Prediction)) {
+		if(UFlag.is(option, Production.Prediction)) {
 			Expression fails = Factory.newFailure(s);
 			this.matchCase = new Expression[257];
 			for(int ch = 0; ch <= 256; ch++) {
@@ -173,7 +190,7 @@ public class Choice extends SequentialExpression {
 			else {
 				short r = e.acceptByte(ch, option);
 				//System.out.println("~ " + GrammarFormatter.stringfyByte(ch) + ": r=" + r + " in " + e);
-				if(r != Expression.Reject) {
+				if(r != Prediction.Reject) {
 					l.add(e);
 				}
 			}

@@ -4,8 +4,8 @@ import java.util.TreeMap;
 
 import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -53,6 +53,14 @@ public class WithoutFlag extends Unary {
 	@Override
 	public short acceptByte(int ch, int option) {
 		return this.inner.acceptByte(ch, option);
+	}
+	@Override
+	public boolean predict(int option, int ch, boolean k) {
+		return Prediction.predictUnary(this, option, ch, k);
+	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		Prediction.predictUnary(this, option, dfa);
 	}
 	@Override
 	public boolean match(SourceContext context) {

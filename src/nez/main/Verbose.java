@@ -4,6 +4,7 @@ import nez.expr.Expression;
 import nez.util.ConsoleUtils;
 
 public class Verbose {
+	public static final String BugsReport1 = "kimio@ynu.ac.jp";
 	public static boolean General = true;
 	public static boolean Grammar = false;
 	public static boolean Expression = false;
@@ -11,6 +12,7 @@ public class Verbose {
 	public static boolean PackratParsing = false;
 	public static boolean Debug = false;
 	public static boolean Backtrack = false;
+	public static boolean SelfTesting = true;
 	
 	public static void setAll() {
 		General = true;
@@ -51,4 +53,17 @@ public class Verbose {
 		}
 	}
 
+	public final static void printSelfTesting(Object s) {
+		if(SelfTesting) {
+			ConsoleUtils.println(s);
+		}
+	}
+
+	public final static void printSelfTestingIndent(Object s) {
+		if(SelfTesting) {
+			ConsoleUtils.println("   " + s);
+		}
+	}
+
+	
 }

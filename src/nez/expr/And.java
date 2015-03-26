@@ -43,11 +43,20 @@ public class And extends Unary {
 	@Override
 	public short acceptByte(int ch, int option) {
 		short r = this.inner.acceptByte(ch, option);
-		if(r == Accept || r == Unconsumed) {
-			return Unconsumed;
+		if(r == Prediction.Accept || r == Prediction.Unconsumed) {
+			return Prediction.Unconsumed;
 		}
 		return r;
 	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		boolean[] indfa = dfa.clone();
+		this.inner.predict(option, indfa);
+		for(int c = 0; c < dfa.length; c++) {
+			dfa[c]  = (dfa[c] && indfa[c]);
+		}
+	}
+
 	@Override
 	public boolean match(SourceContext context) {
 		long pos = context.getPosition();

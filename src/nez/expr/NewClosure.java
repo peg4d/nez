@@ -65,16 +65,18 @@ public class NewClosure extends SequentialExpression {
 		}
 		return Factory.newNew(s, l);
 	}
+
 	@Override
 	public short acceptByte(int ch, int option) {
-		for(int i = 0; i < this.size(); i++) {
-			short r = this.get(i).acceptByte(ch, option);
-			if(r != Unconsumed) {
-				return r;
-			}
-		}
-		return Unconsumed;
+		return Prediction.acceptSequence(this, ch, option);
 	}
+
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		Prediction.predictSequence(this, option, dfa);
+	}
+
+
 	@Override
 	public boolean match(SourceContext context) {
 		long startIndex = context.getPosition();

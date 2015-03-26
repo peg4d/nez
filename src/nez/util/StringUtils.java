@@ -303,4 +303,11 @@ public abstract class StringUtils {
 		return b;
 	}
 
+	public final static String formatChar(int c) {
+		if(Character.isISOControl(c) || c > 127) {
+			return "<" + c + ">";
+		}
+		return "<" + (char)c + "," + c + ">";
+	}
+
 }

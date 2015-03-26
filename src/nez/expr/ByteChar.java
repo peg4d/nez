@@ -26,8 +26,22 @@ public class ByteChar extends Terminal {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		return (byteChar == ch) ? Accept : Reject;
+		return (byteChar == ch) ? Prediction.Accept : Prediction.Reject;
 	}
+	
+	@Override
+	public boolean predict(int option, int ch, boolean k) {
+		return (byteChar == ch) ? true : false;
+	}
+
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		for(int c = 0; c < dfa.length; c++) {
+			dfa[c] = false;
+		}
+		dfa[byteChar] = true;
+	}
+
 	@Override
 	public boolean match(SourceContext context) {
 		if(context.byteAt(context.getPosition()) == this.byteChar) {

@@ -50,14 +50,19 @@ public class Option extends Unary {
 		}
 		return this;
 	}
-	@Override 
-	public short acceptByte(int ch, int option) {
-		short r = this.inner.acceptByte(ch, option);
-		if(r == Accept) {
-			return Accept;
-		}
-		return Unconsumed;
+	
+	@Override public short acceptByte(int ch, int option) {
+		return Prediction.acceptOption(this, ch, option);
 	}
+	@Override
+	public boolean predict(int option, int ch, boolean k) {
+		return Prediction.predictOption(this, option, ch, k);
+	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		Prediction.predictOption(this, option, dfa);
+	}
+	
 	@Override
 	public boolean match(SourceContext context) {
 		//long f = context.rememberFailure();

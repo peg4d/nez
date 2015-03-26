@@ -8,7 +8,7 @@ import nez.ast.Source;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
-import nez.util.FlagUtils;
+import nez.util.UFlag;
 import nez.util.UList;
 import nez.util.UMap;
 
@@ -44,15 +44,27 @@ public class AnyChar extends Terminal {
 	public Expression removeFlag(TreeMap<String, String> undefedFlags) {
 		return this;
 	}
+	
 	@Override
 	public short acceptByte(int ch, int option) {
-		if(FlagUtils.is(option, Production.Binary)) {
-			return (ch == Source.BinaryEOF) ? Reject : Accept;
+		if(UFlag.is(option, Production.Binary)) {
+			return (ch == Source.BinaryEOF) ? Prediction.Reject : Prediction.Accept;
 		}
 		else {
-			return (ch == Source.BinaryEOF || ch == 0) ? Reject : Accept;
+			return (ch == Source.BinaryEOF || ch == 0) ? Prediction.Reject : Prediction.Accept;
 		}
 	}
+	
+	@Override
+	public boolean predict(int option, int ch, boolean k) {
+		return Prediction.predictAnyChar(option, ch, k);
+	}
+
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		Prediction.predictAnyChar(option, dfa);
+	}
+
 	@Override
 	public boolean match(SourceContext context) {
 		if(context.byteAt(context.getPosition()) != context.EOF()) {

@@ -49,7 +49,19 @@ public class IsSymbol extends Terminal {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		return Accept;
+		if(this.symbolExpression != null) {
+			return this.symbolExpression.acceptByte(ch, option);
+		}
+		return Prediction.Accept;
+	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		if(this.symbolExpression != null) {
+			this.symbolExpression.predict(option, dfa);
+		}
+		else {
+			Prediction.predictAnyChar(option, dfa);
+		}
 	}
 	@Override
 	public boolean match(SourceContext context) {

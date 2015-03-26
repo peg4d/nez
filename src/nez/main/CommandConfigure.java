@@ -12,7 +12,7 @@ import nez.expr.NezParser;
 import nez.expr.NezParserCombinator;
 import nez.runtime.MemoTable;
 import nez.util.ConsoleUtils;
-import nez.util.FlagUtils;
+import nez.util.UFlag;
 import nez.util.StringUtils;
 import nez.util.UList;
 
@@ -148,7 +148,7 @@ public class CommandConfigure {
 //			}
 			else if(argument.startsWith("--memo")) {
 				if(argument.equals("--memo:none")) {
-					ProductionOption = FlagUtils.unsetFlag(ProductionOption, Production.PackratParsing);
+					ProductionOption = UFlag.unsetFlag(ProductionOption, Production.PackratParsing);
 				}
 				else if(argument.equals("--memo:packrat")) {
 					defaultTable = MemoTable.newPackratHashTable(0, 0, 0);
@@ -174,19 +174,25 @@ public class CommandConfigure {
 				else if(argument.endsWith(":tracing") || argument.endsWith(":trace")) {
 					this.ProductionOption |= Production.Tracing;
 				}
+				else if(argument.endsWith(":dfa")) {
+					this.ProductionOption |= Production.DFA;
+				}
 				else if(argument.endsWith(":log")) {
 					RecorderFileName = "nezrec.csv";  // -Xrec
 				}
 			}
 			else if(argument.startsWith("--disable:")) {
 				if(argument.endsWith(":packrat") || argument.endsWith(":memo")) {
-					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.PackratParsing);
+					this.ProductionOption = UFlag.unsetFlag(this.ProductionOption, Production.PackratParsing);
 				}
 				else if(argument.endsWith(":tracing") || argument.endsWith(":trace")) {
-					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Tracing);
+					this.ProductionOption = UFlag.unsetFlag(this.ProductionOption, Production.Tracing);
 				}
 				else if(argument.endsWith(":prediction") || argument.endsWith(":predict")) {
-					this.ProductionOption = FlagUtils.unsetFlag(this.ProductionOption, Production.Prediction);
+					this.ProductionOption = UFlag.unsetFlag(this.ProductionOption, Production.Prediction);
+				}
+				else if(argument.endsWith(":dfa")) {
+					this.ProductionOption = UFlag.unsetFlag(this.ProductionOption, Production.DFA);
 				}
 			}
 			else if(argument.startsWith("-Xrec")) {

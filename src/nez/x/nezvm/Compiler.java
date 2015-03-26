@@ -24,6 +24,7 @@ import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
+import nez.expr.Prediction;
 import nez.expr.Repetition;
 import nez.expr.Replace;
 import nez.expr.Rule;
@@ -776,7 +777,7 @@ public class Compiler extends GrammarVisitor {
 				// FIXME:
 				// AnyChar behaves differently in cases of Binary
 				short r = e.acceptByte(c, Production.Binary); 
-				if(r != Expression.Reject) {
+				if(r != Prediction.Reject) {
 					l.add(e);
 				}
 			}

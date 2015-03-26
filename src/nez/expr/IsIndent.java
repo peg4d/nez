@@ -29,10 +29,16 @@ public class IsIndent extends Terminal {
 	@Override
 	public short acceptByte(int ch, int option) {
 		if (ch == '\t' || ch == ' ') {
-			return Accept;
+			return Prediction.Accept;
 		}
-		return Unconsumed;
+		return Prediction.Unconsumed;
 	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		dfa['\t'] = true;
+		dfa[' '] = true;
+	}
+
 	@Override
 	public boolean match(SourceContext context) {
 		return context.matchSymbolTable(NezTag.Indent, true);

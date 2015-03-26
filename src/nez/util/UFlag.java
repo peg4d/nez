@@ -1,6 +1,6 @@
 package nez.util;
 
-public class FlagUtils {
+public class UFlag {
 	public final static boolean is(int flag, int flag2) {
 		return ((flag & flag2) == flag2);
 	}

@@ -132,6 +132,11 @@ public class NonTerminal extends Expression {
 	}
 
 	@Override
+	public void predict(int option, boolean[] dfa) {
+		this.getRule().predict(option, dfa);
+	}
+
+	@Override
 	void optimizeImpl(int option) {
 		Expression e = this;
 		while(e instanceof NonTerminal) {

@@ -5,7 +5,7 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
-import nez.util.FlagUtils;
+import nez.util.UFlag;
 import nez.util.StringUtils;
 import nez.util.UList;
 
@@ -55,7 +55,7 @@ public class ByteMap extends Terminal {
 		for(int i = 0; i < 256; i++) {
 			byteMap[i] = !byteMap[i];
 		}
-		if(!FlagUtils.is(option, Production.Binary)) {
+		if(!UFlag.is(option, Production.Binary)) {
 			byteMap[0] = false;
 		}
 	}
@@ -76,8 +76,21 @@ public class ByteMap extends Terminal {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		return (byteMap[ch]) ? Accept : Reject;
+		return (byteMap[ch]) ? Prediction.Accept : Prediction.Reject;
 	}
+
+	@Override
+	public boolean predict(int option, int ch, boolean k) {
+		return (byteMap[ch]) ? true : false;
+	}
+
+	@Override
+	public void predict(int option, boolean[] dfa) {
+		for(int c = 0; c < dfa.length; c++) {
+			dfa[c] = byteMap[c];
+		}
+	}
+	
 	@Override
 	public boolean match(SourceContext context) {
 		if(this.byteMap[context.byteAt(context.getPosition())]) {

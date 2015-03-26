@@ -56,6 +56,10 @@ public class DefSymbol extends Unary {
 		return this.inner.acceptByte(ch, option);
 	}
 	@Override
+	public void predict(int option, boolean[] dfa) {
+		this.inner.predict(option, dfa);
+	}
+	@Override
 	public boolean match(SourceContext context) {
 		long startIndex = context.getPosition();
 		if(this.inner.optimized.match(context)) {

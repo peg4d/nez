@@ -45,7 +45,10 @@ abstract class Unconsumed extends Expression {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		return Unconsumed;
+		return Prediction.Unconsumed;
+	}
+	@Override
+	public void predict(int option, boolean[] dfa) {
 	}
 	@Override
 	public boolean match(SourceContext context) {

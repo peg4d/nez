@@ -60,6 +60,11 @@ public class Link extends Unary {
 		return inner.acceptByte(ch, option);
 	}
 	@Override
+	public void predict(int option, boolean[] dfa) {
+		this.get(0).predict(option, dfa);
+	}
+
+	@Override
 	public boolean match(SourceContext context) {
 		Node left = context.left;
 		int mark = context.startConstruction();

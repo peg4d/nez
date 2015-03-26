@@ -60,7 +60,7 @@ public class New extends Unconsumed {
 	}
 	@Override
 	public short acceptByte(int ch, int option) {
-		return Unconsumed;
+		return Prediction.Unconsumed;
 	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
