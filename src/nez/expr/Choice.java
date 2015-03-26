@@ -130,10 +130,11 @@ public class Choice extends SequentialExpression {
 	
 	@Override
 	void optimizeImpl(int option) {
-		if(UFlag.is(option, Production.Optimization) && !(this.optimized instanceof ByteMap)) {
-			boolean byteMap[] = new boolean[257];
-			if(toByteMap(option, byteMap, 0)) {
-				this.optimized = Factory.newByteMap(s, byteMap);
+		this.optimized = flatten();
+		if(UFlag.is(option, Production.Optimization) && this.optimized instanceof Choice) {
+			Expression p = ((Choice)this.optimized).toByteMap(option);
+			if(p != null) {
+				this.optimized = p;
 				return;
 			}
 		}
@@ -144,11 +145,50 @@ public class Choice extends SequentialExpression {
 				Expression selected = selectChoice(ch, fails, option);
 				matchCase[ch] = selected;
 			}
-			this.optimized = this;
 		}
 	}
 	
-	private final boolean toByteMap(int option, boolean[] byteMap, int level) {
+	private Choice flatten() {
+		UList<Expression> l = new UList<Expression>(new Expression[2]);
+		flatten(this, l);
+		Expression e = Factory.newChoice(s, l);
+		//System.out.println("Flatten: " + this + "\n => " + e);
+		if(e instanceof Choice) {
+			return (Choice)e;
+		}
+		return this;
+	}
+
+	private void flatten(Choice p, UList<Expression> l) {
+		for(Expression e: p) {
+			e = Factory.resolveNonTerminal(e);
+			if(e instanceof Choice) {
+				flatten((Choice)e, l);
+			}
+			else {
+				l.add(e);
+			}
+		}
+	}
+	
+	public ByteMap toByteMap(int option) {
+		boolean byteMap[] = ByteMap.newMap(false);
+		for(Expression e : this) {
+			e = e.optimize(option);
+			if(e instanceof ByteChar) {
+				byteMap[((ByteChar) e).byteChar] = true;
+				continue;
+			}
+			if(e instanceof ByteMap) {
+				ByteMap.appendBitMap(byteMap, ((ByteMap)e).byteMap);
+				continue;
+			}
+			return null;
+		}
+		return (ByteMap)Factory.newByteMap(s, byteMap);
+	}
+	
+	private final boolean checkByteMap(int option, boolean[] byteMap, int level) {
 		for(Expression e : this) {
 			e = e.optimize(option);
 			if(e instanceof ByteChar) {
@@ -161,7 +201,7 @@ public class Choice extends SequentialExpression {
 			}
 			if(e instanceof Choice) {
 				if(level < 8) {
-					if(!((Choice)e).toByteMap(option, byteMap, level+1)) {
+					if(!((Choice)e).checkByteMap(option, byteMap, level+1)) {
 						return false;
 					}
 					continue;
@@ -171,6 +211,8 @@ public class Choice extends SequentialExpression {
 		}
 		return true;
 	}
+	
+
 
 	private Expression selectChoice(int ch, Expression failed, int option) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);

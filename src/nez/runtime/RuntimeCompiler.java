@@ -33,6 +33,7 @@ import nez.expr.Sequence;
 import nez.expr.Tagging;
 import nez.main.Verbose;
 import nez.util.ConsoleUtils;
+import nez.util.StringUtils;
 import nez.util.UFlag;
 import nez.util.UList;
 import nez.util.UMap;
@@ -125,6 +126,7 @@ public class RuntimeCompiler {
 	}
 	
 	public final Instruction encode(UList<Rule> ruleList) {
+		long t = System.nanoTime();
 		if(UFlag.is(this.option, Production.DFA)) {
 			for(int i = ruleList.size() - 1; i >= 0; i--) {
 				Rule r = ruleList.ArrayValues[i];
@@ -150,6 +152,8 @@ public class RuntimeCompiler {
 				((ICallPush) inst).setResolvedJump(deref.head);
 			}
 		}
+		long t2 = System.nanoTime();
+		Verbose.printElapsedTime("CompilingTime", t, t2);
 		return this.codeList.ArrayValues[0];
 	}
 
@@ -405,6 +409,9 @@ public class RuntimeCompiler {
 			return encodeByteMap((ByteMap)pp, next, dfa);
 		}
 		if(dfa != null) {
+			if(pp instanceof Choice) {
+				p = (Choice)pp;
+			}
 			return encodeDfaChoice(p, next, dfa);
 		}
 		if(p.matchCase != null) {
@@ -435,11 +442,11 @@ public class RuntimeCompiler {
 			Integer key = merged.getId();
 			Instruction inst = m.get(key);
 			if(inst == null) {
-//				if(p.matchCase[c] != merged) {
-//					System.out.println("# " + p);
-//					System.out.println("A.choice '" + (char)c + "'("+c+"): " + merged);
-//					System.out.println("B.choice '" + (char)c + "'("+c+"): " + p.matchCase[c]);
-//				}
+				if(p.matchCase[c] != merged) {
+					System.out.println("# " + p);
+					System.out.println("NEW " + StringUtils.formatChar(c) + ": " + merged);
+					System.out.println("OLD " + StringUtils.formatChar(c) + ": " + p.matchCase[c]);
+				}
 				if(merged == p || merged instanceof Choice) {
 					/* this is a rare case where the selected choice is the parent choice */
 					/* this cause the repeated calls of the same matchers */
@@ -471,7 +478,7 @@ public class RuntimeCompiler {
 //		}
 //		Expression common = makeCommonChoice(p, p2);
 //		if(common == null) {
-		return Factory.newChoice(null, p, p2);
+			return Factory.newChoice(null, p, p2);
 //		}
 //		return common;
 	}

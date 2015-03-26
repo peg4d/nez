@@ -34,6 +34,11 @@ public class Verbose {
 			ConsoleUtils.println(msg);
 		}
 	}
+	
+	public final static void printElapsedTime(String msg, long t1, long t2) {
+		double d = (t2 - t1) / 1000000;
+		println(msg + ": " + String.format("%f", d) + "[ms]");
+	}
 
 	public static void noticeOptimize(String key, Expression p) {
 		if(Expression) {
