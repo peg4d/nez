@@ -9,7 +9,7 @@ import nez.ast.ASTWriter;
 import nez.ast.Transformer;
 import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
-import nez.expr.NezParserCombinator;
+import nez.expr.NezCombinator;
 import nez.runtime.MemoTable;
 import nez.util.ConsoleUtils;
 import nez.util.UFlag;
@@ -254,7 +254,7 @@ public class CommandConfigure {
 			return p.load(SourceContext.newStringSourceContext(GrammarText), new GrammarChecker(this.OptimizationLevel));
 		}
 		ConsoleUtils.println("unspecifed grammar");
-		return NezParserCombinator.newGrammar();
+		return NezCombinator.newGrammar();
 	}
 
 	public final Grammar newGrammar() {

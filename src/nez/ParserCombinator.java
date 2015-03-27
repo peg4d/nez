@@ -110,6 +110,10 @@ public class ParserCombinator {
 		return Factory.newRepetition(src(), Sequence(e));
 	}
 	
+	protected final Expression OneMore(Expression ... e) {
+		return Factory.newRepetition1(src(), Sequence(e));
+	}
+
 	protected final Expression Not(Expression ... e) {
 		return Factory.newNot(src(), Sequence(e));
 	}

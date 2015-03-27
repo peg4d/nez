@@ -1,7 +1,7 @@
 import static org.junit.Assert.assertTrue;
 import nez.Grammar;
 import nez.Production;
-import nez.expr.NezParserCombinator;
+import nez.expr.NezCombinator;
 
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ public class ProductionTest {
 
 	@Test
 	public void test() {
-		Grammar peg = NezParserCombinator.newGrammar();
+		Grammar peg = NezCombinator.newGrammar();
 		Production p = peg.getProduction("DIGIT");
 		assertTrue(p.match("8"));
 		assertTrue(!p.match("88"));

@@ -17,7 +17,7 @@ public class NezParser extends NodeVisitor {
 	GrammarChecker checker;
 	
 	public NezParser() {
-		product = NezParserCombinator.newGrammar().getProduction("Chunk", Production.SafeOption);
+		product = NezCombinator.newGrammar().getProduction("Chunk", Production.SafeOption);
 	}
 	
 	public Grammar load(SourceContext sc, GrammarChecker checker) {
