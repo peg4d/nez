@@ -5,6 +5,8 @@ import nez.ast.Source;
 import nez.util.UFlag;
 
 public class Prediction {
+	public final static int TextEOF   = 0;
+	public final static int BinaryEOF = 256;
 	public final static short Unconsumed = 0;
 	public final static short Accept = 1;
 	public final static short Reject = 2;

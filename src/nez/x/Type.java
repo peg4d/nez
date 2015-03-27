@@ -90,7 +90,8 @@ public abstract class Type {
 				inf.endRepetition(); 				
 			}
 			else {
-				((Capture)e).begin.unRepeated = true;
+				// FIXME::
+				//((Capture)e).begin.unRepeated = true;
 			}
 			return inf;
 		}

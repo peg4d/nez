@@ -69,37 +69,27 @@ public class Factory {
 	}
 	
 	public final static Expression newOption(SourcePosition s, Expression p) {
-		if(p.isInterned()) {
-			s = null;
-		}
+		s = p.isInterned() ? null : s;
 		return internImpl(s, new Option(s, p));
 	}
 		
 	public final static Expression newRepetition(SourcePosition s, Expression p) {
-		if(p.isInterned()) {
-			s = null;
-		}
+		s = p.isInterned() ? null : s;
 		return internImpl(s, new Repetition(s, p));
 	}
 
 	public final static Expression newRepetition1(SourcePosition s, Expression p) {
-		if(p.isInterned()) {
-			s = null;
-		}
+		s = p.isInterned() ? null : s;
 		return internImpl(s, new Repetition1(s, p));
 	}
 
 	public final static Expression newAnd(SourcePosition s, Expression p) {
-		if(p.isInterned()) {
-			s = null;
-		}
+		s = p.isInterned() ? null : s;
 		return internImpl(s, new And(s, p));
 	}
 	
 	public final static Expression newNot(SourcePosition s, Expression p) {
-		if(p.isInterned()) {
-			s = null;
-		}
+		s = p.isInterned() ? null : s;
 		return internImpl(s, new Not(s, p));
 	}
 
@@ -125,6 +115,64 @@ public class Factory {
 		return internImpl(s, new Sequence(s, l));
 	}
 
+//	public final static Expression newSequence(SourcePosition s, UList<Expression> l, boolean optimized) {
+//		if(l.size() == 0) {
+//			return internImpl(s, newEmpty(s));
+//		}
+//		if(l.size() == 1) {
+//			return internImpl(s, l.ArrayValues[0]);
+//		}
+//		if(optimized) {
+//			for(int i = 1; i < l.size(); i++) {
+//				Expression p = l.ArrayValues[i-1];
+//				Expression e = l.ArrayValues[i];
+//				if(Expression.isByteConsumed(e)) {
+//					if(Expression.isPositionIndependentOperation(p)) {
+//						l.ArrayValues[i-1] = e;
+//						l.ArrayValues[i]   = p;
+//						continue;
+//					}
+//					if(p instanceof New) {
+//						New n = (New)p;
+//						l.ArrayValues[i-1] = e;
+//						if(n.isInterned()) {
+//							l.ArrayValues[i] =  Factory.newNew(s, n.lefted, n.shift - 1);
+//						}
+//						else {
+//							n.shift -= 1;
+//							l.ArrayValues[i]   = n;
+//						}
+//						continue;
+//					}
+//					if(p instanceof Capture) {
+//						Capture n = (Capture)p;
+//						l.ArrayValues[i-1] = e;
+//						if(n.isInterned()) {
+//							l.ArrayValues[i] =  Factory.newCapture(s, n.shift - 1);
+//						}
+//						else {
+//							n.shift -= 1;
+//							l.ArrayValues[i]   = n;
+//						}
+//						continue;
+//					}
+//				}
+//			}
+//		}
+//		return internImpl(s, new Sequence(s, l));
+//	}
+
+	private New shift(New n, int shift) {
+		n.shift += shift;
+		return n;
+	}
+
+	private Capture shift(Capture n, int shift) {
+		n.shift += shift;
+		return n;
+	}
+
+	
 	public final static Expression newChoice(SourcePosition s, UList<Expression> l) {
 		int size = l.size();
 		for(int i = 0; i < size; i++) {
@@ -345,12 +393,20 @@ public class Factory {
 
 	public final static Expression newNew(SourcePosition s, boolean lefted, Expression e) {
 		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
-		New p = new New(s, lefted, 0);
-		Factory.addSequence(l, p);
+		Factory.addSequence(l, newNew(s, lefted, 0));
 		Factory.addSequence(l, e);
-		Factory.addSequence(l, new Capture(s, p, 0));
+		Factory.addSequence(l, Factory.newCapture(s, 0));
 		return newSequence(s, l);
 	}
+
+	public final static Expression newNew(SourcePosition s, boolean lefted, int shift) {
+		return internImpl(s, new New(s, lefted, shift));
+	}
+
+	public final static Expression newCapture(SourcePosition s, int shift) {
+		return internImpl(s, new Capture(s, shift));
+	}
+
 	
 	public final static UList<Expression> toSequenceList(Expression e) {
 		UList<Expression> l = null;

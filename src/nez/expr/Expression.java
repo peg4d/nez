@@ -141,4 +141,14 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	}
 
 
+	// test
+	
+	public static final boolean isByteConsumed(Expression e) {
+		return (e instanceof ByteChar || e instanceof ByteMap || e instanceof AnyChar);
+	}
+
+	public static final boolean isPositionIndependentOperation(Expression e) {
+		return (e instanceof Tagging || e instanceof Replace);
+	}
+
 }

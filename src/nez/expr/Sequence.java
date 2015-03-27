@@ -130,8 +130,68 @@ public class Sequence extends SequentialExpression {
 				}
 			}
 		}
-		this.optimized = this;
+		if(UFlag.is(option, Production.DFA) && needsReplaceOperation(option)) {
+			this.optimized = operationReplacedSequence(option);
+			//System.out.println("replaced: " + this + "\n => " + this.optimized);
+		}
+		else {
+			this.optimized = this;
+		}
 	}
+
+	private boolean needsReplaceOperation(int option) {
+		for(int i = 1; i < this.size(); i++) {
+			Expression p = this.get(i-1).optimize(option);
+			Expression e = this.get(i).optimize(option);
+			if(Expression.isByteConsumed(e)) {
+				if(Expression.isPositionIndependentOperation(p) || p instanceof New || p instanceof Capture) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private Expression operationReplacedSequence(int option) {
+		UList<Expression> l = this.toList();
+		for(int i = 1; i < l.size(); i++) {
+			Expression p = l.ArrayValues[i-1].optimize(option);
+			Expression e = l.ArrayValues[i].optimize(option);
+			if(Expression.isByteConsumed(e)) {
+				if(Expression.isPositionIndependentOperation(p)) {
+					l.ArrayValues[i-1] = e;
+					l.ArrayValues[i]   = p;
+					continue;
+				}
+				if(p instanceof New) {
+					New n = (New)p;
+					l.ArrayValues[i-1] = e;
+					if(n.isInterned()) {
+						l.ArrayValues[i] =  Factory.newNew(n.s, n.lefted, n.shift - 1);
+					}
+					else {
+						n.shift -= 1;
+						l.ArrayValues[i]   = n;
+					}
+					continue;
+				}
+				if(p instanceof Capture) {
+					Capture n = (Capture)p;
+					l.ArrayValues[i-1] = e;
+					if(n.isInterned()) {
+						l.ArrayValues[i] =  Factory.newCapture(n.s, n.shift - 1);
+					}
+					else {
+						n.shift -= 1;
+						l.ArrayValues[i]   = n;
+					}
+					continue;
+				}
+			}
+		}
+		return Factory.newSequence(s, l);
+	}
+
 	
 	boolean isByteMap(int option, boolean[] byteMap) {
 		for(int i = 0; i < this.size() - 1; i++) {

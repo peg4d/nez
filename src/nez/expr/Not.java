@@ -47,6 +47,20 @@ public class Not extends Unary {
 		/* The code below works only if a single character in !(e) */
 		/* we must accept 'i' for !'int' 'i' */
 		Expression p = this.inner.optimize(option);
+		if(p instanceof Choice) {
+			for(Expression pp : p) {
+				short r = acceptByte(pp, ch, option);
+				if(r != Prediction.Unconsumed) {
+					return r;
+				}
+			}
+			return Prediction.Unconsumed;
+		}
+		else {
+			return acceptByte(p, ch, option);
+		}
+	}
+	private short acceptByte(Expression p, int ch, int option) {
 		if(p instanceof ByteChar) {
 			return ((ByteChar) p).byteChar == ch ? Prediction.Reject : Prediction.Unconsumed;
 		}
@@ -63,6 +77,16 @@ public class Not extends Unary {
 	@Override
 	public void predict(int option, boolean[] dfa) {
 		Expression p = this.inner.optimize(option);
+		if(p instanceof Choice) {
+			for(Expression pp : p) {
+				predict(pp, option, dfa);
+			}
+		}
+		else {
+			predict(p, option, dfa);
+		}
+	}
+	private void predict(Expression p, int option, boolean[] dfa) {
 		if(p instanceof ByteMap) {
 			for(int c = 0; c < dfa.length; c++) {
 				if(dfa[c] && ((ByteMap) p).byteMap[c]) {

@@ -1,6 +1,5 @@
 package nez.runtime;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -25,6 +24,7 @@ import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
+import nez.expr.Prediction;
 import nez.expr.Repetition;
 import nez.expr.Repetition1;
 import nez.expr.Replace;
@@ -134,6 +134,8 @@ public class RuntimeCompiler {
 				//Verbose.println("" + r.getLocalName() + ": " + StringUtils.stringfyCharClass(dfa));
 			}
 		}
+		long t3 = System.nanoTime();
+		Verbose.printElapsedTime("PredictionTime", t, t3);
 		for(Rule r : ruleList) {
 			String uname = r.getUniqueName();
 			CodeBlock block = new CodeBlock();
@@ -152,11 +154,48 @@ public class RuntimeCompiler {
 				((ICallPush) inst).setResolvedJump(deref.head);
 			}
 		}
+		for(Rule r : ruleList) {
+			String uname = r.getUniqueName();
+			CodeBlock block = this.ruleMap.get(uname);
+			test(r.getExpression(), block.head);
+		}
 		long t2 = System.nanoTime();
 		Verbose.printElapsedTime("CompilingTime", t, t2);
 		return this.codeList.ArrayValues[0];
 	}
 
+	void test(Expression e, Instruction inst) {
+		boolean found = false;
+		for(int c = 0; c < 257; c++) {
+			if(e.acceptByte(c, this.option) != inst.isAcceptImpl(c)) {
+				found = true;
+				break;
+			}
+		}
+		if(found) {
+			Verbose.printSelfTesting("\nTesting prediction " +  e + " .. ");
+			for(int c = 0; c < 256; c++) {
+				short a = e.acceptByte(c, option);
+				short a2 = inst.isAcceptImpl(c);
+				if(a != a2) {
+					if(a == Prediction.Accept) {
+						Verbose.printSelfTestingIndent("[Failed] Accept " + StringUtils.formatChar(c) + ": " + a2);
+						break;
+					}
+					if(a == Prediction.Reject) {
+						Verbose.printSelfTestingIndent("[Failed] Reject " + StringUtils.formatChar(c) + ": " + a2);
+						break;
+					}
+					if(a == Prediction.Unconsumed) {
+						Verbose.printSelfTestingIndent("[Failed] Unconsumed " + StringUtils.formatChar(c) + ": " + a2);
+						break;
+					}
+				}
+			}
+			Verbose.printSelfTesting("\nPlease report the above to " + Verbose.BugsReport1);
+		}	
+	}
+	
 	void verify(Instruction inst) {
 		if(inst != null) {
 			if(inst.id == -1) {
@@ -237,12 +276,12 @@ public class RuntimeCompiler {
 
 	public final Instruction encodeByteChar(ByteChar p, Instruction next, boolean[] dfa) {
 		updateDfa(p, dfa);
-		return new IByteChar(p, false, next);
+		return new IByteChar(p, next);
 	}
 
 	public final Instruction encodeByteMap(ByteMap p, Instruction next, boolean[] dfa) {
 		updateDfa(p, dfa);
-		return new IByteMap(p, false, next);
+		return new IByteMap(p, next);
 	}
 
 	public Instruction encodeFail(Expression p) {
@@ -259,69 +298,71 @@ public class RuntimeCompiler {
 	}
 
 	public final Instruction encodeOption(Option p, Instruction next, boolean[] dfa) {
-//		if(dfa != null) {
-//			boolean[] optdfa = dfa.clone();
-//			updateDfa(p.get(0), optdfa);
-//			if(isDisjoint(dfa, optdfa)) {
-//				Instruction opt = encodeDfa(p.get(0), next, dfa.clone());
-//				IDfaDispatch match = new IDfaDispatch(p, failed);
-//				for(int ch = 0; ch < dfa.length; ch++) {
-//					if(optdfa[ch]) {
-//						dfa[ch] = true;
-//						match.setJumpTable(ch, opt);
-//						continue;
-//					}
-//					if(dfa[ch]) {
-//						match.setJumpTable(ch, next);
-//					}
-//				}
-//				System.out.println("DFA: " + p);
-//				return match;
-//			}
-//			System.out.println("NFA: " + p);
-//			updateDfa(p, dfa);
-//		}
+		if(dfa != null) {
+			boolean[] optdfa = dfa.clone();
+			updateDfa(p.get(0), optdfa);
+			if(isDisjoint(dfa, optdfa)) {
+				Instruction opt = encodeDfa(p.get(0), next, dfa.clone());
+				IDfaDispatch match = new IDfaDispatch(p, failed);
+				for(int ch = 0; ch < dfa.length; ch++) {
+					if(optdfa[ch]) {
+						dfa[ch] = true;
+						match.setJumpTable(ch, opt);
+						continue;
+					}
+					if(dfa[ch]) {
+						match.setJumpTable(ch, next);
+					}
+				}
+				//System.out.println("DFA: " + p + " " + next.e);
+				return match;
+			}
+			//System.out.println("NFA: " + p + " " + next.e);
+			updateDfa(p, dfa);
+		}
 		if(UFlag.is(option, Production.Specialization)) {
 			Expression inner = p.get(0).optimize(option);
 			if(inner instanceof ByteChar) {
 				Verbose.noticeOptimize("Specialization", p, inner);
-				return new IByteChar((ByteChar)inner, true, next);
+				return new IOptionByteChar((ByteChar)inner, next);
 			}
 			if(inner instanceof ByteMap) {
 				Verbose.noticeOptimize("Specialization", p, inner);
-				return new IByteMap((ByteMap)inner, true, next);
+				return new IOptionByteMap((ByteMap)inner, next);
 			}
 		}
 		Instruction pop = new IFailPop(p, next);
 		return new IFailPush(p, next, encodeDfa(p.get(0), pop, dfa));
 	}
-
 	
 	public final Instruction encodeRepetition(Repetition p, Instruction next, boolean[] dfa) {
-//		if(dfa != null && !p.possibleInfiniteLoop) {
-//			boolean[] optdfa = dfa.clone();
-//			updateDfa(p.get(0), optdfa);
-//			if(isDisjoint(dfa, optdfa)) {
-//				IDfaDispatch match = new IDfaDispatch(p, failed);
-//				Instruction opt = encodeDfa(p.get(0), match, dfa.clone());
-//				for(int ch = 0; ch < dfa.length; ch++) {
-//					if(optdfa[ch]) {
-//						dfa[ch] = true;
-//						match.setJumpTable(ch, opt);
-//						continue;
-//					}
-//					if(dfa[ch]) {
-//						match.setJumpTable(ch, next);
-//					}
-//				}
-//				System.out.println("DFA: " + p);
-//				return match;
-//			}
-//		}
-//		if(dfa != null) {
-//			System.out.println("NFA: " + p);
-//			updateDfa(p, dfa);
-//		}
+		if(dfa != null && !p.possibleInfiniteLoop) {
+			boolean[] optdfa = dfa.clone();
+			updateDfa(p.get(0), optdfa);
+			if(isDisjoint(dfa, optdfa)) {
+				IDfaDispatch match = new IDfaDispatch(p, failed);
+				Instruction opt = encodeDfa(p.get(0), match, dfa.clone());
+				System.out.println("DFA: " + p + " " + next.e);
+				System.out.println("  1 " + p + " " + StringUtils.stringfyCharClass(optdfa));
+				System.out.println("  2 " + next.e + " " + StringUtils.stringfyCharClass(dfa));
+
+				for(int ch = 0; ch < dfa.length; ch++) {
+					if(optdfa[ch]) {
+						dfa[ch] = true;
+						match.setJumpTable(ch, opt);
+						continue;
+					}
+					if(dfa[ch]) {
+						match.setJumpTable(ch, next);
+					}
+				}
+				return match;
+			}
+		}
+		if(dfa != null) {
+			//System.out.println("NFA: " + p + " " + next.e);
+			updateDfa(p, dfa);
+		}
 		if(UFlag.is(option, Production.Specialization)) {
 			Expression inner = p.get(0).optimize(option);
 			if(inner instanceof ByteChar) {
@@ -361,13 +402,17 @@ public class RuntimeCompiler {
 				Verbose.noticeOptimize("Specilization", p);
 				return new INotByteMap((ByteChar)inn, next);
 			}
+			if(inn instanceof AnyChar) {
+				Verbose.noticeOptimize("Specilization", p);
+				return new INotAnyChar(inn, UFlag.is(this.option, Production.Binary), next);
+			}
 			if(inn instanceof Sequence && ((Sequence)inn).isMultiChar()) {
 				Verbose.noticeOptimize("Specilization", p);
 				return new INotMultiChar((Sequence)inn, next);
 			}
 		}
 		Instruction fail = new IFailPop(p, new IFail(p));
-		return new IFailPush(p, next, encodeDfa(p.get(0), fail, dfa));
+		return new INotFailPush(p, next, encodeDfa(p.get(0), fail, dfa));
 	}
 
 	public final Instruction encodeSequence(Expression p, Instruction next, boolean[] dfa) {
@@ -432,7 +477,7 @@ public class RuntimeCompiler {
 			Expression merged = null;
 			for(int i = 0; i < p.size(); i++) {
 				if(dfas[i][c]) {
-					merged = mergeChoice(merged, p.get(i));
+					merged = mergeChoice(merged, p.get(i).optimize(option));
 				}
 			}
 			if(merged == null) {
@@ -442,14 +487,15 @@ public class RuntimeCompiler {
 			Integer key = merged.getId();
 			Instruction inst = m.get(key);
 			if(inst == null) {
-				if(p.matchCase[c] != merged) {
-					System.out.println("# " + p);
-					System.out.println("NEW " + StringUtils.formatChar(c) + ": " + merged);
-					System.out.println("OLD " + StringUtils.formatChar(c) + ": " + p.matchCase[c]);
-				}
+//				if(p.matchCase != null && p.matchCase[c] != merged) {
+//					System.out.println("# " + p);
+//					System.out.println("NEW " + StringUtils.formatChar(c) + ": " + merged);
+//					System.out.println("OLD " + StringUtils.formatChar(c) + ": " + p.matchCase[c]);
+//				}
 				if(merged == p || merged instanceof Choice) {
 					/* this is a rare case where the selected choice is the parent choice */
 					/* this cause the repeated calls of the same matchers */
+					//System.out.println("NFA: " + StringUtils.formatChar(c) + ": " + merged);
 					inst = this.encodeUnoptimizedChoice((Choice)merged, next, dupDfa(dfa));
 				}
 				else {
@@ -476,19 +522,25 @@ public class RuntimeCompiler {
 //				return Factory.newChoice(null, p, p2);
 //			}
 //		}
-//		Expression common = makeCommonChoice(p, p2);
-//		if(common == null) {
+		Expression common = makeCommonChoice(p, p2, true);
+		if(common == null) {
 			return Factory.newChoice(null, p, p2);
-//		}
-//		return common;
+		}
+		return common;
 	}
 	
-	private final Expression makeCommonChoice(Expression e, Expression e2) {
+	private final Expression makeCommonChoice(Expression e, Expression e2, boolean ignoredFirstChar) {
 		int min = sizeAsSequence(e) < sizeAsSequence(e2) ? sizeAsSequence(e) : sizeAsSequence(e2);
 		int commonIndex = -1;
 		for(int i = 0; i < min; i++) {
 			Expression p = retrieveAsList(e, i);
 			Expression p2 = retrieveAsList(e2, i);
+			if(ignoredFirstChar && i == 0) {
+				if(Expression.isByteConsumed(p.optimize(this.option)) && Expression.isByteConsumed(p2.optimize(this.option))) {
+					commonIndex = i + 1;
+					continue;
+				}
+			}
 			if(p.getId() != p2.getId()) {
 				break;
 			}
@@ -496,7 +548,6 @@ public class RuntimeCompiler {
 		}
 		if(commonIndex == -1) {
 			return null;
-			//return Factory.newChoice(null, e, e2);
 		}
 		UList<Expression> common = new UList<Expression>(new Expression[commonIndex]);
 		for(int i = 0; i < commonIndex; i++) {
@@ -515,29 +566,6 @@ public class RuntimeCompiler {
 		Factory.addChoice(l3, Factory.newSequence(null, l2));
 		Factory.addSequence(common, Factory.newChoice(null, l3));
 		return Factory.newSequence(null, common);
-	}
-
-	class IDfaDispatch extends Instruction {
-		Instruction[] jumpTable;
-		public IDfaDispatch(Expression e, Instruction next) {
-			super(e, next);
-			jumpTable = new Instruction[257];
-			Arrays.fill(jumpTable, next);
-		}
-		void setJumpTable(int ch, Instruction inst) {
-			if(inst instanceof IDfaDispatch) {
-				jumpTable[ch] = ((IDfaDispatch) inst).jumpTable[ch];
-			}
-			else {
-				jumpTable[ch] = Instruction.labeling(inst);
-			}
-		}
-		@Override
-		Instruction exec(Context sc) throws TerminationException {
-			int ch = sc.byteAt(sc.getPosition());
-			//System.out.println("ch="+(char)ch + " " + jumpTable[ch]);
-			return jumpTable[ch];
-		}
 	}
 	
 	private final Instruction encodePrefetchChoice(Choice p, Instruction next, boolean[] dfa2) {

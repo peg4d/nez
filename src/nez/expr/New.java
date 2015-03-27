@@ -11,7 +11,7 @@ import nez.util.UMap;
 public class New extends Unconsumed {
 	public boolean lefted;
 	public boolean unRepeated = false;
-	int shift;
+	public int shift  = 0;
 	New(SourcePosition s, boolean lefted, int shift) {
 		super(s);
 		this.lefted = lefted;
@@ -23,7 +23,8 @@ public class New extends Unconsumed {
 	}
 	@Override
 	public String getInterningKey() {
-		return lefted ? "{@}" : "{}";
+		String s = lefted ? "{@" : "{";
+		return (shift != 0) ? s + "[" + shift + "]" : s;
 	}
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
@@ -57,10 +58,6 @@ public class New extends Unconsumed {
 	@Override
 	public Expression removeFlag(TreeMap<String, String> undefedFlags) {
 		return this;
-	}
-	@Override
-	public short acceptByte(int ch, int option) {
-		return Prediction.Unconsumed;
 	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {

@@ -334,15 +334,15 @@ public abstract class Context implements Source {
 	
 	public final Instruction opIFailSkip(IFailSkip op) {
 		ContextStack stackTop = contextStacks[failStackTop];
-		if(this.pos == stackTop.pos) {
-			return opIFail();
-		}
+//		if(this.pos == stackTop.pos) {
+//			return opIFail();
+//		}
 		stackTop.pos = this.pos;
 		stackTop.lastLog = this.lastAppendedLog;
 		return op.next;
 	}
 
-	public final Instruction opIFailSkip_(IFailSkip op) {
+	public final Instruction opIFailCheckSkip(IFailSkip op) {
 		ContextStack stackTop = contextStacks[failStackTop];
 		assert(stackTop.debugFailStackFlag);
 		if(this.pos == stackTop.pos) {
@@ -420,7 +420,15 @@ public abstract class Context implements Source {
 			this.consume(1);
 			return op.next;
 		}
-		return op.optional ? op.next : this.opIFail();
+		return this.opIFail();
+	}
+
+	public final Instruction opIOptionByteChar(IByteChar op) {
+		if(this.byteAt(this.pos) == op.byteChar) {
+			this.consume(1);
+			return op.next;
+		}
+		return op.next;
 	}
 
 	public final Instruction opIByteMap(IByteMap op) {
@@ -429,7 +437,16 @@ public abstract class Context implements Source {
 			this.consume(1);
 			return op.next;
 		}
-		return op.optional ? op.next : this.opIFail();
+		return this.opIFail();
+	}
+
+	public final Instruction opIOptionByteMap(IByteMap op) {
+		int byteChar = this.byteAt(this.pos);
+		if(op.byteMap[byteChar]) {
+			this.consume(1);
+			return op.next;
+		}
+		return op.next;
 	}
 
 //	public final Instruction opMatchByteMap(IByteMap op) {
@@ -463,12 +480,12 @@ public abstract class Context implements Source {
 	}
 
 	public final Instruction opINew(INew op) {
-		pushDataLog(LazyNew, this.pos, null); //op.e);
+		pushDataLog(LazyNew, this.pos + op.shift, null); //op.e);
 		return op.next;
 	}
 
 	public final Instruction opILeftNew(ILeftNew op) {
-		pushDataLog(LazyLeftNew, this.pos, null); // op.e);
+		pushDataLog(LazyLeftNew, this.pos + op.shift, null); // op.e);
 		return op.next;
 	}
 
@@ -630,7 +647,7 @@ public abstract class Context implements Source {
 
 	// Specialization 
 	
-	public final Instruction opRByteMap(IRepeatedByteMap op) {
+	public final Instruction opRepeatedByteMap(IRepeatedByteMap op) {
 		while(true) {
 			int c = this.byteAt(this.pos);
 			if(!op.byteMap[c]) {
@@ -641,7 +658,7 @@ public abstract class Context implements Source {
 		return op.next;
 	}
 
-	public final Instruction opNByteMap(INotByteMap op) {
+	public final Instruction opNotByteMap(INotByteMap op) {
 		int c = this.byteAt(this.pos);
 		if(!op.byteMap[c]) {
 			return op.next;
