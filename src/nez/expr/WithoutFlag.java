@@ -67,8 +67,8 @@ public class WithoutFlag extends Unary {
 		return this.inner.optimized.match(context);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return this.inner.encode(bc, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return this.inner.encode(bc, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

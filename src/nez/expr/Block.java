@@ -56,8 +56,8 @@ public class Block extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeBlock(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeBlock(this, next);
 	}
 	
 	@Override

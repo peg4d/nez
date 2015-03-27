@@ -20,8 +20,8 @@ public class DefIndent extends Unconsumed {
 		return true;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeDefIndent(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeDefIndent(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

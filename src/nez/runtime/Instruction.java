@@ -40,7 +40,7 @@ public abstract class Instruction {
 	}
 	
 	short isAcceptImpl(int ch) {
-		return this.next.isAcceptImpl(ch);
+		return next == null ? Prediction.Accept : this.next.isAcceptImpl(ch);
 	}
 
 	boolean isAccept(int ch) {

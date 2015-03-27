@@ -24,7 +24,7 @@ public class Capture extends ASTOperation {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeCapture(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeCapture(this, next);
 	}
 }

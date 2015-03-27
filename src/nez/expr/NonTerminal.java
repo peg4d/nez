@@ -128,7 +128,13 @@ public class NonTerminal extends Expression {
 	
 	@Override
 	public short acceptByte(int ch, int option) {
-		return this.deReference().acceptByte(ch, option);
+		try {
+			return this.deReference().acceptByte(ch, option);
+		}
+		catch(StackOverflowError e) {
+			System.out.println(e + " at " + this.getLocalName());
+			return Prediction.Accept;
+		}
 	}
 
 	@Override
@@ -152,8 +158,8 @@ public class NonTerminal extends Expression {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeNonTerminal(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeNonTerminal(this, next);
 	}
 
 	@Override

@@ -24,7 +24,7 @@ public class IfFlag extends Unconsumed {
 		return this;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return next;
 	}
 	@Override

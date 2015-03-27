@@ -118,8 +118,8 @@ public class Choice extends SequentialExpression {
 		return false;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeChoice(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeChoice(this, next);
 	}
 	
 	// optimize
@@ -138,7 +138,7 @@ public class Choice extends SequentialExpression {
 				return;
 			}
 		}
-		if(UFlag.is(option, Production.Prediction)) {
+		if(UFlag.is(option, Production.Prediction) && !UFlag.is(option, Production.DFA)) {
 			Expression fails = Factory.newFailure(s);
 			this.matchCase = new Expression[257];
 			for(int ch = 0; ch <= 256; ch++) {

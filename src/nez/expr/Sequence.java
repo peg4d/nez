@@ -268,8 +268,8 @@ public class Sequence extends SequentialExpression {
 		return true;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeSequence(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeSequence(this, next);
 	}
 	
 	@Override

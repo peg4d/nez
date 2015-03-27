@@ -57,8 +57,8 @@ public class Repetition1 extends Repetition {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeRepetition1(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeRepetition1(this, next);
 	}
 
 	@Override

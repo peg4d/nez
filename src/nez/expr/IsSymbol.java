@@ -68,8 +68,8 @@ public class IsSymbol extends Terminal {
 		return context.matchSymbolTable(table, this.checkLastSymbolOnly);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeIsSymbol(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeIsSymbol(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

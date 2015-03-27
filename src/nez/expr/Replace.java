@@ -30,7 +30,7 @@ public class Replace extends ASTOperation {
 		return true;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeReplace(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeReplace(this, next);
 	}
 }

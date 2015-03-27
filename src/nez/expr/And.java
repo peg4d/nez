@@ -70,8 +70,8 @@ public class And extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeAnd(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeAnd(this, next);
 	}
 	
 	@Override

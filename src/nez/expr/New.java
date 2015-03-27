@@ -60,8 +60,8 @@ public class New extends Unconsumed {
 		return this;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeNew(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeNew(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

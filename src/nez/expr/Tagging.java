@@ -34,7 +34,7 @@ public class Tagging extends ASTOperation {
 		return true;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeTagging(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeTagging(this, next);
 	}
 }

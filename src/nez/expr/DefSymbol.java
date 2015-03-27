@@ -97,8 +97,8 @@ public class DefSymbol extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeDefSymbol(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeDefSymbol(this, next);
 	}
 
 	@Override

@@ -5,8 +5,8 @@ import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
-import nez.util.UFlag;
 import nez.util.StringUtils;
+import nez.util.UFlag;
 import nez.util.UList;
 
 public class ByteMap extends Terminal {
@@ -100,8 +100,8 @@ public class ByteMap extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeByteMap(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeByteMap(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

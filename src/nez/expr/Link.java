@@ -82,8 +82,8 @@ public class Link extends Unary {
 		return false;
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeLink(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeLink(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

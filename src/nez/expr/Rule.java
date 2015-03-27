@@ -318,8 +318,8 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return this.getExpression().encode(bc, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return this.getExpression().encode(bc, next);
 	}
 
 	@Override

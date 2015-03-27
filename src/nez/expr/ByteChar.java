@@ -51,8 +51,8 @@ public class ByteChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeByteChar(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeByteChar(this, next);
 	}
 	
 	@Override

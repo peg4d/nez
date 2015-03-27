@@ -53,8 +53,8 @@ public class Match extends Unary {
 	}
 	
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return this.inner.encode(bc, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return this.inner.encode(bc, next);
 	}
 
 	@Override

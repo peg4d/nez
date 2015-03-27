@@ -44,8 +44,8 @@ public class IsIndent extends Terminal {
 		return context.matchSymbolTable(NezTag.Indent, true);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeIsIndent(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeIsIndent(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

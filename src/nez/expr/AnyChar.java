@@ -75,8 +75,8 @@ public class AnyChar extends Terminal {
 		return context.failure2(this);
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
-		return bc.encodeMatchAny(this, next, dfa);
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
+		return bc.encodeMatchAny(this, next);
 	}
 	@Override
 	protected int pattern(GEP gep) {

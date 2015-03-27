@@ -18,7 +18,7 @@ public class Empty extends Unconsumed {
 		return "";
 	}
 	@Override
-	public Instruction encode(RuntimeCompiler bc, Instruction next, boolean[] dfa) {
+	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return next;
 	}
 
