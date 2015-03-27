@@ -2,8 +2,6 @@ package nez.util;
 
 import java.util.HashMap;
 
-import org.peg4d.Utils;
-
 public final class UMap <T> {
 	final HashMap<String, T>	m;
 	public UMap() {
@@ -27,7 +25,7 @@ public final class UMap <T> {
 	}
 	protected String stringify(Object Value) {
 		if(Value instanceof String) {
-			return Utils.quoteString('"', (String) Value, '"');
+			return StringUtils.quoteString('"', (String) Value, '"');
 		}
 		return Value.toString();
 	}

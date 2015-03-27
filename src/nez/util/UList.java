@@ -3,8 +3,6 @@ package nez.util;
 import java.lang.reflect.Array;
 import java.util.AbstractList;
 
-import org.peg4d.Utils;
-
 public class UList<T> extends AbstractList<T> {
 	private int    currentSize;
 	public T[] ArrayValues;
@@ -29,7 +27,7 @@ public class UList<T> extends AbstractList<T> {
 
 	protected String Stringify(Object Value) {
 		if(Value instanceof String) {
-			return Utils.quoteString('"', (String) Value, '"');
+			return StringUtils.quoteString('"', (String) Value, '"');
 		}
 		return Value.toString();
 	}

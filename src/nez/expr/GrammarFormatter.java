@@ -2,8 +2,6 @@ package nez.expr;
 
 import nez.util.StringUtils;
 
-import org.peg4d.Utils;
-
 public class GrammarFormatter extends GrammarVisitor {
 	private StringBuilder sb = null;
 	private final static String NewIndent = "\n\t";
@@ -156,7 +154,7 @@ public class GrammarFormatter extends GrammarVisitor {
 			break;
 		}
 		if(s.length() > 1) {
-			sb.append(Utils.quoteString('\'', s, '\''));
+			sb.append(StringUtils.quoteString('\'', s, '\''));
 		}
 		return end - 1;
 	}

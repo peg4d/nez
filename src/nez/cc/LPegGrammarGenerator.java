@@ -28,8 +28,6 @@ import nez.expr.Unary;
 import nez.util.StringUtils;
 import nez.util.UList;
 
-import org.peg4d.Utils;
-
 public class LPegGrammarGenerator extends GrammarGenerator {
 
 	Grammar peg;
@@ -298,7 +296,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 			break;
 		}
 		if(s.length() > 1) {
-			file.write("lpeg.P" + Utils.quoteString('"', s, '"'));
+			file.write("lpeg.P" + StringUtils.quoteString('"', s, '"'));
 		}
 		return end - 1;
 	}
