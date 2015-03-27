@@ -10,10 +10,8 @@ import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
 import nez.expr.Failure;
-import nez.expr.LeftNewClosure;
 import nez.expr.Link;
 import nez.expr.New;
-import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -200,7 +198,7 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		if(prefix != null) {
 			file.write(prefix);
 		}
-		if(e.get(0) instanceof NonTerminal || e.get(0) instanceof NewClosure) {
+		if(e.get(0) instanceof NonTerminal/* || e.get(0) instanceof NewClosure*/) {
 			this.visit(e.get(0));
 		}
 		else {
@@ -316,17 +314,17 @@ public class LPegGrammarGenerator extends GrammarGenerator {
 		}
 	}
 
-	public void visitNewClosure(NewClosure e) {
-		file.write("( ");
-		this.visitSequenceImpl(e);
-		file.write(" )");
-	}
-
-	public void visitLeftNew(LeftNewClosure e) {
-		file.write("( ");
-		this.visitSequenceImpl(e);
-		file.write(" )");
-	}
+//	public void visitNewClosure(NewClosure e) {
+//		file.write("( ");
+//		this.visitSequenceImpl(e);
+//		file.write(" )");
+//	}
+//
+//	public void visitLeftNew(LeftNewClosure e) {
+//		file.write("( ");
+//		this.visitSequenceImpl(e);
+//		file.write(" )");
+//	}
 
 	public void visitNew(New e) {
 

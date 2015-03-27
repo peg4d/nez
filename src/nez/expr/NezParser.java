@@ -261,25 +261,25 @@ public class NezParser extends NodeVisitor {
 	// PEG4d TransCapturing
 
 	public Expression toNew(AST ast) {
-		if(Expression.ClassicMode) {
-			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-			return Factory.newNew(ast, seq.toList());
-		}
-		else {
-			Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-			return Factory.newNew(ast, false, p);
-		}
+//		if(Expression.ClassicMode) {
+//			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+//			return Factory.newNew(ast, seq.toList());
+//		}
+//		else {
+		Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+		return Factory.newNew(ast, false, p);
+//		}
 	}
 
 	public Expression toLeftNew(AST ast) {
-		if(Expression.ClassicMode) {
-			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-			return Factory.newNew(ast, seq.toList());
-		}
-		else {
-			Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-			return Factory.newNew(ast, true, p);
-		}
+//		if(Expression.ClassicMode) {
+//			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+//			return Factory.newNew(ast, seq.toList());
+//		}
+//		else {
+		Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
+		return Factory.newNew(ast, true, p);
+//		}
 	}
 
 	public Expression toLink(AST ast) {

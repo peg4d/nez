@@ -377,27 +377,19 @@ public class Factory {
 		return internImpl(s, new Link(s, p, index));
 	}
 
-	public final static Expression newNew(SourcePosition s, UList<Expression> l) {
-		if(s != null && isInterned(l)) {
-			s = null;
-		}
-		return internImpl(s, new NewClosure(s, l));
-	}
-
-	public final static Expression newLeftNew(SourcePosition s, UList<Expression> l) {
-		if(s != null && isInterned(l)) {
-			s = null;
-		}
-		return internImpl(s, new LeftNewClosure(s, l));
-	}
-
-	public final static Expression newNew(SourcePosition s, boolean lefted, Expression e) {
-		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
-		Factory.addSequence(l, newNew(s, lefted, 0));
-		Factory.addSequence(l, e);
-		Factory.addSequence(l, Factory.newCapture(s, 0));
-		return newSequence(s, l);
-	}
+//	public final static Expression newNew(SourcePosition s, UList<Expression> l) {
+//		if(s != null && isInterned(l)) {
+//			s = null;
+//		}
+//		return internImpl(s, new NewClosure(s, l));
+//	}
+//
+//	public final static Expression newLeftNew(SourcePosition s, UList<Expression> l) {
+//		if(s != null && isInterned(l)) {
+//			s = null;
+//		}
+//		return internImpl(s, new LeftNewClosure(s, l));
+//	}
 
 	public final static Expression newNew(SourcePosition s, boolean lefted, int shift) {
 		return internImpl(s, new New(s, lefted, shift));
@@ -405,6 +397,38 @@ public class Factory {
 
 	public final static Expression newCapture(SourcePosition s, int shift) {
 		return internImpl(s, new Capture(s, shift));
+	}
+
+	public final static Expression newNew(SourcePosition s, boolean lefted, Expression e) {
+		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
+		Factory.addSequence(l, internImpl(s, new New(s, lefted, 0)));
+		Factory.addSequence(l, e);
+		Factory.addSequence(l, Factory.newCapture(s, 0));
+		return newSequence(s, l);
+	}
+
+	public final static Expression newLeftNewOption(SourcePosition s, Expression e) {
+		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
+		Factory.addSequence(l, internImpl(s, new New(s, true, 0)));
+		Factory.addSequence(l, e);
+		Factory.addSequence(l, Factory.newCapture(s, 0));
+		return newOption(s, Factory.newSequence(s, l));
+	}
+
+	public final static Expression newLeftNewRepetition(SourcePosition s, Expression e) {
+		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
+		Factory.addSequence(l, internImpl(s, new New(s, true, 0)));
+		Factory.addSequence(l, e);
+		Factory.addSequence(l, Factory.newCapture(s, 0));
+		return newRepetition(s, Factory.newSequence(s, l));
+	}
+
+	public final static Expression newLeftNewRepetition1(SourcePosition s, Expression e) {
+		UList<Expression> l = new UList<Expression>(new Expression[e.size() + 3]);
+		Factory.addSequence(l, internImpl(s, new New(s, true, 0)));
+		Factory.addSequence(l, e);
+		Factory.addSequence(l, Factory.newCapture(s, 0));
+		return newRepetition1(s, Factory.newSequence(s, l));
 	}
 
 	

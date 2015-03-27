@@ -122,21 +122,37 @@ public class ParserCombinator {
 		return Factory.newAnd(src(), Sequence(e));
 	}
 
-	protected final Expression New(Expression ... elist) {
-		UList<Expression> l = new UList<Expression>(new Expression[8]);
-		for(Expression e : elist) {
-			Factory.addSequence(l, e);
-		}
-		return Factory.newNew(src(), l);
+	protected final Expression New(Expression ... e) {
+		return Factory.newNew(src(), false, Sequence(e));
+	}
+
+	protected final Expression LeftNewOption(Expression ... e) {
+		return Factory.newLeftNewOption(src(), Sequence(e));
+	}
+
+	protected final Expression LeftNewZeroMore(Expression ... e) {
+		return Factory.newLeftNewRepetition(src(), Sequence(e));
+	}
+
+	protected final Expression LeftNewOneMore(Expression ... e) {
+		return Factory.newLeftNewRepetition1(src(), Sequence(e));
 	}
 	
-	protected Expression NewLeftLink(Expression ... elist) {
-		UList<Expression> l = new UList<Expression>(new Expression[8]);
-		for(Expression e : elist) {
-			Factory.addSequence(l, e);
-		}
-		return Factory.newLeftNew(src(), l);
-	}
+//	protected final Expression NewClosure(Expression ... elist) {
+//		UList<Expression> l = new UList<Expression>(new Expression[8]);
+//		for(Expression e : elist) {
+//			Factory.addSequence(l, e);
+//		}
+//		return Factory.newNew(src(), l);
+//	}
+//	
+//	protected Expression LeftNewClosure(Expression ... elist) {
+//		UList<Expression> l = new UList<Expression>(new Expression[8]);
+//		for(Expression e : elist) {
+//			Factory.addSequence(l, e);
+//		}
+//		return Factory.newLeftNew(src(), l);
+//	}
 	
 	protected Expression Link(Expression ... e) {
 		return Factory.newLink(src(), Sequence(e), -1);

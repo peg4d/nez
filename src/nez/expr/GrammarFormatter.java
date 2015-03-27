@@ -75,7 +75,7 @@ public class GrammarFormatter extends GrammarVisitor {
 		if(prefix != null) {
 			sb.append(prefix);
 		}
-		if(/*e.inner instanceof String ||*/ e.inner instanceof NonTerminal || e.inner instanceof NewClosure) {
+		if(/*e.inner instanceof String ||*/ e.inner instanceof NonTerminal/* || e.inner instanceof NewClosure*/) {
 			this.visit(e.inner);
 		}
 		else {
@@ -171,18 +171,6 @@ public class GrammarFormatter extends GrammarVisitor {
 			}
 			visit(e.get(i));
 		}
-	}
-
-	public void visitNewClosure(NewClosure e) {
-		sb.append("{ ");
-		this.appendSequence(e);
-		sb.append(" }");
-	}
-
-	public void visitLeftNewClosure(LeftNewClosure e) {
-		sb.append("{@ ");
-		this.appendSequence(e);
-		sb.append(" }");
 	}
 
 	public void visitNew(New e) {

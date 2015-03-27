@@ -18,9 +18,7 @@ import nez.expr.Expression;
 import nez.expr.Factory;
 import nez.expr.Failure;
 import nez.expr.GrammarVisitor;
-import nez.expr.LeftNewClosure;
 import nez.expr.Link;
-import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -821,7 +819,7 @@ public class Compiler extends GrammarVisitor {
 				this.depth = depth;
 				return false;
 			}
-			if(e instanceof Sequence || e instanceof Choice || e instanceof NewClosure) {
+			if(e instanceof Sequence || e instanceof Choice) {
 				if (depth < 2) {
 					for(int i = 0; i < e.size(); i++) {
 						if (!checkSC(e.get(i))) {
@@ -1593,105 +1591,107 @@ public class Compiler extends GrammarVisitor {
 		}
 	}
 
-	public void visitNew(NewClosure e) {
-		if (PatternMatching) {
-			for(int i = 0; i < e.size(); i++) {
-				if (O_FusionInstruction) {
-					i = writeSequenceCode(e, i, e.size());
-				}
-				else {
-					e.get(i).visit(this);
-				}
-			}
-		}
-		else {
-			BasicBlock bb = this.getCurrentBasicBlock();
-			BasicBlock fbb = new BasicBlock();
-			BasicBlock mergebb = new BasicBlock();
-			this.pushFailureJumpPoint(fbb);
-//			if (e.leftJoin) {
+//  FIXME
+//	public void visitNew(NewClosure e) {
+//		if (PatternMatching) {
+//			for(int i = 0; i < e.size(); i++) {
+//				if (O_FusionInstruction) {
+//					i = writeSequenceCode(e, i, e.size());
+//				}
+//				else {
+//					e.get(i).visit(this);
+//				}
+//			}
+//		}
+//		else {
+//			BasicBlock bb = this.getCurrentBasicBlock();
+//			BasicBlock fbb = new BasicBlock();
+//			BasicBlock mergebb = new BasicBlock();
+//			this.pushFailureJumpPoint(fbb);
+////			if (e.leftJoin) {
+////				this.createPUSHo(e, bb);
+////				this.createLEFTJOIN(e, bb, 0);
+////			}
+////			else {
+//				this.createNEW(e, bb);
+////			}
+//			for(int i = 0; i < e.size(); i++) {
+//				if (O_FusionInstruction) {
+//					i = writeSequenceCode(e, i, e.size());
+//				}
+//				else {
+//					e.get(i).visit(this);
+//				}
+//			}
+//			bb = this.getCurrentBasicBlock();
+//			createSETendp(e, bb);
+//			createPOPp(e, bb);
+////			if (e.leftJoin) {
+////				this.createPOPo(e, bb);
+////			}
+//			createJUMP(e, bb, mergebb);
+//			this.popFailureJumpPoint(e);
+//			fbb.setInsertPoint(this.func);
+//			createABORT(e, fbb);
+////			if (e.leftJoin) {
+////				this.createSTOREo(e, fbb);
+////			}
+//			this.createJUMP(e, fbb, this.jumpFailureJump());
+//			mergebb.setInsertPoint(this.func);
+//			this.setCurrentBasicBlock(mergebb);
+//		}
+//	}
+
+// FIXME:
+//	public void visitLeftNew(LeftNewClosure e) {
+//		if (PatternMatching) {
+//			for(int i = 0; i < e.size(); i++) {
+//				if (O_FusionInstruction) {
+//					i = writeSequenceCode(e, i, e.size());
+//				}
+//				else {
+//					e.get(i).visit(this);
+//				}
+//			}
+//		}
+//		else {
+//			BasicBlock bb = this.getCurrentBasicBlock();
+//			BasicBlock fbb = new BasicBlock();
+//			BasicBlock mergebb = new BasicBlock();
+//			this.pushFailureJumpPoint(fbb);
+//			//if (e.leftJoin) {
 //				this.createPUSHo(e, bb);
 //				this.createLEFTJOIN(e, bb, 0);
+////			}
+////			else {
+////				this.createNEW(e, bb);
+////			}
+//			for(int i = 0; i < e.size(); i++) {
+//				if (O_FusionInstruction) {
+//					i = writeSequenceCode(e, i, e.size());
+//				}
+//				else {
+//					e.get(i).visit(this);
+//				}
 //			}
-//			else {
-				this.createNEW(e, bb);
-//			}
-			for(int i = 0; i < e.size(); i++) {
-				if (O_FusionInstruction) {
-					i = writeSequenceCode(e, i, e.size());
-				}
-				else {
-					e.get(i).visit(this);
-				}
-			}
-			bb = this.getCurrentBasicBlock();
-			createSETendp(e, bb);
-			createPOPp(e, bb);
-//			if (e.leftJoin) {
+//			bb = this.getCurrentBasicBlock();
+//			createSETendp(e, bb);
+//			createPOPp(e, bb);
+////			if (e.leftJoin) {
 //				this.createPOPo(e, bb);
-//			}
-			createJUMP(e, bb, mergebb);
-			this.popFailureJumpPoint(e);
-			fbb.setInsertPoint(this.func);
-			createABORT(e, fbb);
-//			if (e.leftJoin) {
+////			}
+//			createJUMP(e, bb, mergebb);
+//			this.popFailureJumpPoint(e);
+//			fbb.setInsertPoint(this.func);
+//			createABORT(e, fbb);
+////			if (e.leftJoin) {
 //				this.createSTOREo(e, fbb);
-//			}
-			this.createJUMP(e, fbb, this.jumpFailureJump());
-			mergebb.setInsertPoint(this.func);
-			this.setCurrentBasicBlock(mergebb);
-		}
-	}
-
-	public void visitLeftNew(LeftNewClosure e) {
-		if (PatternMatching) {
-			for(int i = 0; i < e.size(); i++) {
-				if (O_FusionInstruction) {
-					i = writeSequenceCode(e, i, e.size());
-				}
-				else {
-					e.get(i).visit(this);
-				}
-			}
-		}
-		else {
-			BasicBlock bb = this.getCurrentBasicBlock();
-			BasicBlock fbb = new BasicBlock();
-			BasicBlock mergebb = new BasicBlock();
-			this.pushFailureJumpPoint(fbb);
-			//if (e.leftJoin) {
-				this.createPUSHo(e, bb);
-				this.createLEFTJOIN(e, bb, 0);
-//			}
-//			else {
-//				this.createNEW(e, bb);
-//			}
-			for(int i = 0; i < e.size(); i++) {
-				if (O_FusionInstruction) {
-					i = writeSequenceCode(e, i, e.size());
-				}
-				else {
-					e.get(i).visit(this);
-				}
-			}
-			bb = this.getCurrentBasicBlock();
-			createSETendp(e, bb);
-			createPOPp(e, bb);
-//			if (e.leftJoin) {
-				this.createPOPo(e, bb);
-//			}
-			createJUMP(e, bb, mergebb);
-			this.popFailureJumpPoint(e);
-			fbb.setInsertPoint(this.func);
-			createABORT(e, fbb);
-//			if (e.leftJoin) {
-				this.createSTOREo(e, fbb);
-//			}
-			this.createJUMP(e, fbb, this.jumpFailureJump());
-			mergebb.setInsertPoint(this.func);
-			this.setCurrentBasicBlock(mergebb);
-		}
-	}
+////			}
+//			this.createJUMP(e, fbb, this.jumpFailureJump());
+//			mergebb.setInsertPoint(this.func);
+//			this.setCurrentBasicBlock(mergebb);
+//		}
+//	}
 
 	public void visitLink(Link e) {
 		if (PatternMatching) {

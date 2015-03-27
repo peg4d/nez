@@ -17,10 +17,8 @@ import nez.expr.Expression;
 import nez.expr.Factory;
 import nez.expr.IsIndent;
 import nez.expr.IsSymbol;
-import nez.expr.LeftNewClosure;
 import nez.expr.Link;
 import nez.expr.New;
-import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -860,19 +858,19 @@ public class RuntimeCompiler {
 	}
 
 	
-	public final Instruction encodeNewClosure(NewClosure p, Instruction next, boolean[] dfa) {
-		if(this.enableASTConstruction()) {
-			return new INew(p, this.encodeSequence(p, new ICapture(p, next), dfa));
-		}
-		return this.encodeSequence(p, next, dfa);
-	}
-
-	public final Instruction encodeLeftNewClosure(LeftNewClosure p, Instruction next, boolean[] dfa) {
-		if(this.enableASTConstruction()) {
-			return new ILeftNew(p, this.encodeSequence(p, new ICapture(p, next), dfa));
-		}
-		return this.encodeSequence(p, next, dfa);
-	}
+//	public final Instruction encodeNewClosure(NewClosure p, Instruction next, boolean[] dfa) {
+//		if(this.enableASTConstruction()) {
+//			return new INew(p, this.encodeSequence(p, new ICapture(p, next), dfa));
+//		}
+//		return this.encodeSequence(p, next, dfa);
+//	}
+//
+//	public final Instruction encodeLeftNewClosure(LeftNewClosure p, Instruction next, boolean[] dfa) {
+//		if(this.enableASTConstruction()) {
+//			return new ILeftNew(p, this.encodeSequence(p, new ICapture(p, next), dfa));
+//		}
+//		return this.encodeSequence(p, next, dfa);
+//	}
 
 	public final Instruction encodeNew(New p, Instruction next, boolean[] dfa) {
 		if(this.enableASTConstruction()) {

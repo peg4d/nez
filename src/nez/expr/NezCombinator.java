@@ -80,7 +80,7 @@ public class NezCombinator extends ParserCombinator {
 	}
 
 	public Expression Name() {
-		return New(P("LETTER"), ZeroMore(P("W")), Tag(NezTag.Name));
+		return New(Not(P("KEYWORD")), P("LETTER"), ZeroMore(P("W")), Tag(NezTag.Name));
 	}
 
 	public Expression DotName() {
@@ -132,9 +132,7 @@ public class NezCombinator extends ParserCombinator {
 	public Expression Charset() {
 		Expression _CharChunk = Sequence(
 			New (P("CHAR"), Tag(NezTag.Class)), 
-			Option(
-				NewLeftLink(t("-"), Link(New(P("CHAR"), Tag(NezTag.Class))), Tag(NezTag.List))
-			)
+			LeftNewOption(t("-"), Link(New(P("CHAR"), Tag(NezTag.Class))), Tag(NezTag.List))
 		);
 		return Sequence(t("["), New(ZeroMore(Link(_CharChunk)), Tag(NezTag.Class)), t("]"));
 	}
@@ -155,27 +153,17 @@ public class NezCombinator extends ParserCombinator {
 	public Expression Func() {
 		return Sequence(t("<"), 
 			New(Choice(
-//			Sequence(t("debug"),   P("S"), Link(P("Expr")), Tag(NezTag.Debug)),
-//			Sequence(t("memo"),   P("S"), Link(P("Expr")), P("_"), t(">"), Tag(NezTag.Memo)),
 			Sequence(t("match"),   P("S"), Link(P("Expr")), P("_"), t(">"), Tag(NezTag.Match)),
-//			Sequence(t("fail"),   P("S"), Link(P("SingleQuotedString")), P("_"), t(">"), Tag(NezTag.Fail)),
-//			Sequence(t("catch"), Tag(NezTag.Catch)),
 			Sequence(t("if"), P("S"), Option(t("!")), Link(P("Name")), Tag(NezTag.If)),
 			Sequence(t("with"),  P("S"), Link(P("Name")), P("S"), Link(P("Expr")), Tag(NezTag.With)),
 			Sequence(t("without"), P("S"), Link(P("Name")), P("S"), Link(P("Expr")), Tag(NezTag.Without)),
 			Sequence(t("block"), Option(Sequence(P("S"), Link(P("Expr")))), Tag(NezTag.Block)),
 			Sequence(t("indent"), Tag(NezTag.Indent)),
-				//						Sequence(t("choice"), Tag(NezTag.Choice)),
-//			Sequence(t("powerset"), P("S"), Link(P("Expr")), Tag(NezTag.PowerSet)),
-//			Sequence(t("permutation"), P("S"), Link(P("Expr")), Tag(NezTag.Permutation)),
-//			Sequence(t("perm"), P("S"), Link(P("Expr")), Tag(NezTag.PermutationExpr)),
 			Sequence(t("is"), P("S"), Link(P("Name")), Tag(NezTag.Is)),
 			Sequence(t("isa"), P("S"), Link(P("Name")), Tag(NezTag.Isa)),
 			Sequence(t("def"),  P("S"), Link(P("Name")), P("S"), Link(P("Expr")), Tag(NezTag.Def)),
-
 			Sequence(t("scan"), P("S"), Link(New(DIGIT(), ZeroMore(DIGIT()))), t(","), P("S"), Link(P("Expr")), t(","), P("S"), Link(P("Expr")), Tag(NezTag.Scan)),
 			Sequence(t("repeat"), P("S"), Link(P("Expr")), Tag(NezTag.Repeat))
-
 			)), P("_"), t(">")
 		);
 	}
@@ -202,20 +190,16 @@ public class NezCombinator extends ParserCombinator {
 	}
 	
 	public Expression SuffixTerm() {
-		Expression Connector  = Choice(t("@"), t("^"));
 		return Sequence(
 			P("Term"), 
-			Option(
-				NewLeftLink(
-					Choice(
-						Sequence(t("*"), Option(Link(1, P("Integer"))), Tag(NezTag.Repetition)), 
-						Sequence(t("+"), Tag(NezTag.Repetition1)), 
-						Sequence(t("?"), Tag(NezTag.Option)),
-						Sequence(Connector, Option(Link(1, P("Integer"))), Tag(NezTag.Link))
+			LeftNewOption(
+				Choice(
+					Sequence(t("*"), Option(Link(1, P("Integer"))), Tag(NezTag.Repetition)), 
+					Sequence(t("+"), Tag(NezTag.Repetition1)), 
+					Sequence(t("?"), Tag(NezTag.Option))
 					)
 				)
-			)
-		);
+			);
 	}
 	
 	public Expression Predicate() {
@@ -233,10 +217,6 @@ public class NezCombinator extends ParserCombinator {
 		);
 	}
 
-//	public Expression NOTRULE() {
-//		return Not(Choice(P("Rule"), P("Import")));
-//	}
-
 	public Expression NOTRULE() {
 		return Not(Choice(t(";"), P("RuleHead"), P("Import")));
 	}
@@ -244,18 +224,13 @@ public class NezCombinator extends ParserCombinator {
 	public Expression Sequence() {
 		return Sequence(
 			P("Predicate"), 
-			Option(
-				NewLeftLink(
-					P("_"), 
-					P("NOTRULE"),
-					Link(P("Predicate")),
-					ZeroMore(
-						P("_"), 
-						P("NOTRULE"),
-						Link(P("Predicate"))
-					),
-					Tag(NezTag.Sequence) 
-				)
+			LeftNewOption(
+				OneMore(
+				P("_"), 
+				P("NOTRULE"),
+				Link(P("Predicate"))
+				),
+				Tag(NezTag.Sequence) 
 			)
 		);
 	}
@@ -263,16 +238,12 @@ public class NezCombinator extends ParserCombinator {
 	public Expression Expr() {
 		return Sequence(
 			P("Sequence"), 
-			Option(
-				NewLeftLink(
-					P("_"), t("/"), P("_"), 
-					Link(P("Sequence")), 
-					ZeroMore(
-						P("_"), t("/"), P("_"), 
-						Link(P("Sequence"))
-					),
-					Tag(NezTag.Choice) 
-				)
+			LeftNewOption(
+				OneMore(
+				P("_"), t("/"), P("_"), 
+				Link(P("Sequence"))
+				),
+				Tag(NezTag.Choice) 
 			)
 		);
 	}

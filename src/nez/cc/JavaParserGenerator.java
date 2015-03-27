@@ -9,10 +9,8 @@ import nez.expr.Choice;
 import nez.expr.Empty;
 import nez.expr.Expression;
 import nez.expr.Failure;
-import nez.expr.LeftNewClosure;
 import nez.expr.Link;
 import nez.expr.New;
-import nez.expr.NewClosure;
 import nez.expr.NonTerminal;
 import nez.expr.Not;
 import nez.expr.Option;
@@ -117,18 +115,6 @@ class JavaParserGenerator extends GrammarGenerator {
 			}
 			visit(e.get(i));
 		}
-	}
-
-	public void visitNewClosure(NewClosure e) {
-		file.write("( ");
-//		this.visitSequenceImpl(e);
-		file.write(" )");
-	}
-
-	public void visitLeftNew(LeftNewClosure e) {
-//		file.write("( ");
-//		this.visitSequenceImpl(e);
-//		file.write(" )");
 	}
 	
 	public void visitNew(New e) {
