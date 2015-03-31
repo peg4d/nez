@@ -3,8 +3,6 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.Production;
-import nez.SourceContext;
-import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -100,23 +98,6 @@ public class Choice extends SequentialExpression {
 		}
 	}
 
-	
-	@Override
-	public boolean match(SourceContext context) {
-		//long f = context.rememberFailure();
-		Node left = context.left;
-		for(int i = 0; i < this.size(); i++) {
-			context.left = left;
-			if(this.get(i).optimized.match(context)) {
-				//context.forgetFailure(f);
-				left = null;
-				return true;
-			}
-		}
-		//assert(context.isFailure());
-		left = null;
-		return false;
-	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeChoice(this, next);

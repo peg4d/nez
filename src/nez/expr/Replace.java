@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -23,11 +22,6 @@ public class Replace extends ASTOperation {
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		return this.checkTypestate(checker, c, "`" + value + "`");
-	}
-	@Override
-	public boolean match(SourceContext context) {
-		//context.left.setValue(this.value);
-		return true;
 	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {

@@ -4,9 +4,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-public class NodeVisitor {
+public class CommonTreeVisitor {
 	HashMap<Integer, Method> methodMap = new HashMap<Integer, Method>();
-	public final Object visit(String method, Node node) {
+	public final Object visit(String method, CommonTree node) {
 		Tag tag = node.getTag();
 		Method m = invokeMethod(method, tag.id);
 		if(m != null) {
@@ -24,7 +24,7 @@ public class NodeVisitor {
 		return null;
 	}
 	
-	public final Object visit(Node node) {
+	public final Object visit(CommonTree node) {
 		return visit("to", node);
 	}
 
@@ -38,7 +38,7 @@ public class NodeVisitor {
 		if(m == null) {
 			String name = method + Tag.tag(tagId).getName();
 			try {
-				m = this.getClass().getMethod(name, AST.class);
+				m = this.getClass().getMethod(name, CommonTree.class);
 			} catch (NoSuchMethodException e) {
 				e.printStackTrace();
 				return null;

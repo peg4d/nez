@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import nez.Grammar;
-import nez.ast.AST;
+import nez.ast.CommonTree;
 import nez.expr.Expression;
 import nez.expr.Rule;
 
@@ -27,7 +27,7 @@ public class DTDConverter extends GrammarConverter {
 	}
 
 	@Override
-	public void convert(AST node) {
+	public void convert(CommonTree node) {
 		this.visit("visit", node);
 		System.out.println("\nConverted Rule: " + grammar.getResourceName());
 		grammar.dump();
@@ -57,8 +57,8 @@ public class DTDConverter extends GrammarConverter {
 		return attDefList;
 	}
 
-	public void visitDoc(AST node) {
-		for(AST subnode: node) {
+	public void visitDoc(CommonTree node) {
+		for(CommonTree subnode: node) {
 			this.visit("visit", subnode);
 		}
 		for (int elementID = 0; elementID < elementCount; elementID++) {
@@ -70,14 +70,14 @@ public class DTDConverter extends GrammarConverter {
 
 
 
-	public void visitElement(AST node) {
+	public void visitElement(CommonTree node) {
 		String elementName = node.textAt(0, "");
 		elementMap.put(elementCount, elementName);
 		grammar.defineRule(node, "Content" + elementCount, toExpression(node.get(1)));
 		elementCount++;
 	}
 
-	private Expression genElement(AST node, int elementID) {
+	private Expression genElement(CommonTree node, int elementID) {
 		String elementName = elementMap.get(elementID);
 		// check whether attribute exists
 		if (attributeMap.containsValue(elementID)) {
@@ -101,7 +101,7 @@ public class DTDConverter extends GrammarConverter {
 		}
 	}
 
-	public void visitAttlist(AST node) {
+	public void visitAttlist(CommonTree node) {
 		initAttCounter();
 		String elementName = node.textAt(0, "");
 		attributeMap.put(elementName, attID);
@@ -121,53 +121,53 @@ public class DTDConverter extends GrammarConverter {
 		}
 	}
 
-	public void visitREQUIRED(AST node) {
+	public void visitREQUIRED(CommonTree node) {
 		String name = "AttDef" + attID + "_" + attDefCount;
 		reqList.add(attDefCount++);
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
 
-	public void visitIMPLIED(AST node) {
+	public void visitIMPLIED(CommonTree node) {
 		String name = "AttDef" + attID + "_" + attDefCount;
 		impList.add(attDefCount++);
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
 
-	public void visitFIXED(AST node) {
+	public void visitFIXED(CommonTree node) {
 		String name = "AttDef" + attID + "_" + attDefCount;
 		impList.add(attDefCount++);
 		grammar.defineRule(node, name, genFixedAtt(node));
 	}
 
 
-	public void visitDefault(AST node) {
+	public void visitDefault(CommonTree node) {
 		String name = "AttDef" + attID + "_" + attDefCount;
 		impList.add(attDefCount++);
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
 
-	public void visitEntity(AST node) {
+	public void visitEntity(CommonTree node) {
 		String name = "ENT_" + entityCount++;
 		grammar.defineRule(node, name, toExpression(node.get(1)));
 	}
 	
-	private Expression toExpression(AST node) {
+	private Expression toExpression(CommonTree node) {
 		return (Expression)this.visit("to", node);
 	}
 	
-	public Expression toEmpty(AST node) {
+	public Expression toEmpty(CommonTree node) {
 		return grammar.newNonTerminal("EMPTY");
 	}
 
-	public Expression toAny(AST node) {
+	public Expression toAny(CommonTree node) {
 		return grammar.newNonTerminal("ANY");
 	}
 
-	public Expression toZeroMore(AST node) {
+	public Expression toZeroMore(CommonTree node) {
 		return grammar.newRepetition(toExpression(node.get(0)));
 	}
 
-	public Expression toOneMore(AST node) {
+	public Expression toOneMore(CommonTree node) {
 		Expression[] l = {
 		toExpression(node.get(0)),
 		grammar.newRepetition(toExpression(node.get(0)))
@@ -175,29 +175,29 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toOption(AST node) {
+	public Expression toOption(CommonTree node) {
 		return grammar.newOption(toExpression(node.get(0)));
 	}
 
-	public Expression toChoice(AST node) {
+	public Expression toChoice(CommonTree node) {
 		Expression[] l = new Expression[node.size()];
 		int count = 0;
-		for (AST subnode : node) {
+		for (CommonTree subnode : node) {
 			l[count++] = toExpression(subnode);
 		}
 		return grammar.newChoice(l);
 	}
 
-	public Expression toSeq(AST node) {
+	public Expression toSeq(CommonTree node) {
 		Expression[] l = new Expression[node.size()];
 		int count = 0;
-		for (AST subnode : node) {
+		for (CommonTree subnode : node) {
 			l[count++] = toExpression(subnode);
 		}
 		return grammar.newSequence(l);
 	}
 
-	public Expression toCDATA(AST node) {
+	public Expression toCDATA(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
@@ -209,7 +209,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toID(AST node) {
+	public Expression toID(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
@@ -226,7 +226,7 @@ public class DTDConverter extends GrammarConverter {
 
 	}
 
-	public Expression toIDREF(AST node) {
+	public Expression toIDREF(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
@@ -240,7 +240,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toIDREFS(AST node) {
+	public Expression toIDREFS(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
@@ -255,7 +255,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	private Expression genFixedAtt(AST node) {
+	private Expression genFixedAtt(CommonTree node) {
 		String attName = node.textAt(0, "");
 		String fixedValue = node.textAt(2, "");
 		Expression[] l ={
@@ -268,7 +268,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toENTITY(AST node) {
+	public Expression toENTITY(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l ={
 				grammar.newString(attName),
@@ -282,7 +282,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toENTITIES(AST node) {
+	public Expression toENTITIES(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
@@ -296,7 +296,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toNMTOKEN(AST node) {
+	public Expression toNMTOKEN(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
@@ -308,7 +308,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toNMTOKENS(AST node) {
+	public Expression toNMTOKENS(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
@@ -320,7 +320,7 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 	
-	public Expression genCompAtt(AST node, int[] attlist) {
+	public Expression genCompAtt(CommonTree node, int[] attlist) {
 		int listLength = attlist.length;
 		if (listLength == 1) {
 			Expression[] l = {
@@ -346,7 +346,7 @@ public class DTDConverter extends GrammarConverter {
 		}
 	}
 
-	public Expression genProxAtt(AST node, int[] attlist) {
+	public Expression genProxAtt(CommonTree node, int[] attlist) {
 		int listLength = attlist.length;
 		if (listLength == 0) {
 			Expression[] l = {
@@ -377,7 +377,7 @@ public class DTDConverter extends GrammarConverter {
 		}
 	}
 
-	public Expression genImpliedChoice(AST node){
+	public Expression genImpliedChoice(CommonTree node){
 		Expression[] l = new Expression[impList.size()];
 		String definitionName = "AttDef" + attID + "_";
 		int choiceCount = 0;
@@ -388,7 +388,7 @@ public class DTDConverter extends GrammarConverter {
 	}
 	
 
-	public Expression toEnum(AST node) {
+	public Expression toEnum(CommonTree node) {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName + "="),
@@ -397,20 +397,20 @@ public class DTDConverter extends GrammarConverter {
 		return grammar.newSequence(l);
 	}
 
-	public Expression toEntValue(AST node) {
+	public Expression toEntValue(CommonTree node) {
 		String replaceString = node.getText();
 		return grammar.newString(replaceString);
 	}
 
-	public Expression toElName(AST node) {
+	public Expression toElName(CommonTree node) {
 		String elementName = "Element_" + node.getText();
 		return grammar.newNonTerminal(elementName);
 	}
-	public Expression toData(AST node) {
+	public Expression toData(CommonTree node) {
 		return grammar.newNonTerminal("PCDATA");
 	}
 
-	private Expression genEntityList(AST node) {
+	private Expression genEntityList(CommonTree node) {
 		if (entityCount == 0) {
 			return grammar.newNonTerminal("NotAny");
 		}

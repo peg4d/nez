@@ -1,7 +1,6 @@
 package nez.expr;
 
 import nez.Production;
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -91,14 +90,6 @@ public class ByteMap extends Terminal {
 		}
 	}
 	
-	@Override
-	public boolean match(SourceContext context) {
-		if(this.byteMap[context.byteAt(context.getPosition())]) {
-			context.consume(1);
-			return true;
-		}
-		return context.failure2(this);
-	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeByteMap(this, next);

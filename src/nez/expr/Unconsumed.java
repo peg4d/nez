@@ -2,7 +2,6 @@ package nez.expr;
 
 import java.util.TreeMap;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.util.UList;
 import nez.util.UMap;
@@ -49,9 +48,5 @@ abstract class Unconsumed extends Expression {
 	}
 	@Override
 	public void predict(int option, boolean[] dfa) {
-	}
-	@Override
-	public boolean match(SourceContext context) {
-		return true;
 	}
 }

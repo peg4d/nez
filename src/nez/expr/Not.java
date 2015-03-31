@@ -1,8 +1,6 @@
 package nez.expr;
 
 import nez.Production;
-import nez.SourceContext;
-import nez.ast.Node;
 import nez.ast.Source;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
@@ -112,25 +110,6 @@ public class Not extends Unary {
 		}
 	}
 
-	@Override
-	public boolean match(SourceContext context) {
-		long pos = context.getPosition();
-		//long f   = context.rememberFailure();
-		Node left = context.left;
-		if(this.inner.optimized.match(context)) {
-			context.rollback(pos);
-			context.failure2(this);
-			left = null;
-			return false;
-		}
-		else {
-			context.rollback(pos);
-			//context.forgetFailure(f);
-			context.left = left;
-			left = null;
-			return true;
-		}
-	}
 	@Override
 	Expression dupUnary(Expression e) {
 		return (this.inner != e) ? Factory.newNot(this.s, e) : this;

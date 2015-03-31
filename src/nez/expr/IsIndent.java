@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -39,10 +38,6 @@ public class IsIndent extends Terminal {
 		dfa[' '] = true;
 	}
 
-	@Override
-	public boolean match(SourceContext context) {
-		return context.matchSymbolTable(NezTag.Indent, true);
-	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeIsIndent(this, next);

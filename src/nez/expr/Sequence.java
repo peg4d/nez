@@ -3,7 +3,6 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.Production;
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -254,19 +253,19 @@ public class Sequence extends SequentialExpression {
 //
 //		return this;
 //	}
-	@Override
-	public boolean match(SourceContext context) {
-		long pos = context.getPosition();
-		int mark = context.startConstruction();
-		for(int i = 0; i < this.size(); i++) {
-			if(!(this.get(i).optimized.match(context))) {
-				context.abortConstruction(mark);
-				context.rollback(pos);
-				return false;
-			}
-		}
-		return true;
-	}
+//	@Override
+//	public boolean match(SourceContext context) {
+//		long pos = context.getPosition();
+//		int mark = context.startConstruction();
+//		for(int i = 0; i < this.size(); i++) {
+//			if(!(this.get(i).optimized.match(context))) {
+//				context.abortConstruction(mark);
+//				context.rollback(pos);
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeSequence(this, next);

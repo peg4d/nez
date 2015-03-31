@@ -5,7 +5,7 @@ import java.io.IOException;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
-import nez.ast.ASTWriter;
+import nez.ast.CommonTreeWriter;
 import nez.ast.Transformer;
 import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
@@ -347,7 +347,7 @@ public class CommandConfigure {
 	}
 
 	public final Transformer getTransformer() {
-		return new ASTWriter();
+		return new CommonTreeWriter();
 	}
 
 }

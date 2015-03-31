@@ -1,11 +1,11 @@
 package nez.x;
 
 import nez.Grammar;
-import nez.ast.AST;
-import nez.ast.NodeVisitor;
+import nez.ast.CommonTree;
+import nez.ast.CommonTreeVisitor;
 import nez.util.FileBuilder;
 
-public abstract class GrammarConverter extends NodeVisitor {
+public abstract class GrammarConverter extends CommonTreeVisitor {
 	final protected FileBuilder file;
 	final protected Grammar grammar;
 	public GrammarConverter(Grammar peg, String name) {
@@ -13,5 +13,5 @@ public abstract class GrammarConverter extends NodeVisitor {
 		this.grammar = peg;
 	}
 	public abstract String getDesc();
-	public abstract void convert(AST node);
+	public abstract void convert(CommonTree node);
 }

@@ -1,7 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
-import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -63,18 +61,6 @@ public class Option extends Unary {
 		Prediction.predictOption(this, option, dfa);
 	}
 	
-	@Override
-	public boolean match(SourceContext context) {
-		//long f = context.rememberFailure();
-		Node left = context.left;
-		if(!this.inner.optimized.match(context)) {
-			context.left = left;
-			//context.forgetFailure(f);
-		}
-		left = null;
-		return true;
-	}
-
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeOption(this, next);

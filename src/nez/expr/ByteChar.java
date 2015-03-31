@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -42,14 +41,6 @@ public class ByteChar extends Terminal {
 		dfa[byteChar] = true;
 	}
 
-	@Override
-	public boolean match(SourceContext context) {
-		if(context.byteAt(context.getPosition()) == this.byteChar) {
-			context.consume(1);
-			return true;
-		}
-		return context.failure2(this);
-	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeByteChar(this, next);

@@ -2,7 +2,7 @@ package nez.main;
 
 import nez.Production;
 import nez.SourceContext;
-import nez.ast.Node;
+import nez.ast.CommonTree;
 import nez.ast.Transformer;
 import nez.util.ConsoleUtils;
 import nez.util.UList;
@@ -22,7 +22,7 @@ class ParseCommand extends Command {
 			SourceContext file = config.getInputSourceContext();
 			Transformer trans = config.getTransformer();
 			file.start(rec);
-			Node node = p.parse(file, trans.newNode());
+			CommonTree node = p.parse(file);
 			file.done(rec);
 			if(node == null) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());

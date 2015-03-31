@@ -2,14 +2,13 @@ package nez.expr;
 import java.util.AbstractList;
 import java.util.TreeMap;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
 import nez.util.UList;
 import nez.util.UMap;
 
-public abstract class Expression extends AbstractList<Expression> implements Recognizer {
+public abstract class Expression extends AbstractList<Expression> {
 	public final static boolean ClassicMode = false;
 	SourcePosition s = null;
 	int    internId   = 0;
@@ -137,12 +136,6 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 
 	protected abstract int pattern(GEP gep);
 	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);
-
-	@Override
-	public boolean match(SourceContext context) {
-		throw new RuntimeException("old one");
-	}
-
 
 	// test
 	

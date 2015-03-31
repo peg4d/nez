@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -12,12 +11,6 @@ public class DefIndent extends Unconsumed {
 	@Override
 	public String getPredicate() {
 		return "defindent";
-	}
-	@Override
-	public boolean match(SourceContext context) {
-		String indent = context.getIndentText(context.getPosition());
-		context.pushSymbolTable(NezTag.Indent, indent);
-		return true;
 	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {

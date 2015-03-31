@@ -1,6 +1,6 @@
 package nez.runtime;
 
-import nez.ast.Node;
+import nez.ast.ParsingFactory;
 import nez.ast.Source;
 import nez.ast.Tag;
 import nez.expr.NezTag;
@@ -48,66 +48,25 @@ public abstract class Context implements Source {
 
 	/* PEG4d : AST construction */
 
-	Node base;
-	public Node left;
+	private ParsingFactory treeFactory;
+	private Object left;
 
-	public final void setBaseNode(Node base) {
-		this.base = base;
-	}
-
-	public final Node newNode() {
-		return this.base.newNode(null, this, this.pos, this.pos, 0);
+	public final void setBaseNode(ParsingFactory treeFactory) {
+		this.treeFactory = treeFactory;
 	}
 	
-	public final Node getParsedNode() {
+	public final Object getParsingNode() {
 		return this.left;
 	}
-	
-	private final static int LazyLink    = 0;
-	private final static int LazyCapture = 1;
-	private final static int LazyTag     = 2;
-	private final static int LazyReplace = 3;
-	private final static int LazyLeftNew = 4;
-	private final static int LazyNew     = 5;
-	
-	private class DataLog {
-		int     type;
-		long    pos;
-		Object  value;
-		DataLog prev;
-		DataLog next;
-		int id() {
-			if(prev == null) return 0;
-			return prev.id() + 1;
-		}
-		@Override
-		public String toString() {
-			switch(type) {
-			case LazyLink:
-				return "["+id()+"] link<" + this.pos + "," + this.value + ">";
-			case LazyCapture:
-				return "["+id()+"] cap<pos=" + this.pos + ">";
-			case LazyTag:
-				return "["+id()+"] tag<" + this.value + ">";
-			case LazyReplace:
-				return "["+id()+"] replace<" + this.value + ">";
-			case LazyNew:
-				return "["+id()+"] new<pos=" + this.pos + ">"  + "   ## " + this.value  ;
-			case LazyLeftNew:
-				return "["+id()+"] leftnew<pos=" + this.pos + "," + this.value + ">";
-			}
-			return "["+id()+"] nop";
-		}
-	}
-
+		
 	//private DataLog newPoint = null;
-	private DataLog lastAppendedLog = null;
-	private DataLog unusedDataLog = null;
+	private OperationLog lastAppendedLog = null;
+	private OperationLog unusedDataLog = null;
 	
 	private final void pushDataLog(int type, long pos, Object value) {
-		DataLog l;
+		OperationLog l;
 		if(this.unusedDataLog == null) {
-			l = new DataLog();
+			l = new OperationLog();
 		}
 		else {
 			l = this.unusedDataLog;
@@ -122,16 +81,16 @@ public abstract class Context implements Source {
 		lastAppendedLog = l;
 	}
 	
-	public final Node logCommit(DataLog start) {
-		assert(start.type == LazyNew);
+	public final Object logCommit(OperationLog start) {
+		assert(start.type == OperationLog.LazyNew);
 		long spos = start.pos, epos = spos;
 		Tag tag = null;
 		Object value = null;
 		int objectSize = 0;
-		Node left = null;
-		for(DataLog cur = start.next; cur != null; cur = cur.next ) {
+		Object left = null;
+		for(OperationLog cur = start.next; cur != null; cur = cur.next ) {
 			switch(cur.type) {
-			case LazyLink:
+			case OperationLog.LazyLink:
 				int index = (int)cur.pos;
 				if(index == -1) {
 					cur.pos = objectSize;
@@ -141,16 +100,16 @@ public abstract class Context implements Source {
 					objectSize = index + 1;
 				}
 				break;
-			case LazyCapture:
+			case OperationLog.LazyCapture:
 				epos = cur.pos;
 				break;
-			case LazyTag:
+			case OperationLog.LazyTag:
 				tag = (Tag)cur.value;
 				break;
-			case LazyReplace:
+			case OperationLog.LazyReplace:
 				value = cur.value;
 				break;
-			case LazyLeftNew:
+			case OperationLog.LazyLeftNew:
 				left = commitNode(start, cur, spos, epos, objectSize, left, tag, value);
 				start = cur;
 				spos = cur.pos; 
@@ -163,11 +122,10 @@ public abstract class Context implements Source {
 		return commitNode(start, null, spos, epos, objectSize, left, tag, value);
 	}
 
-	private Node commitNode(DataLog start, DataLog end, long spos, long epos,
-			int objectSize, Node left, Tag tag, Object value) {
-		Node newnode = this.base.newNode(tag, this, spos, epos, objectSize);
+	private Object commitNode(OperationLog start, OperationLog end, long spos, long epos, int objectSize, Object left, Tag tag, Object value) {
+		Object newnode = this.treeFactory.newNode(tag, this, spos, epos, objectSize, value);
 		if(left != null) {
-			newnode.link(0, left);
+			this.treeFactory.link(newnode, 0, left);
 		}
 //		if(value != null) {
 //			newnode.setValue(value);
@@ -176,19 +134,19 @@ public abstract class Context implements Source {
 //			System.out.println("PREV " + start.prev);
 //			System.out.println(">>> BEGIN");
 //			System.out.println("  LOG " + start);
-			for(DataLog cur = start.next; cur != end; cur = cur.next ) {
+			for(OperationLog cur = start.next; cur != end; cur = cur.next ) {
 //				System.out.println("  LOG " + cur);
-				if(cur.type == LazyLink) {
-					newnode.link((int)cur.pos, (Node)cur.value);
+				if(cur.type == OperationLog.LazyLink) {
+					this.treeFactory.link(newnode, (int)cur.pos, cur.value);
 				}
 			}
 //			System.out.println("<<< END");
 //			System.out.println("COMMIT " + newnode);
 		}
-		return newnode.commit(value);
+		return this.treeFactory.commit(newnode);
 	}
 
-	public final void logAbort(DataLog checkPoint, boolean isFail) {
+	public final void logAbort(OperationLog checkPoint, boolean isFail) {
 		assert(checkPoint != null);
 //		if(isFail) {
 //			for(DataLog cur = checkPoint.next; cur != null; cur = cur.next ) {
@@ -198,7 +156,6 @@ public abstract class Context implements Source {
 		lastAppendedLog.next = this.unusedDataLog;
 		this.unusedDataLog = checkPoint.next;
 		this.unusedDataLog.prev = null;
-
 		this.lastAppendedLog = checkPoint;
 		this.lastAppendedLog.next = null;
 	}
@@ -211,32 +168,6 @@ public abstract class Context implements Source {
 	public int stateValue = 0;
 	int stateCount = 0;
 	UList<SymbolTableEntry> stackedSymbolTable = new UList<SymbolTableEntry>(new SymbolTableEntry[4]);
-
-	class SymbolTableEntry {
-		Tag table;  // T in <def T e>
-		byte[] utf8;
-		int len;
-		SymbolTableEntry(Tag table, String indent) {
-			this.table = table;
-			this.utf8 = indent.getBytes();
-			this.len = utf8.length;
-		}
-		SymbolTableEntry(Tag table, byte[] b) {
-			this.table = table;
-			this.utf8 = b == null ? new byte[0] : b;
-			this.len = utf8.length;
-		}
-		final boolean match(byte[] b) {
-			if(this.len == b.length) {
-				for(int i = 0; i < this.len; i++) {
-					if(utf8[i] != b[i]) {
-						return false;
-					}
-				}
-			}
-			return true;
-		}
-	}
 
 	public final void pushSymbolTable(Tag table, byte[] s) {
 		this.stackedSymbolTable.add(new SymbolTableEntry(table, s));
@@ -263,22 +194,14 @@ public abstract class Context implements Source {
 
 	// ----------------------------------------------------------------------
 	// Instruction 
-	
-	class ContextStack {
-		boolean debugFailStackFlag;
-		Instruction jump;
-		long pos;
-		int  prevFailTop;
-		DataLog lastLog;
-	}
-	
+		
 	private ContextStack[] contextStacks = null;
 	private int usedStackTop;
 	private int failStackTop;
 	
 	public final void initJumpStack(int n, MemoTable memoTable) {
 		this.contextStacks = new ContextStack[n];
-		this.lastAppendedLog = new DataLog();
+		this.lastAppendedLog = new OperationLog();
 		for(int i = 0; i < n; i++) {
 			this.contextStacks[i] = new ContextStack();
 		}
@@ -468,10 +391,10 @@ public abstract class Context implements Source {
 	public final Instruction opNodeStore(INodeStore op) {
 		ContextStack top = popLocalStack();
 		if(top.lastLog.next != null) {
-			Node child = this.logCommit(top.lastLog.next);
+			Object child = this.logCommit(top.lastLog.next);
 			logAbort(top.lastLog, false);
 			if(child != null) {
-				pushDataLog(LazyLink, op.index, child);
+				pushDataLog(OperationLog.LazyLink, op.index, child);
 			}
 			this.left = child;
 			//System.out.println("LINK " + this.lastAppendedLog);
@@ -480,18 +403,18 @@ public abstract class Context implements Source {
 	}
 
 	public final Instruction opINew(INew op) {
-		pushDataLog(LazyNew, this.pos + op.shift, null); //op.e);
+		pushDataLog(OperationLog.LazyNew, this.pos + op.shift, null); //op.e);
 		return op.next;
 	}
 
 	public final Instruction opILeftNew(ILeftNew op) {
-		pushDataLog(LazyLeftNew, this.pos + op.shift, null); // op.e);
+		pushDataLog(OperationLog.LazyLeftNew, this.pos + op.shift, null); // op.e);
 		return op.next;
 	}
 
-	public final Node newTopLevelNode() {
-		for(DataLog cur = this.lastAppendedLog; cur != null; cur = cur.prev) {
-			if(cur.type == LazyNew) {
+	public final Object newTopLevelNode() {
+		for(OperationLog cur = this.lastAppendedLog; cur != null; cur = cur.prev) {
+			if(cur.type == OperationLog.LazyNew) {
 				this.left = logCommit(cur);
 				logAbort(cur.prev, false);
 				return this.left;
@@ -501,17 +424,17 @@ public abstract class Context implements Source {
 	}
 	
 	public final Instruction opITag(ITag op) {
-		pushDataLog(LazyTag, 0, op.tag);
+		pushDataLog(OperationLog.LazyTag, 0, op.tag);
 		return op.next;
 	}
 
 	public final Instruction opIReplace(IReplace op) {
-		pushDataLog(LazyReplace, 0, op.value);
+		pushDataLog(OperationLog.LazyReplace, 0, op.value);
 		return op.next;
 	}
 
 	public final Instruction opICapture(ICapture op) {
-		pushDataLog(LazyCapture, this.pos, null);
+		pushDataLog(OperationLog.LazyCapture, this.pos, null);
 		return op.next;
 	}
 
@@ -563,7 +486,7 @@ public abstract class Context implements Source {
 			}
 			mp.memoHit(entry.consumed);
 			this.consume(entry.consumed);
-			pushDataLog(LazyLink, op.index, entry.result);
+			pushDataLog(OperationLog.LazyLink, op.index, entry.result);
 			return op.skip;
 		}
 		mp.miss();
@@ -582,7 +505,7 @@ public abstract class Context implements Source {
 			}
 			mp.memoHit(me.consumed);
 			consume(me.consumed);
-			pushDataLog(LazyLink, op.index, me.result);
+			pushDataLog(OperationLog.LazyLink, op.index, me.result);
 			return op.skip;
 		}
 		mp.miss();
@@ -852,4 +775,75 @@ public abstract class Context implements Source {
 
 	}
 	
+}
+
+class OperationLog {
+	final static int LazyLink    = 0;
+	final static int LazyCapture = 1;
+	final static int LazyTag     = 2;
+	final static int LazyReplace = 3;
+	final static int LazyLeftNew = 4;
+	final static int LazyNew     = 5;
+
+	int     type;
+	long    pos;
+	Object  value;
+	OperationLog prev;
+	OperationLog next;
+	int id() {
+		if(prev == null) return 0;
+		return prev.id() + 1;
+	}
+	@Override
+	public String toString() {
+		switch(type) {
+		case LazyLink:
+			return "["+id()+"] link<" + this.pos + "," + this.value + ">";
+		case LazyCapture:
+			return "["+id()+"] cap<pos=" + this.pos + ">";
+		case LazyTag:
+			return "["+id()+"] tag<" + this.value + ">";
+		case LazyReplace:
+			return "["+id()+"] replace<" + this.value + ">";
+		case LazyNew:
+			return "["+id()+"] new<pos=" + this.pos + ">"  + "   ## " + this.value  ;
+		case LazyLeftNew:
+			return "["+id()+"] leftnew<pos=" + this.pos + "," + this.value + ">";
+		}
+		return "["+id()+"] nop";
+	}
+}
+
+class ContextStack {
+	boolean debugFailStackFlag;
+	Instruction jump;
+	long pos;
+	int  prevFailTop;
+	OperationLog lastLog;
+}
+
+class SymbolTableEntry {
+	Tag table;  // T in <def T e>
+	byte[] utf8;
+	int len;
+	SymbolTableEntry(Tag table, String indent) {
+		this.table = table;
+		this.utf8 = indent.getBytes();
+		this.len = utf8.length;
+	}
+	SymbolTableEntry(Tag table, byte[] b) {
+		this.table = table;
+		this.utf8 = b == null ? new byte[0] : b;
+		this.len = utf8.length;
+	}
+	final boolean match(byte[] b) {
+		if(this.len == b.length) {
+			for(int i = 0; i < this.len; i++) {
+				if(utf8[i] != b[i]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 }

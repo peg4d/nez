@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.runtime.Instruction;
@@ -62,10 +61,6 @@ public class IsSymbol extends Terminal {
 		else {
 			Prediction.predictAnyChar(option, dfa);
 		}
-	}
-	@Override
-	public boolean match(SourceContext context) {
-		return context.matchSymbolTable(table, this.checkLastSymbolOnly);
 	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {

@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.ast.Tag;
 import nez.runtime.Instruction;
@@ -59,20 +58,8 @@ public class DefSymbol extends Unary {
 	public void predict(int option, boolean[] dfa) {
 		this.inner.predict(option, dfa);
 	}
-	@Override
-	public boolean match(SourceContext context) {
-		long startIndex = context.getPosition();
-		if(this.inner.optimized.match(context)) {
-			long endIndex = context.getPosition();
-			String s = context.substring(startIndex, endIndex);
-			context.pushSymbolTable(table, s);
-			return true;
-		}
-		return false;
-	}
 	
 	// Utilities
-	
 	public static boolean checkContextSensitivity(Expression e, UMap<String> visitedMap) {
 		if(e.size() > 0) {
 			for(int i = 0; i < e.size(); i++) {

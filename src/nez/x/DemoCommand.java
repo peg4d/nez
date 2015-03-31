@@ -3,8 +3,7 @@ package nez.x;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
-import nez.ast.AST;
-import nez.ast.Node;
+import nez.ast.CommonTree;
 import nez.expr.GrammarChecker;
 import nez.expr.NezParser;
 import nez.expr.Rule;
@@ -61,7 +60,7 @@ public class DemoCommand extends Command {
 				grammarAdded = false;
 			}
 			SourceContext sc = SourceContext.newStringSourceContext("<stdio>", linenum, line);
-			Node node = product.parse(sc, new AST());
+			CommonTree node = product.parse(sc);
 			if(node == null) {
 				ConsoleUtils.println(sc.getSyntaxErrorMessage());
 				continue;

@@ -1,7 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
-import nez.ast.Node;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -32,28 +30,6 @@ public class Repetition1 extends Repetition {
 	}
 	@Override public void predict(int option, boolean[] dfa) {
 		Prediction.predictUnary(this, option, dfa);
-	}
-	@Override
-	public boolean match(SourceContext context) {
-		long ppos = -1;
-		long pos = context.getPosition();
-		int c = 0;
-		while(ppos < pos) {
-			Node left = context.left;
-			if(!this.inner.optimized.match(context)) {
-				context.left = left;
-				left = null;
-				break;
-			}
-			ppos = pos;
-			pos = context.getPosition();
-			c++;
-			left = null;
-		}
-		if(c == 0) {
-			return context.failure2(this);
-		}
-		return true;
 	}
 	
 	@Override

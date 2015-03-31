@@ -3,14 +3,14 @@ package nez.expr;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
-import nez.ast.AST;
-import nez.ast.NodeVisitor;
+import nez.ast.CommonTree;
+import nez.ast.CommonTreeVisitor;
 import nez.ast.Tag;
 import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
 
-public class NezParser extends NodeVisitor {
+public class NezParser extends CommonTreeVisitor {
 
 	Production product;
 	Grammar loaded;
@@ -24,7 +24,7 @@ public class NezParser extends NodeVisitor {
 		this.loaded = new Grammar(sc.getResourceName());
 		this.checker = checker;
 		while(sc.hasUnconsumed()) {
-			AST ast = product.parse(sc, new AST());
+			CommonTree ast = product.parse(sc);
 			if(ast == null) {
 				ConsoleUtils.exit(1, sc.getSyntaxErrorMessage());
 			}
@@ -40,14 +40,14 @@ public class NezParser extends NodeVisitor {
 		SourceContext sc = SourceContext.newStringSourceContext(res, linenum, text);
 		this.loaded = peg;
 		this.checker = null;
-		AST ast = product.parse(sc, new AST());
+		CommonTree ast = product.parse(sc);
 		if(ast == null || !ast.is(NezTag.Rule)) {
 			return null;
 		}
 		return toRule(ast);
 	}
 	
-	private boolean parse(AST ast) {
+	private boolean parse(CommonTree ast) {
 		//System.out.println("DEBUG? parsed: " + ast);
 		if(ast.is(NezTag.Rule)) {
 			toRule(ast);
@@ -99,11 +99,11 @@ public class NezParser extends NodeVisitor {
 //		return "lib/"+filePath;
 //	}
 
-	Expression toExpression(AST po) {
+	Expression toExpression(CommonTree po) {
 		return (Expression)this.visit(po);
 	}
 	
-	public Rule toRule(AST ast) {
+	public Rule toRule(CommonTree ast) {
 		String ruleName = ast.textAt(0, "");
 		if(ast.get(0).is(NezTag.String)) {
 			ruleName = quote(ruleName);
@@ -121,16 +121,16 @@ public class NezParser extends NodeVisitor {
 		return rule;
 	}
 	
-	private void readAnnotations(Rule rule, AST pego) {
+	private void readAnnotations(Rule rule, CommonTree pego) {
 		for(int i = 0; i < pego.size(); i++) {
-			AST p = pego.get(i);
+			CommonTree p = pego.get(i);
 			if(p.is(NezTag.Annotation)) {
 				rule.addAnotation(p.textAt(0, ""), p.get(1));
 			}
 		}
 	}
 	
-	public Expression toNonTerminal(AST ast) {
+	public Expression toNonTerminal(CommonTree ast) {
 		String symbol = ast.getText();
 //		if(ruleName.equals(symbol)) {
 //			Expression e = peg.getExpression(ruleName);
@@ -151,7 +151,7 @@ public class NezParser extends NodeVisitor {
 		return "\"" + t + "\"";
 	}
 
-	public Expression toString(AST ast) {
+	public Expression toString(CommonTree ast) {
 		String name = quote(ast.getText());
 		Rule r = this.loaded.getRule(name);
 		if(r != null) {
@@ -163,15 +163,15 @@ public class NezParser extends NodeVisitor {
 		return Factory.newString(ast, StringUtils.unquoteString(ast.getText()));
 	}
 
-	public Expression toCharacter(AST ast) {
+	public Expression toCharacter(CommonTree ast) {
 		return Factory.newString(ast, StringUtils.unquoteString(ast.getText()));
 	}
 
-	public Expression toClass(AST ast) {
+	public Expression toClass(CommonTree ast) {
 		UList<Expression> l = new UList<Expression>(new Expression[2]);
 		if(ast.size() > 0) {
 			for(int i = 0; i < ast.size(); i++) {
-				AST o = ast.get(i);
+				CommonTree o = ast.get(i);
 				if(o.is(NezTag.List)) {  // range
 					l.add(Factory.newCharSet(ast, o.textAt(0, ""), o.textAt(1, "")));
 				}
@@ -183,7 +183,7 @@ public class NezParser extends NodeVisitor {
 		return Factory.newChoice(ast, l);
 	}
 
-	public Expression toByte(AST ast) {
+	public Expression toByte(CommonTree ast) {
 		String t = ast.getText();
 		if(t.startsWith("U+")) {
 			int c = StringUtils.hex(t.charAt(2));
@@ -200,11 +200,11 @@ public class NezParser extends NodeVisitor {
 		return Factory.newByteChar(ast, c);
 	}
 
-	public Expression toAny(AST ast) {
+	public Expression toAny(CommonTree ast) {
 		return Factory.newAnyChar(ast);
 	}
 
-	public Expression toChoice(AST ast) {
+	public Expression toChoice(CommonTree ast) {
 		UList<Expression> l = new UList<Expression>(new Expression[ast.size()]);
 		for(int i = 0; i < ast.size(); i++) {
 			Factory.addChoice(l, toExpression(ast.get(i)));
@@ -212,7 +212,7 @@ public class NezParser extends NodeVisitor {
 		return Factory.newChoice(ast, l);
 	}
 
-	public Expression toSequence(AST ast) {
+	public Expression toSequence(CommonTree ast) {
 		UList<Expression> l = new UList<Expression>(new Expression[ast.size()]);
 		for(int i = 0; i < ast.size(); i++) {
 			Factory.addSequence(l, toExpression(ast.get(i)));
@@ -220,19 +220,19 @@ public class NezParser extends NodeVisitor {
 		return Factory.newSequence(ast, l);
 	}
 
-	public Expression toNot(AST ast) {
+	public Expression toNot(CommonTree ast) {
 		return Factory.newNot(ast, toExpression(ast.get(0)));
 	}
 
-	public Expression toAnd(AST ast) {
+	public Expression toAnd(CommonTree ast) {
 		return Factory.newAnd(ast, toExpression(ast.get(0)));
 	}
 
-	public Expression toOption(AST ast) {
+	public Expression toOption(CommonTree ast) {
 		return Factory.newOption(ast, toExpression(ast.get(0)));
 	}
 
-	public Expression toRepetition1(AST ast) {
+	public Expression toRepetition1(CommonTree ast) {
 		if(Expression.ClassicMode) {
 			UList<Expression> l = new UList<Expression>(new Expression[2]);
 			l.add(toExpression(ast.get(0)));
@@ -244,7 +244,7 @@ public class NezParser extends NodeVisitor {
 		}
 	}
 
-	public Expression toRepetition(AST ast) {
+	public Expression toRepetition(CommonTree ast) {
 		if(ast.size() == 2) {
 			int ntimes = StringUtils.parseInt(ast.textAt(1, ""), -1);
 			if(ntimes != 1) {
@@ -260,7 +260,7 @@ public class NezParser extends NodeVisitor {
 
 	// PEG4d TransCapturing
 
-	public Expression toNew(AST ast) {
+	public Expression toNew(CommonTree ast) {
 //		if(Expression.ClassicMode) {
 //			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
 //			return Factory.newNew(ast, seq.toList());
@@ -271,7 +271,7 @@ public class NezParser extends NodeVisitor {
 //		}
 	}
 
-	public Expression toLeftNew(AST ast) {
+	public Expression toLeftNew(CommonTree ast) {
 //		if(Expression.ClassicMode) {
 //			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
 //			return Factory.newNew(ast, seq.toList());
@@ -282,7 +282,7 @@ public class NezParser extends NodeVisitor {
 //		}
 	}
 
-	public Expression toLink(AST ast) {
+	public Expression toLink(CommonTree ast) {
 		int index = -1;
 		if(ast.size() == 2) {
 			index = StringUtils.parseInt(ast.textAt(1, ""), -1);
@@ -290,11 +290,11 @@ public class NezParser extends NodeVisitor {
 		return Factory.newLink(ast, toExpression(ast.get(0)), index);
 	}
 
-	public Expression toTagging(AST ast) {
+	public Expression toTagging(CommonTree ast) {
 		return Factory.newTagging(ast, Tag.tag(ast.getText()));
 	}
 
-	public Expression toReplace(AST ast) {
+	public Expression toReplace(CommonTree ast) {
 		return Factory.newReplace(ast, ast.getText());
 	}
 
@@ -304,7 +304,7 @@ public class NezParser extends NodeVisitor {
 //		return Factory.newDebug(toExpression(ast.get(0)));
 //	}
 
-	public Expression toMatch(AST ast) {
+	public Expression toMatch(CommonTree ast) {
 		return Factory.newMatch(ast, toExpression(ast.get(0)));
 	}
 
@@ -316,39 +316,39 @@ public class NezParser extends NodeVisitor {
 //		return Factory.newFail(Utils.unquoteString(ast.textAt(0, "")));
 //	}
 
-	public Expression toIf(AST ast) {
+	public Expression toIf(CommonTree ast) {
 		return Factory.newIfFlag(ast, ast.textAt(0, ""));
 	}
 
-	public Expression toWith(AST ast) {
+	public Expression toWith(CommonTree ast) {
 		return Factory.newWithFlag(ast, ast.textAt(0, ""), toExpression(ast.get(1)));
 	}
 
-	public Expression toWithout(AST ast) {
+	public Expression toWithout(CommonTree ast) {
 		return Factory.newWithoutFlag(ast, ast.textAt(0, ""), toExpression(ast.get(1)));
 	}
 
-	public Expression toBlock(AST ast) {
+	public Expression toBlock(CommonTree ast) {
 		return Factory.newBlock(ast, toExpression(ast.get(0)));
 	}
 
-	public Expression toDef(AST ast) {
+	public Expression toDef(CommonTree ast) {
 		return Factory.newDefSymbol(ast, Tag.tag(ast.textAt(0, "")), toExpression(ast.get(1)));
 	}
 
-	public Expression toIs(AST ast) {
+	public Expression toIs(CommonTree ast) {
 		return Factory.newIsSymbol(ast, Tag.tag(ast.textAt(0, "")));
 	}
 
-	public Expression toIsa(AST ast) {
+	public Expression toIsa(CommonTree ast) {
 		return Factory.newIsaSymbol(ast, Tag.tag(ast.textAt(0, "")));
 	}
 
-	public Expression toDefIndent(AST ast) {
+	public Expression toDefIndent(CommonTree ast) {
 		return Factory.newDefIndent(ast);
 	}
 
-	public Expression toIndent(AST ast) {
+	public Expression toIndent(CommonTree ast) {
 		return Factory.newIndent(ast);
 	}
 

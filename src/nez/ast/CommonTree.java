@@ -4,69 +4,52 @@ import java.util.AbstractList;
 
 import nez.util.StringUtils;
 
-public class AST extends AbstractList<AST> implements Node, SourcePosition {
+public class CommonTree extends AbstractList<CommonTree> implements SyntaxTree, SourcePosition {
 	private Source    source;
 	private Tag       tag;
 	private long      pos;
 	private int       length;
-	private Object    value  = null;
-	AST               parent = null;
-	private AST       subTree[] = null;
+	private Object    value;
+	CommonTree             parent = null;
+	private CommonTree     subTree[] = null;
 
-	public AST() {
-		this.tag        = Tag.tag("Text");
-		this.source     = null;
-		this.pos        = 0;
-		this.length     = 0;
-	}
+//	public CommonTree() {
+//		this.tag        = Tag.tag("Text");
+//		this.source     = null;
+//		this.pos        = 0;
+//		this.length     = 0;
+//	}
 
-	private AST(Tag tag, Source source, long pos, long epos, int size) {
+	CommonTree(Tag tag, Source source, long pos, long epos, int size, Object value) {
 		this.tag        = tag;
 		this.source     = source;
 		this.pos        = pos;
 		this.length     = (int)(epos - pos);
 		if(size > 0) {
-			this.subTree = new AST[size];
+			this.subTree = new CommonTree[size];
 		}
-	}
-
-	@Override
-	public Node newNode(Tag tag, Source source, long spos, long epos, int size) {
-		return new AST(tag == null ? this.tag : tag, source, spos, epos, size);
-	}
-	
-	@Override
-	public Node commit(Object value) {
 		this.value = value;
-		return this;
 	}
 
-	@Override
-	public void abort() {
+	public void link(int index, SyntaxTree child) {
+		this.set(index, (CommonTree)child);
 	}
 
-	@Override
-	public void link(int index, Node child) {
-		this.set(index, (AST)child);
-	}
-
-
-	@Override
 	public Tag getTag() {
 		return this.tag;
 	}
 
-	@Override
-	public void setTag(Tag tag) {
-		this.tag = tag;
-	}
+//	@Override
+//	public void setTag(Tag tag) {
+//		this.tag = tag;
+//	}
 
-	@Override
-	public void setEndingPosition(long pos) {
-		this.length = (int)(pos - this.getSourcePosition());
-	}
-
-	@Override
+//	@Override
+//	public void setEndingPosition(long pos) {
+//		this.length = (int)(pos - this.getSourcePosition());
+//	}
+//
+//	@Override
 	public final void expandAstToSize(int newSize) {
 		if(newSize > this.size()) {
 			this.resizeAst(newSize);
@@ -100,7 +83,7 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 //		System.out.println("gc " + this.getSourcePosition());
 //	}
 
-	public final AST getParent() {
+	public final CommonTree getParent() {
 		return this.parent;
 	}
 
@@ -157,11 +140,11 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 	}
 
 	@Override
-	public final AST get(int index) {
+	public final CommonTree get(int index) {
 		return this.subTree[index];
 	}
 
-	public final AST get(int index, AST defaultValue) {
+	public final CommonTree get(int index, CommonTree defaultValue) {
 		if(index < this.size()) {
 			return this.subTree[index];
 		}
@@ -169,8 +152,8 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 	}
 
 	@Override
-	public final AST set(int index, AST node) {
-		AST oldValue = null;
+	public final CommonTree set(int index, CommonTree node) {
+		CommonTree oldValue = null;
 		if(!(index < this.size())){
 			this.expandAstToSize(index+1);
 		}
@@ -189,13 +172,13 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 //	
 	private void resizeAst(int size) {
 		if(this.subTree == null && size > 0) {
-			this.subTree = new AST[size];
+			this.subTree = new CommonTree[size];
 		}
 		else if(size == 0){
 			this.subTree = null;
 		}
 		else if(this.subTree.length != size) {
-			AST[] newast = new AST[size];
+			CommonTree[] newast = new CommonTree[size];
 			if(size > this.subTree.length) {
 				System.arraycopy(this.subTree, 0, newast, 0, this.subTree.length);
 			}

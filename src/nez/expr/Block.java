@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -43,16 +42,6 @@ public class Block extends Unary {
 	@Override
 	public void predict(int option, boolean[] dfa) {
 		Prediction.predictUnary(this, option, dfa);
-	}
-	@Override
-	public boolean match(SourceContext context) {
-		int stateValue = context.stateValue;
-		String indent = context.getIndentText(context.getPosition());
-		int stackTop = context.pushSymbolTable(NezTag.Indent, indent);
-		boolean b = this.inner.optimized.match(context);
-		context.popSymbolTable(stackTop);
-		context.stateValue = stateValue;
-		return b;
 	}
 	
 	@Override

@@ -1,9 +1,6 @@
 package nez.runtime;
 
-import nez.SourceContext;
-import nez.ast.Node;
-import nez.ast.Tag;
-import nez.expr.NonTerminal;
+import nez.ast.SyntaxTree;
 
 public abstract class ClassicContext extends Context {
 
@@ -11,14 +8,14 @@ public abstract class ClassicContext extends Context {
 //		if(this.pos > fpos) {  // adding error location
 //			this.fpos = this.pos;
 //		}
-		this.left = null;
+		//this.left = null;
 		return false;
 	}
 	private class NodeLog {
 		NodeLog next;
-		Node parentNode;
+		SyntaxTree parentNode;
 		int  index;
-		Node childNode;
+		SyntaxTree childNode;
 	}
 
 	private NodeLog nodeStack = null;
@@ -42,7 +39,7 @@ public abstract class ClassicContext extends Context {
 	}
 
 	
-	public final void lazyLink(Node parent, int index, Node child) {
+	public final void lazyLink(SyntaxTree parent, int index, SyntaxTree child) {
 		NodeLog l = this.newNodeLog();
 		l.parentNode = parent;
 		l.childNode  = child;
@@ -52,7 +49,7 @@ public abstract class ClassicContext extends Context {
 		this.logStackSize += 1;
 	}
 	
-	public final void lazyJoin(Node left) {
+	public final void lazyJoin(SyntaxTree left) {
 		NodeLog l = this.newNodeLog();
 		l.childNode  = left;
 		l.index = -9;
@@ -73,76 +70,76 @@ public abstract class ClassicContext extends Context {
 		return logStackSize;
 	}
 
-	public final void commitConstruction(int checkPoint, Node newnode) {
-		NodeLog first = null;
-		int objectSize = 0;
-		//System.out.println("commit: " + checkPoint + " < " + this.logStackSize);
-		while(checkPoint < this.logStackSize) {
-			NodeLog cur = this.nodeStack;
-			this.nodeStack = this.nodeStack.next;
-			this.logStackSize--;
-			if(cur.index == -9) { // lazyCommit
-				commitConstruction(checkPoint, cur.childNode);
-				unusedNodeLog(cur);
-				break;
-			}
-			if(cur.parentNode == newnode) {
-				cur.next = first;
-				first = cur;
-				objectSize += 1;
-			}
-			else {
-				unusedNodeLog(cur);
-			}
-		}
-		if(objectSize > 0) {
-			newnode.expandAstToSize(objectSize);
-			for(int i = 0; i < objectSize; i++) {
-				NodeLog cur = first;
-				first = first.next;
-				if(cur.index == -1) {
-					cur.index = i;
-				}
-				newnode.link(cur.index, cur.childNode);
-				this.unusedNodeLog(cur);
-			}
-			//checkNullEntry(newnode);
-		}
-	}
-	
-	public final void abortConstruction(int checkPoint) {
-		while(checkPoint < this.logStackSize) {
-			NodeLog l = this.nodeStack;
-			this.nodeStack = this.nodeStack.next;
-			this.logStackSize--;
-			unusedNodeLog(l);
-		}
-		//assert(checkPoint == this.logStackSize);
-	}
+//	public final void commitConstruction(int checkPoint, SyntaxTree newnode) {
+//		NodeLog first = null;
+//		int objectSize = 0;
+//		//System.out.println("commit: " + checkPoint + " < " + this.logStackSize);
+//		while(checkPoint < this.logStackSize) {
+//			NodeLog cur = this.nodeStack;
+//			this.nodeStack = this.nodeStack.next;
+//			this.logStackSize--;
+//			if(cur.index == -9) { // lazyCommit
+//				commitConstruction(checkPoint, cur.childNode);
+//				unusedNodeLog(cur);
+//				break;
+//			}
+//			if(cur.parentNode == newnode) {
+//				cur.next = first;
+//				first = cur;
+//				objectSize += 1;
+//			}
+//			else {
+//				unusedNodeLog(cur);
+//			}
+//		}
+//		if(objectSize > 0) {
+//			newnode.expandAstToSize(objectSize);
+//			for(int i = 0; i < objectSize; i++) {
+//				NodeLog cur = first;
+//				first = first.next;
+//				if(cur.index == -1) {
+//					cur.index = i;
+//				}
+//				newnode.link(cur.index, cur.childNode);
+//				this.unusedNodeLog(cur);
+//			}
+//			//checkNullEntry(newnode);
+//		}
+//	}
+//	
+//	public final void abortConstruction(int checkPoint) {
+//		while(checkPoint < this.logStackSize) {
+//			NodeLog l = this.nodeStack;
+//			this.nodeStack = this.nodeStack.next;
+//			this.logStackSize--;
+//			unusedNodeLog(l);
+//		}
+//		//assert(checkPoint == this.logStackSize);
+//	}
 
-	public final int pushSymbolTable(Tag table, String s) {
-		int stackTop = this.stackedSymbolTable.size();
-		this.stackedSymbolTable.add(new SymbolTableEntry(table, s));
-		this.stateCount += 1;
-		this.stateValue = stateCount;
-		return stackTop;
-	}
-
-	public final boolean matchSymbolTable(Tag table, boolean checkLastSymbolOnly) {
-		for(int i = stackedSymbolTable.size() - 1; i >= 0; i--) {
-			SymbolTableEntry s = stackedSymbolTable.ArrayValues[i];
-			if(s.table == table) {
-				if(this.match(this.pos, s.utf8)) {
-					this.consume(s.utf8.length);
-					return true;
-				}
-				if(checkLastSymbolOnly) {
-					break;
-				}
-			}
-		}
-		return this.failure2(null);
-	}
+//	public final int pushSymbolTable(Tag table, String s) {
+//		int stackTop = this.stackedSymbolTable.size();
+//		this.stackedSymbolTable.add(new SymbolTableEntry(table, s));
+//		this.stateCount += 1;
+//		this.stateValue = stateCount;
+//		return stackTop;
+//	}
+//
+//	public final boolean matchSymbolTable(Tag table, boolean checkLastSymbolOnly) {
+//		for(int i = stackedSymbolTable.size() - 1; i >= 0; i--) {
+//			SymbolTableEntry s = stackedSymbolTable.ArrayValues[i];
+//			if(s.table == table) {
+//				if(this.match(this.pos, s.utf8)) {
+//					this.consume(s.utf8.length);
+//					return true;
+//				}
+//				if(checkLastSymbolOnly) {
+//					break;
+//				}
+//			}
+//		}
+//		return this.failure2(null);
+//	}
 	
 //	UList<NonTerminal> stackedNonTerminals;
 //	int[]         stackedPositions;
@@ -181,17 +178,17 @@ public abstract class ClassicContext extends Context {
 ////		}
 //	}
 		
-	public final boolean matchNonTerminal(NonTerminal e) {
-//		if(this.stackedNonTerminals != null) {
-//			int pos = this.stackedNonTerminals.size();
-//			this.stackedNonTerminals.add(e);
-//			stackedPositions[pos] = (int)this.pos;
-//			boolean b = e.deReference().matcher.match(this);
-//			this.stackedNonTerminals.clear(pos);
-//			return b;
-//		}
-		return e.deReference().optimized.match((SourceContext)this); // FIXME
-	}
+//	public final boolean matchNonTerminal(NonTerminal e) {
+////		if(this.stackedNonTerminals != null) {
+////			int pos = this.stackedNonTerminals.size();
+////			this.stackedNonTerminals.add(e);
+////			stackedPositions[pos] = (int)this.pos;
+////			boolean b = e.deReference().matcher.match(this);
+////			this.stackedNonTerminals.clear(pos);
+////			return b;
+////		}
+//		return e.deReference().optimized.match((SourceContext)this); // FIXME
+//	}
 	
 //	protected MemoTable memoTable = null;
 //

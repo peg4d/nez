@@ -1,7 +1,8 @@
 package nez;
 
-import nez.ast.AST;
-import nez.ast.Node;
+import nez.ast.CommonTree;
+import nez.ast.CommonTreeFactory;
+import nez.ast.ParsingFactory;
 import nez.expr.Expression;
 import nez.expr.NonTerminal;
 import nez.expr.Rule;
@@ -190,82 +191,19 @@ public class Production {
 		
 	public final boolean match(SourceContext s) {
 		boolean matched;
-		if(UFlag.is(this.option, Production.ClassicMode)) {
-			matched = this.start.match(s);
+		Instruction pc = this.compile();
+		s.initJumpStack(64, getMemoTable(s));
+		if(Verbose.Debug) {
+			matched = Instruction.debug(pc, s);
 		}
 		else {
-			Instruction pc = this.compile();
-			s.initJumpStack(64, getMemoTable(s));
-			if(Verbose.Debug) {
-				matched = Instruction.debug(pc, s);
-			}
-			else {
-				matched = Instruction.run(pc, s);
-			}
-			if(matched) {
-				s.newTopLevelNode();
-			}
+			matched = Instruction.run(pc, s);
+		}
+		if(matched) {
+			s.newTopLevelNode();
 		}
 		return matched;
 	}
-
-//	public final static void test() {
-//		nez.Grammar peg = NezParserCombinator.newGrammar();
-//		Production p = null;
-//		p = peg.getProduction("DIGIT");
-//		assert(p.match("1"));
-//		p = peg.getProduction("INT");
-//		assert(p.match("12"));
-//		p = peg.getProduction("EOL");
-//		assert(p.match("\r"));
-//		assert(p.match("\n"));
-//		assert(!p.match("1"));
-//		p = peg.getProduction("EOT");
-//		assert(p.match(""));
-//		assert(!p.match("1"));
-//		p = peg.getProduction("SEMI");
-//		assert(p.match(";"));
-//		assert(p.match(""));
-//		p = peg.getProduction("NAME");
-//		assert(p.match("AbcdAb1"));
-//		assert(!p.match("123"));
-//		p = peg.getProduction("Name");
-//		AST ast = p.parseAST("Uzumaki Naruto");
-//		System.out.println(ast);
-//		p = peg.getProduction("Expr");
-//		AST ast = p.parseAST("'a' 'b'");
-//		System.out.println(ast);
-//	}
-
-//	public final static void test1() {
-//		Grammar peg = PEG.newGrammar();
-//		Production p = null;
-//		AST node = null;
-//		p = peg.getProduction("DIGIT");
-//		assert(p.match("1"));
-//		p = peg.getProduction("INT");
-//		assert(p.match("12"));
-//		p = peg.getProduction("EOL");
-//		assert(p.match("\r"));
-//		assert(p.match("\n"));
-//		assert(!p.match("1"));
-//		p = peg.getProduction("EOT");
-//		assert(p.match(""));
-//		assert(!p.match("1"));
-//		p = peg.getProduction("SEMI");
-//		assert(p.match(";"));
-//		assert(p.match(""));
-//		p = peg.getProduction("NAME");
-//		assert(p.match("AbcdAb1"));
-//		assert(!p.match("123"));
-//		p = peg.getProduction("Name");
-//		AST ast = p.parseAST("Uzumaki Naruto");
-//		System.out.println(ast);
-//		p = peg.getProduction("Oab");
-//		node = p.parseAST("ab");
-//		System.out.println(node);
-//
-//	}
 
 	/* --------------------------------------------------------------------- */
 		
@@ -277,28 +215,29 @@ public class Production {
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T extends Node> T parse(SourceContext sc, T base) {
+	public Object parse(SourceContext sc, ParsingFactory treeFactory) {
 		long startPosition = sc.getPosition();
-		sc.setBaseNode(base);
+		sc.setBaseNode(treeFactory);
 		if(!this.match(sc)) {
-			
 			return null;
 		}
-		Node node = sc.getParsedNode();
+		Object node = sc.getParsingNode();
 		if(node == null) {
-			node = base.newNode(null, sc, startPosition, sc.getPosition(), 0);
+			node = treeFactory.newNode(null, sc, startPosition, sc.getPosition(), 0, null);
 		}
-		else {
-			sc.commitConstruction(0, node);
-		}
-		node = node.commit(null);
-		return (T)node;
+//		else {
+//			sc.commitConstruction(0, node);
+//		}
+		return treeFactory.commit(node);
 	}
 
-	public final AST parseAST(String str) {
+	public final CommonTree parse(SourceContext sc) {
+		return (CommonTree)this.parse(sc, new CommonTreeFactory());
+	}
+
+	public final CommonTree parseAST(String str) {
 		SourceContext sc = SourceContext.newStringSourceContext(str);
-		return this.parse(sc, new AST());
+		return (CommonTree)this.parse(sc, new CommonTreeFactory());
 	}
 
 	public final void record(Recorder rec) {

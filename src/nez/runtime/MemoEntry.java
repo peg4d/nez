@@ -1,11 +1,10 @@
 package nez.runtime;
 
-import nez.ast.Node;
 
 class MemoEntry {
 	boolean failed;
 	int  consumed;
-	Node result;
+	Object result;
 //	int  memoPoint;
 	int  stateValue = 0;
 }

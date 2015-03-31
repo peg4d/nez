@@ -3,9 +3,9 @@ package nez.x;
 import java.util.AbstractList;
 import java.util.Arrays;
 
-import nez.ast.Node;
 import nez.ast.Source;
 import nez.ast.SourcePosition;
+import nez.ast.SyntaxTree;
 import nez.ast.Tag;
 import nez.main.Recorder;
 import nez.util.FileBuilder;
@@ -33,7 +33,7 @@ public class RelationExtracker {
 		this.file = new FileBuilder(fileName);
 	}
 	
-	public Node newNode() {
+	public SyntaxTree newNode() {
 		return new RNode(this);
 	}
 
@@ -467,7 +467,7 @@ class WordCount {
 	}
 }
 
-class RNode extends AbstractList<RNode> implements Node, SourcePosition {
+class RNode extends AbstractList<RNode> implements SyntaxTree, SourcePosition {
 	RelationExtracker  tracker;
 	private Source    source;
 	private Tag       tag;
@@ -496,49 +496,47 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 		}
 	}
 
-	@Override
-	public Node commit(Object value) {
-		this.value = value;
-		tracker.recieve(this);
-		return this;
-	}
+//	@Override
+//	public SyntaxTree commit(Object value) {
+//		this.value = value;
+//		tracker.recieve(this);
+//		return this;
+//	}
+//
+//	@Override
+//	public void abort() {
+//	}
 
-	@Override
-	public void abort() {
-	}
+//	@Override
+//	public SyntaxTree newNode(Tag tag, Source source, long spos, long epos, int size) {
+//		return new RNode(this.tracker, tag == null ? this.tag : tag, source, spos, epos, size);
+//	}	
 
-	@Override
-	public Node newNode(Tag tag, Source source, long spos, long epos, int size) {
-		return new RNode(this.tracker, tag == null ? this.tag : tag, source, spos, epos, size);
-	}	
-
-	@Override
-	public void link(int index, Node child) {
+	public void link(int index, SyntaxTree child) {
 		this.set(index, (RNode)child);
 	}
 
 
-	@Override
 	public Tag getTag() {
 		return this.tag;
 	}
-
-	@Override
-	public void setTag(Tag tag) {
-		this.tag = tag;
-	}
-
-	@Override
-	public void setEndingPosition(long pos) {
-		this.length = (int)(pos - this.getSourcePosition());
-	}
-
-	@Override
-	public final void expandAstToSize(int newSize) {
-		if(newSize > this.size()) {
-			this.resizeAst(newSize);
-		}
-	}
+//
+//	@Override
+//	public void setTag(Tag tag) {
+//		this.tag = tag;
+//	}
+//
+//	@Override
+//	public void setEndingPosition(long pos) {
+//		this.length = (int)(pos - this.getSourcePosition());
+//	}
+//
+//	@Override
+//	public final void expandAstToSize(int newSize) {
+//		if(newSize > this.size()) {
+//			this.resizeAst(newSize);
+//		}
+//	}
 	
 	public Source getSource() {
 		return this.source;
@@ -611,16 +609,16 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 		return defaultValue;
 	}
 
-	@Override
-	public final RNode set(int index, RNode node) {
-		RNode oldValue = null;
-		if(!(index < this.size())){
-			this.expandAstToSize(index+1);
-		}
-		oldValue = this.subTree[index];
-		this.subTree[index] = node;
-		return oldValue;
-	}
+//	@Override
+//	public final RNode set(int index, RNode node) {
+//		RNode oldValue = null;
+//		if(!(index < this.size())){
+//			this.expandAstToSize(index+1);
+//		}
+//		oldValue = this.subTree[index];
+//		this.subTree[index] = node;
+//		return oldValue;
+//	}
 
 	private void resizeAst(int size) {
 		if(this.subTree == null && size > 0) {

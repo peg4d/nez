@@ -6,8 +6,7 @@ import java.util.TreeMap;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
-import nez.ast.AST;
-import nez.ast.Node;
+import nez.ast.CommonTree;
 import nez.ast.Transformer;
 import nez.main.Command;
 import nez.main.CommandConfigure;
@@ -30,7 +29,7 @@ public class ConverterCommand extends Command {
 			SourceContext file = config.getInputSourceContext();
 			Transformer trans = config.getTransformer();
 			file.start(rec);
-			Node node = p.parse(file, trans.newNode());
+			CommonTree node = p.parse(file);
 			file.done(rec);
 			if(node == null) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
@@ -54,7 +53,7 @@ public class ConverterCommand extends Command {
 				outputfile = "gen/" + outputfile;
 			}
 			GrammarConverter conv = loadConverter(new Grammar(file.getResourceName()), outputfile);
-			conv.convert((AST) node);
+			conv.convert(node);
 		}
 	}
 	

@@ -2,7 +2,6 @@ package nez.expr;
 
 import java.util.TreeMap;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -62,11 +61,6 @@ public class WithFlag extends Unary {
 	@Override
 	public void predict(int option, boolean[] dfa) {
 		Prediction.predictUnary(this, option, dfa);
-	}
-
-	@Override
-	public boolean match(SourceContext context) {
-		return this.inner.optimized.match(context);
 	}
 	
 	@Override

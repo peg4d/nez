@@ -2,12 +2,11 @@ package nez.runtime;
 
 import java.util.HashMap;
 
-import nez.ast.Node;
 import nez.main.Recorder;
 
 public abstract class MemoTable {
 	public abstract MemoTable newMemoTable(long len, int w, int n);
-	abstract void setMemo(long pos, int memoPoint, boolean failed, Node result, int consumed, int stateValue);
+	abstract void setMemo(long pos, int memoPoint, boolean failed, Object result, int consumed, int stateValue);
 	abstract MemoEntry getMemo(long pos, int memoPoint);
 	abstract MemoEntry getMemo2(long pos, int memoPoint, int stateValue);
 
@@ -51,8 +50,7 @@ class NullTable extends MemoTable {
 		this.initStat();
 	}
 	@Override
-	void setMemo(long pos, int memoPoint, boolean failed, Node result,
-			int consumed, int stateValue) {
+	void setMemo(long pos, int memoPoint, boolean failed, Object result, int consumed, int stateValue) {
 		this.CountStored += 1;
 	}
 	@Override
@@ -90,7 +88,7 @@ class ElasticTable extends MemoTable {
 	}
 	
 	@Override
-	void setMemo(long pos, int memoPoint, boolean failed, Node result, int consumed, int stateValue) {
+	void setMemo(long pos, int memoPoint, boolean failed, Object result, int consumed, int stateValue) {
 		long key = longkey(pos, memoPoint, shift);
 		int hash =  (int)(key % memoArray.length);
 		MemoEntryKey m = this.memoArray[hash];
@@ -195,8 +193,7 @@ class PackratHashTable extends MemoTable {
 	}
 
 	@Override
-	void setMemo(long pos, int memoPoint, boolean failed, Node result,
-			int consumed, int stateValue) {
+	void setMemo(long pos, int memoPoint, boolean failed, Object result, int consumed, int stateValue) {
 		MemoEntryList m = newMemo();
 		m.failed = failed;
 		m.memoPoint = memoPoint;

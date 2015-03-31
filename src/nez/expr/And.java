@@ -1,6 +1,5 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -57,13 +56,6 @@ public class And extends Unary {
 		}
 	}
 
-	@Override
-	public boolean match(SourceContext context) {
-		long pos = context.getPosition();
-		boolean b = this.inner.optimized.match(context);
-		context.rollback(pos);
-		return b;
-	}
 	@Override
 	Expression dupUnary(Expression e) {
 		return (this.inner != e) ? Factory.newAnd(this.s, e) : this;

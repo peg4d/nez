@@ -3,7 +3,6 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.Grammar;
-import nez.SourceContext;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -152,11 +151,6 @@ public class NonTerminal extends Expression {
 			e = nterm.deReference().optimize(option);
 		}
 		this.optimized = e;
-	}
-
-	@Override
-	public boolean match(SourceContext context) {
-		return context.matchNonTerminal(this);
 	}
 	
 	@Override

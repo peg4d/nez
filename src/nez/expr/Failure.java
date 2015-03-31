@@ -1,9 +1,8 @@
 package nez.expr;
 
-import nez.SourceContext;
 import nez.ast.SourcePosition;
-import nez.runtime.RuntimeCompiler;
 import nez.runtime.Instruction;
+import nez.runtime.RuntimeCompiler;
 
 public class Failure extends Unconsumed {
 	Failure(SourcePosition s) {
@@ -22,14 +21,9 @@ public class Failure extends Unconsumed {
 		return Prediction.Reject;
 	}
 	@Override
-	public boolean match(SourceContext context) {
-		return context.failure2(this);
-	}
-	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeFail(this);
 	}
-	
 	@Override
 	protected int pattern(GEP gep) {
 		return 1;

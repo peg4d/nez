@@ -3,7 +3,6 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.Production;
-import nez.SourceContext;
 import nez.ast.Source;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
@@ -65,15 +64,6 @@ public class AnyChar extends Terminal {
 		Prediction.predictAnyChar(option, dfa);
 	}
 
-	@Override
-	public boolean match(SourceContext context) {
-		if(context.byteAt(context.getPosition()) != context.EOF()) {
-			int len = context.charLength(context.getPosition());
-			context.consume(len);
-			return true;
-		}
-		return context.failure2(this);
-	}
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeMatchAny(this, next);

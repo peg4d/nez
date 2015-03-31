@@ -3,8 +3,7 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.Grammar;
-import nez.SourceContext;
-import nez.ast.AST;
+import nez.ast.CommonTree;
 import nez.ast.SourcePosition;
 import nez.main.Verbose;
 import nez.runtime.Instruction;
@@ -205,12 +204,6 @@ public class Rule extends Expression {
 		this.body = this.body.intern();
 	}
 
-	
-	@Override
-	public boolean match(SourceContext context) {
-		return body.match(context);
-	}
-
 	@Override
 	public String getPredicate() {
 		return this.getUniqueName() + "=";
@@ -325,7 +318,7 @@ public class Rule extends Expression {
 		}
 	}
 	
-	public void addAnotation(String textAt, AST ast) {
+	public void addAnotation(String textAt, CommonTree ast) {
 		// TODO Auto-generated method stub
 	}
 

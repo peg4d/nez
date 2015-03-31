@@ -3,9 +3,8 @@ package nez.x;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
-import nez.ast.AST;
-import nez.ast.Node;
-import nez.ast.Transformer;
+import nez.ast.CommonTree;
+import nez.ast.SyntaxTree;
 import nez.main.Command;
 import nez.main.CommandConfigure;
 import nez.main.Recorder;
@@ -28,7 +27,7 @@ public class RegexCommand extends Command {
 		init(config);
 		Recorder rec = config.getRecorder();
 		Production p = config.getProduction(config.StartingPoint);
-		Node node = parse(config, rec, p, false);
+		SyntaxTree node = parse(config, rec, p, false);
 		String outputfile = config.getOutputFileName();
 		if (outputfile == null) {
 			outputfile = file.getResourceName() + ".nez";
@@ -40,7 +39,7 @@ public class RegexCommand extends Command {
 			outputfile = "gen/" + outputfile;
 		}
 		GrammarConverter conv = new RegexConverter(new Grammar(file.getResourceName()), outputfile);
-		conv.convert((AST) node);
+		conv.convert((CommonTree) node);
 		config.GrammarFile = outputfile;
 		config.setInputFileList(inputFileList);
 		rec = config.getRecorder();
@@ -56,17 +55,16 @@ public class RegexCommand extends Command {
 		config.InputFileLists.add(RegexFile);
 	}
 
-	private Node parse(CommandConfigure config, Recorder rec, Production p, boolean writeAST) {
+	private CommonTree parse(CommandConfigure config, Recorder rec, Production p, boolean writeAST) {
 		if(p == null) {
 			ConsoleUtils.exit(1, "undefined nonterminal: " + config.StartingPoint);
 		}
 		p.record(rec);
-		Node node = null;
+		CommonTree node = null;
 		while(config.hasInput()) {
 			file = config.getInputSourceContext();
-			Transformer trans = config.getTransformer();
 			file.start(rec);
-			node = p.parse(file, trans.newNode());
+			node = p.parse(file);
 			file.done(rec);
 			if(node == null) {
 				ConsoleUtils.println(file.getSyntaxErrorMessage());
