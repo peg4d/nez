@@ -1,20 +1,21 @@
-package nez;
+package nez.io;
 
 import java.io.UnsupportedEncodingException;
 
+import nez.SourceContext;
 import nez.util.StringUtils;
 
-class StringSourceContext extends SourceContext {
+public class StringSourceContext extends SourceContext {
 	private byte[] utf8;
 	long textLength;
 
-	StringSourceContext(String sourceText) {
+	public StringSourceContext(String sourceText) {
 		super("(string)", 1);
 		this.utf8 = toZeroTerminalByteSequence(sourceText);
 		this.textLength = utf8.length-1;
 	}
 
-	StringSourceContext(String resource, long linenum, String sourceText) {
+	public StringSourceContext(String resource, long linenum, String sourceText) {
 		super(resource, linenum);
 		this.utf8 = toZeroTerminalByteSequence(sourceText);
 		this.textLength = utf8.length-1;

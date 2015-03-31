@@ -1,4 +1,4 @@
-package nez;
+package nez.io;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -6,9 +6,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import nez.SourceContext;
 import nez.util.StringUtils;
 
-class FileSourceContext extends SourceContext {
+public class FileSourceContext extends SourceContext {
 	public final static int PageSize = 4096;
 
 	private RandomAccessFile file;
@@ -20,7 +21,7 @@ class FileSourceContext extends SourceContext {
 	private final int FifoSize = 8; 
 	private LinkedHashMap<Long, byte[]> fifoMap = null;
 
-	FileSourceContext(String fileName) throws IOException {
+	public FileSourceContext(String fileName) throws IOException {
 		super(fileName, 1);
 		this.file = new RandomAccessFile(fileName, "r");
 		this.fileLength = this.file.length();

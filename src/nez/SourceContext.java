@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import nez.io.FileSourceContext;
+import nez.io.StringSourceContext;
 import nez.runtime.Context;
 import nez.util.StringUtils;
 
