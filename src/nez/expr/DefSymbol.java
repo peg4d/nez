@@ -26,14 +26,14 @@ public class DefSymbol extends Unary {
 		this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 		return true;
 	}
-	@Override
-	public void checkGrammar(GrammarChecker checker) {
+	@Override void checkPhase1(GrammarChecker checker) {
 		checker.setSymbolExpresion(table.getName(), this.inner);
+	}
+	@Override void checkPhase2(GrammarChecker checker) {
 		if(!this.inner.isAlwaysConsumed()) {
 			checker.reportWarning(s, "possible zero-length symbol: " + this.inner);
 		}
 	}
-
 	@Override
 	public int inferTypestate(UMap<String> visited) {
 		return Typestate.BooleanType;

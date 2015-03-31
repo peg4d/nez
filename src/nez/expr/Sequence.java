@@ -32,6 +32,16 @@ public class Sequence extends SequentialExpression {
 		return false;
 	}
 	@Override
+	boolean setOuterLefted(Expression outer) { 
+		for(Expression e: this) {
+			if(e.setOuterLefted(outer)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
 	public Expression removeASTOperator(boolean newNonTerminal) {
 		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
 		for(Expression e : this) {

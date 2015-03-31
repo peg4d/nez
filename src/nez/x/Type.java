@@ -73,9 +73,9 @@ public abstract class Type {
 			return inf;
 		}
 		if(e instanceof New && ((New) e).lefted) {
-			if(((New) e).unRepeated) {
-				System.out.println("TODO: Unrepeated left new is unsupported.");
-			}
+//			if(((New) e).unRepeated) {
+//				System.out.println("TODO: Unrepeated left new is unsupported.");
+//			}
 			AtomType left = new AtomType();
 			left.ref(name);
 			inf.link(null, left);

@@ -26,6 +26,10 @@ public class Option extends Unary {
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return false;
 	}
+	@Override void checkPhase1(GrammarChecker checker) {
+		this.inner.setOuterLefted(this);
+	}
+
 	@Override
 	public int inferTypestate(UMap<String> visited) {
 		int t = this.inner.inferTypestate(visited);

@@ -10,7 +10,7 @@ import nez.util.UMap;
 
 public class New extends Unconsumed {
 	public boolean lefted;
-	public boolean unRepeated = false;
+	public Expression outer = null;
 	public int shift  = 0;
 	New(SourcePosition s, boolean lefted, int shift) {
 		super(s);
@@ -30,6 +30,15 @@ public class New extends Unconsumed {
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return false;
 	}
+	
+	@Override boolean setOuterLefted(Expression outer) { 
+		if(this.lefted) {
+			this.outer = outer;
+			return false;
+		}
+		return false; 
+	}
+
 	@Override
 	public Expression removeASTOperator(boolean newNonTerminal) {
 		return Factory.newEmpty(s);

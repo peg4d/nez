@@ -44,13 +44,16 @@ public abstract class Expression extends AbstractList<Expression> {
 	public final boolean isAlwaysConsumed() {
 		return this.checkAlwaysConsumed(null, null, null);
 	}
-
+	public abstract boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack);
+	
+	void checkPhase1(GrammarChecker checker) {}
+	void checkPhase2(GrammarChecker checker) {}
+	boolean setOuterLefted(Expression outer) { return false; }
+	
 	public final int inferTypestate() {
 		return this.inferTypestate(null);
 	}
 
-	public abstract boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack);
-	public void checkGrammar(GrammarChecker checker) { }
 	public abstract int inferTypestate(UMap<String> visited);
 	public abstract Expression checkTypestate(GrammarChecker checker, Typestate c);
 

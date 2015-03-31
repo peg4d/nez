@@ -60,7 +60,7 @@ public class NonTerminal extends Expression {
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		if(checker != null) {
-			checkGrammar(checker);
+			checkPhase1(checker);
 			if(startNonTerminal != null && startNonTerminal.equals(this.uniqueName)) {
 				checker.reportError(s, "left recursion: " + this.ruleName);
 				checker.foundFatalError();
@@ -68,11 +68,13 @@ public class NonTerminal extends Expression {
 			}
 		}
 		Rule r = this.getRule();
-		return r.checkAlwaysConsumed(checker, startNonTerminal, stack);
+		if(r != null) {
+			return r.checkAlwaysConsumed(checker, startNonTerminal, stack);
+		}
+		return false;
 	}
 
-	@Override
-	public void checkGrammar(GrammarChecker checker) {
+	@Override void checkPhase1(GrammarChecker checker) {
 		Rule r = this.getRule();
 		if(r == null) {
 			checker.reportWarning(s, "undefined rule: " + this.ruleName + " => created empty rule!!");

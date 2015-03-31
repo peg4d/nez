@@ -64,15 +64,16 @@ public class GrammarChecker {
 			}
 			r.minlen = -1;  // reset for all checking
 			r.checkAlwaysConsumed(this, null, stack);
-			checkGrammarAll(r.getExpression());
+			checkPhase1(r.getExpression());
 		}
 		if(this.foundError) {
 			ConsoleUtils.exit(1, "FatalGrammarError");
 		}
 		// type check
 		for(Rule r: grammar.getRuleList()) {
+			this.checkPhase2(r.getExpression());
 			r.checkTypestate(this, new Typestate());
-		}
+		}		
 		// interning
 		for(Rule r: grammar.getRuleList()) {
 			r.internRule();
@@ -83,24 +84,23 @@ public class GrammarChecker {
 				r.removeExpressionFlag(undefedFlags);
 			}
 		}
-//		ParsingContext context = new ParsingContext(null);
-//		for(int i = 0; i < definedNameList.size(); i++) {
-//			ParsingRule rule = this.getRule(definedNameList.ArrayValues[i]);
-//			if(rule.getGrammar() == this) {
-//				rule.testExample1(this, context);
-//			}
-//		}
-// TODO Auto-generated method stub
-		
 	}
 	
-	private void checkGrammarAll(Expression p) {
-		p.checkGrammar(this);
+	private void checkPhase1(Expression p) {
+		p.checkPhase1(this);
 		for(Expression e: p) {
-			this.checkGrammarAll(e);
+			this.checkPhase1(e);
 		}
 	}
 
+	private void checkPhase2(Expression p) {
+		p.checkPhase2(this);
+		for(Expression e: p) {
+			this.checkPhase2(e);
+		}
+	}
+
+	
 	private UMap<Expression> tableMap; 
 
 	public final void setSymbolExpresion(String tableName, Expression e) {
@@ -116,57 +116,5 @@ public class GrammarChecker {
 		}
 		return null;
 	}
-		
-//	final void optimizeConstructor(Constructor holder) {
-//		if(is(O_LazyObject)) {
-//			int prefetchIndex = 0;
-//			for(int i = 0; i < holder.size(); i++) {
-//				Expression sub = holder.get(i);
-//				if(sub.hasObjectOperation()) {
-//					break;
-//				}
-//				prefetchIndex = i + 1;
-//			}
-//			if(prefetchIndex > 0) {
-//				CountLazyObject += 1;
-//				holder.prefetchIndex = prefetchIndex;
-//			}
-//		}
-//	}
-//
-//	final void optimizeSequence(Sequence holder) {
-//		if(is(O_SpecLexer) && holder.size() == 2 && holder.get(0) instanceof Not && holder.get(1) instanceof Any) {
-//			Expression inner = ((Not)holder.get(0)).inner;
-//			if(this.is(O_Inline) && inner instanceof NonTerminal) {
-//				inner = resolveNonTerminal(inner);
-//			}
-//			if(inner instanceof Byte) {
-//				holder.matcher = new ByteMapMatcher(((Byte) inner).byteChar);
-//				CountSpecLexer += 1;
-//				return;
-//			}
-//			Recognizer m = inner.matcher;
-//			if(m instanceof ByteMapMatcher) {
-//				holder.matcher = new ByteMapMatcher(((ByteMapMatcher) m), false);
-//				CountSpecLexer += 1;
-//				return;
-//			}
-//			//System.out.println("not any " + holder + " " + inner.getClass().getSimpleName() + "/" + inner.matcher.getClass().getSimpleName());
-//		}
-//		if(is(O_SpecString)) {
-//			byte[] u = new byte[holder.size()];
-//			for(int i = 0; i < holder.size(); i++) {
-//				Expression inner = resolveNonTerminal(holder.get(i));				
-//				if(inner instanceof Byte) {
-//					u[i] = (byte)((Byte) inner).byteChar;
-//					continue;
-//				}
-//				return;
-//			}
-//			holder.matcher = new StringMatcher(u);
-//			CountSpecString += 1;
-//			return;
-//		}
-//	}
 	
 }
