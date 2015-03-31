@@ -26,7 +26,7 @@ public class Replace extends ASTOperation {
 	}
 	@Override
 	public boolean match(SourceContext context) {
-		context.left.setValue(this.value);
+		//context.left.setValue(this.value);
 		return true;
 	}
 	@Override

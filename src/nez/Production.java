@@ -292,7 +292,7 @@ public class Production {
 		else {
 			sc.commitConstruction(0, node);
 		}
-		node = node.commit();
+		node = node.commit(null);
 		return (T)node;
 	}
 

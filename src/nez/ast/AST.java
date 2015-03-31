@@ -34,15 +34,15 @@ public class AST extends AbstractList<AST> implements Node, SourcePosition {
 	public Node newNode(Tag tag, Source source, long spos, long epos, int size) {
 		return new AST(tag == null ? this.tag : tag, source, spos, epos, size);
 	}
-
-	@Override
-	public void setValue(Object value) {
-		this.value = value;
-	}
 	
 	@Override
-	public Node commit() {
+	public Node commit(Object value) {
+		this.value = value;
 		return this;
+	}
+
+	@Override
+	public void abort() {
 	}
 
 	@Override

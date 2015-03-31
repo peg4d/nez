@@ -169,9 +169,9 @@ public abstract class Context implements Source {
 		if(left != null) {
 			newnode.link(0, left);
 		}
-		if(value != null) {
-			newnode.setValue(value);
-		}
+//		if(value != null) {
+//			newnode.setValue(value);
+//		}
 		if(objectSize > 0) {
 //			System.out.println("PREV " + start.prev);
 //			System.out.println(">>> BEGIN");
@@ -185,7 +185,7 @@ public abstract class Context implements Source {
 //			System.out.println("<<< END");
 //			System.out.println("COMMIT " + newnode);
 		}
-		return newnode.commit();
+		return newnode.commit(value);
 	}
 
 	public final void logAbort(DataLog checkPoint, boolean isFail) {

@@ -497,21 +497,20 @@ class RNode extends AbstractList<RNode> implements Node, SourcePosition {
 	}
 
 	@Override
-	public Node commit() {
+	public Node commit(Object value) {
+		this.value = value;
 		tracker.recieve(this);
 		return this;
 	}
 
 	@Override
-	public Node newNode(Tag tag, Source source, long spos, long epos, int size) {
-		return new RNode(this.tracker, tag == null ? this.tag : tag, source, spos, epos, size);
+	public void abort() {
 	}
 
 	@Override
-	public void setValue(Object value) {
-		this.value = value;
-	}
-	
+	public Node newNode(Tag tag, Source source, long spos, long epos, int size) {
+		return new RNode(this.tracker, tag == null ? this.tag : tag, source, spos, epos, size);
+	}	
 
 	@Override
 	public void link(int index, Node child) {
