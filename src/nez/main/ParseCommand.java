@@ -3,7 +3,7 @@ package nez.main;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.CommonTree;
-import nez.ast.Transformer;
+import nez.ast.CommonTreeWriter;
 import nez.util.ConsoleUtils;
 import nez.util.UList;
 
@@ -20,7 +20,6 @@ class ParseCommand extends Command {
 		p.record(rec);
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
-			Transformer trans = config.getTransformer();
 			file.start(rec);
 			CommonTree node = p.parse(file);
 			file.done(rec);
@@ -34,7 +33,7 @@ class ParseCommand extends Command {
 			if(rec != null) {
 				rec.log();
 			}
-			trans.transform(config.getOutputFileName(file), node);
+			new CommonTreeWriter().transform(config.getOutputFileName(file), node);
 		}
 	}
 }

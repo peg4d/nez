@@ -5,15 +5,14 @@ import java.util.TreeMap;
 import nez.util.FileBuilder;
 import nez.util.StringUtils;
 
-public class CommonTreeWriter implements Transformer {
-	@Override
-	public void transform(String path, SyntaxTree node) {
+public class CommonTreeWriter {
+	public void transform(String path, CommonTree node) {
 		FileBuilder fb = new FileBuilder(path);
-		this.writeAST(fb, (CommonTree)node);
+		this.writeCommonTree(fb, node);
 		fb.writeNewLine();
 		fb.flush();
 	}
-	private void writeAST(FileBuilder fb, CommonTree node) {
+	private void writeCommonTree(FileBuilder fb, CommonTree node) {
 		if(node == null) {
 			fb.writeIndent("null");
 			return;
@@ -27,7 +26,7 @@ public class CommonTreeWriter implements Transformer {
 		else {
 			fb.incIndent();
 			for(int i = 0; i < node.size(); i++) {
-				this.writeAST(fb, node.get(i));
+				this.writeCommonTree(fb, node.get(i));
 			}
 			fb.decIndent();
 			fb.writeIndent(")"); 

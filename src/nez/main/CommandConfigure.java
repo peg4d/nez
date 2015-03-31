@@ -5,15 +5,13 @@ import java.io.IOException;
 import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
-import nez.ast.CommonTreeWriter;
-import nez.ast.Transformer;
 import nez.expr.GrammarChecker;
-import nez.expr.NezParser;
 import nez.expr.NezCombinator;
+import nez.expr.NezParser;
 import nez.runtime.MemoTable;
 import nez.util.ConsoleUtils;
-import nez.util.UFlag;
 import nez.util.StringUtils;
+import nez.util.UFlag;
 import nez.util.UList;
 
 public class CommandConfigure {
@@ -344,10 +342,6 @@ public class CommandConfigure {
 			return rec;
 		}
 		return null;
-	}
-
-	public final Transformer getTransformer() {
-		return new CommonTreeWriter();
 	}
 
 }

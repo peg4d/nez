@@ -5,7 +5,6 @@ import java.util.Arrays;
 
 import nez.ast.Source;
 import nez.ast.SourcePosition;
-import nez.ast.SyntaxTree;
 import nez.ast.Tag;
 import nez.main.Recorder;
 import nez.util.FileBuilder;
@@ -33,9 +32,9 @@ public class RelationExtracker {
 		this.file = new FileBuilder(fileName);
 	}
 	
-	public SyntaxTree newNode() {
-		return new RNode(this);
-	}
+//	public SyntaxTree newNode() {
+//		return new RNode(this);
+//	}
 
 	void recieve(RNode t) {
 		keyCount.count(t.getTag().getName());
@@ -467,7 +466,7 @@ class WordCount {
 	}
 }
 
-class RNode extends AbstractList<RNode> implements SyntaxTree, SourcePosition {
+class RNode extends AbstractList<RNode> implements SourcePosition {
 	RelationExtracker  tracker;
 	private Source    source;
 	private Tag       tag;
@@ -512,8 +511,8 @@ class RNode extends AbstractList<RNode> implements SyntaxTree, SourcePosition {
 //		return new RNode(this.tracker, tag == null ? this.tag : tag, source, spos, epos, size);
 //	}	
 
-	public void link(int index, SyntaxTree child) {
-		this.set(index, (RNode)child);
+	public void link(int index, RNode child) {
+		this.set(index, child);
 	}
 
 

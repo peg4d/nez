@@ -7,7 +7,7 @@ import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.CommonTree;
-import nez.ast.Transformer;
+import nez.ast.CommonTreeWriter;
 import nez.main.Command;
 import nez.main.CommandConfigure;
 import nez.main.Recorder;
@@ -27,7 +27,6 @@ public class ConverterCommand extends Command {
 		p.record(rec);
 		while(config.hasInput()) {
 			SourceContext file = config.getInputSourceContext();
-			Transformer trans = config.getTransformer();
 			file.start(rec);
 			CommonTree node = p.parse(file);
 			file.done(rec);
@@ -41,7 +40,7 @@ public class ConverterCommand extends Command {
 			if(rec != null) {
 				rec.log();
 			}
-			trans.transform(config.getOutputFileName(file), node);
+			new CommonTreeWriter().transform(config.getOutputFileName(file), node);
 			String outputfile = config.getOutputFileName();
 			if (outputfile == null) {
 				outputfile = file.getResourceName() + ".nez";

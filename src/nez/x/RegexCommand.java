@@ -4,7 +4,6 @@ import nez.Grammar;
 import nez.Production;
 import nez.SourceContext;
 import nez.ast.CommonTree;
-import nez.ast.SyntaxTree;
 import nez.main.Command;
 import nez.main.CommandConfigure;
 import nez.main.Recorder;
@@ -27,7 +26,7 @@ public class RegexCommand extends Command {
 		init(config);
 		Recorder rec = config.getRecorder();
 		Production p = config.getProduction(config.StartingPoint);
-		SyntaxTree node = parse(config, rec, p, false);
+		CommonTree node = parse(config, rec, p, false);
 		String outputfile = config.getOutputFileName();
 		if (outputfile == null) {
 			outputfile = file.getResourceName() + ".nez";
@@ -39,7 +38,7 @@ public class RegexCommand extends Command {
 			outputfile = "gen/" + outputfile;
 		}
 		GrammarConverter conv = new RegexConverter(new Grammar(file.getResourceName()), outputfile);
-		conv.convert((CommonTree) node);
+		conv.convert(node);
 		config.GrammarFile = outputfile;
 		config.setInputFileList(inputFileList);
 		rec = config.getRecorder();

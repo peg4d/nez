@@ -4,7 +4,7 @@ import java.util.AbstractList;
 
 import nez.util.StringUtils;
 
-public class CommonTree extends AbstractList<CommonTree> implements SyntaxTree, SourcePosition {
+public class CommonTree extends AbstractList<CommonTree> implements SourcePosition {
 	private Source    source;
 	private Tag       tag;
 	private long      pos;
@@ -31,8 +31,8 @@ public class CommonTree extends AbstractList<CommonTree> implements SyntaxTree, 
 		this.value = value;
 	}
 
-	public void link(int index, SyntaxTree child) {
-		this.set(index, (CommonTree)child);
+	public void link(int index, CommonTree child) {
+		this.set(index, child);
 	}
 
 	public Tag getTag() {
