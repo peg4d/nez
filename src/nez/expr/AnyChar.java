@@ -37,7 +37,7 @@ public class AnyChar extends Terminal {
 		return this;
 	}
 	@Override
-	public Expression removeASTOperator() {
+	public Expression removeASTOperator(boolean newNonTerminal) {
 		return this;
 	}
 	@Override

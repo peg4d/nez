@@ -126,22 +126,18 @@ public class RuntimeCompiler {
 	
 	public final Instruction encode(UList<Rule> ruleList) {
 		long t = System.nanoTime();
-//		if(UFlag.is(this.option, Production.DFA)) {
-//			for(int i = ruleList.size() - 1; i >= 0; i--) {
-//				Rule r = ruleList.ArrayValues[i];
-//				r.initPrediction(this.option);
-//				//Verbose.println("" + r.getLocalName() + ": " + StringUtils.stringfyCharClass(dfa));
-//			}
-//		}
-//		long t3 = System.nanoTime();
-//		Verbose.printElapsedTime("PredictionTime", t, t3);
 		for(Rule r : ruleList) {
 			String uname = r.getUniqueName();
 			CodeBlock block = new CodeBlock();
 			if(Verbose.Debug) {
 				Verbose.debug("compiling .. " + r);
 			}
-			block.head = encodeExpression(r.getExpression(), new IRet(r));
+			Expression e = r.getExpression();
+			if(!UFlag.is(option, Production.ASTConstruction)) {
+				e = e.removeASTOperator(Expression.RemoveOnly);
+				//System.out.println(r.getLocalName() + "=" + e);
+			}
+			block.head = encodeExpression(e, new IRet(r));
 			block.start = codeList.size();
 			this.ruleMap.put(uname, block);
 			verify(block.head);
@@ -153,11 +149,6 @@ public class RuntimeCompiler {
 				((ICallPush) inst).setResolvedJump(deref.head);
 			}
 		}
-//		for(Rule r : ruleList) {
-//			String uname = r.getUniqueName();
-//			CodeBlock block = this.ruleMap.get(uname);
-//			test(r.getExpression(), block.head);
-//		}
 		long t2 = System.nanoTime();
 		Verbose.printElapsedTime("CompilingTime", t, t2);
 		return this.codeList.ArrayValues[0];
@@ -236,34 +227,10 @@ public class RuntimeCompiler {
 		}
 	}
 	
-//	private void updateDfa(Expression e, boolean[] dfa) {
-//		if(dfa != null) {
-//			e.predict(option, dfa);
-//		}
-//	}
-//
-//	private boolean[] dupDfa(boolean[] dfa) {
-//		return (dfa != null) ? dfa.clone() : null;
-//	}
-
 	// encoding
 
 	private Instruction failed = new IFail(null);
 	
-//	public final Instruction encodeDfa(Expression e, Instruction next) {
-//		boolean[] dfa = null;
-//		if(UFlag.is(this.option, Production.DFA)) {
-//			dfa = new boolean[257];
-//			for(int i = 1; i < dfa.length - 1; i++) {
-//				dfa[i] = true;
-//			}
-//			if(UFlag.is(this.option, Production.Binary)) {
-//				dfa[0] = true;
-//			}
-//		}
-//		return this.encodeExpression(e, next, dfa);
-//	}
-
 	public final Instruction encodeExpression(Expression e, Instruction next) {
 		return e.encode(this, next);
 	}
@@ -293,28 +260,84 @@ public class RuntimeCompiler {
 		return true;
 	}
 
+	public final boolean[] and(boolean[] dfa, boolean[] dfa2) {
+		for(int i = 0; i < dfa.length; i++) {
+			if(dfa[i] && dfa2[i]) {
+				dfa[i] = true;
+			}
+			else {
+				dfa[i] = false;
+			}
+		}
+		return dfa;
+	}
+
+	
+	private boolean[] predictNext(Instruction next) {
+		boolean[] dfa = ByteMap.newMap(true);
+		for(int c = 0; c < dfa.length; c++) {
+			short r = next.isAcceptImpl(c);
+			if(r == Prediction.Reject) {
+				dfa[c] = false;
+			}
+		}
+		return dfa;
+	}
+
+	private boolean[] predictInner(Expression e, boolean[] dfa2) {
+		boolean[] dfa = dfa2.clone();
+		for(int c = 0; c < dfa.length; c++) {
+			short r = e.acceptByte(c, option);
+			if(r == Prediction.Accept) {
+				dfa[c] = true;
+			}
+			if(r == Prediction.Reject) {
+				dfa[c] = false;
+			}		
+		}
+		return dfa;
+	}
+
+	private boolean checkInstruction(Instruction next) {
+		return next instanceof IByteChar || next instanceof IByteMap;
+	}
+
+	private Instruction replaceConsumeInstruction(Instruction inst) {
+		if(inst instanceof IByteChar || inst instanceof IByteMap || inst instanceof IAnyChar) {
+			System.out.println("replaced: " + inst);
+			return new IConsume(inst.e, inst.next);
+		}
+		return inst;
+	}
+
+	
+	
 	public final Instruction encodeOption(Option p, Instruction next) {
-//		if(dfa != null) {
-//			boolean[] optdfa = dfa.clone();
-//			if(isDisjoint(dfa, optdfa)) {
-//				Instruction opt = encodeExpression(p.get(0), next);
-//				IDfaDispatch match = new IDfaDispatch(p, failed);
-//				for(int ch = 0; ch < dfa.length; ch++) {
-//					if(optdfa[ch]) {
-//						dfa[ch] = true;
-//						match.setJumpTable(ch, opt);
-//						continue;
-//					}
-//					if(dfa[ch]) {
-//						match.setJumpTable(ch, next);
-//					}
+		if(UFlag.is(option, Production.DFA) && checkInstruction(next)) {
+			boolean[] dfa = predictNext(next);
+			boolean[] optdfa = predictInner(p.get(0), dfa);
+			if(isDisjoint(dfa, optdfa)) {
+				Instruction opt = replaceConsumeInstruction(encodeExpression(p.get(0), next));
+				next = replaceConsumeInstruction(next);
+				IDfaDispatch match = new IDfaDispatch(p, failed);
+				for(int ch = 0; ch < dfa.length; ch++) {
+					if(optdfa[ch]) {
+						dfa[ch] = true;
+						match.setJumpTable(ch, opt);
+						continue;
+					}
+					if(dfa[ch]) {
+						match.setJumpTable(ch, next);
+					}
+				}
+//				if(!(next instanceof IByteChar)) {
+//					System.out.println("DFA: " + p + " " + next.e + "  ## " + next.getClass());
 //				}
-//				//System.out.println("DFA: " + p + " " + next.e);
-//				return match;
-//			}
-//			//System.out.println("NFA: " + p + " " + next.e);
-//			updateDfa(p, dfa);
-//		}
+				return match;
+			}
+//			System.out.println("NFA: " + p + " " + next.e);
+//			System.out.println("NFA: " + StringUtils.stringfyCharClass(and(dfa, optdfa)));
+		}
 		if(UFlag.is(option, Production.Specialization)) {
 			Expression inner = p.get(0).optimize(option);
 			if(inner instanceof ByteChar) {
@@ -326,38 +349,37 @@ public class RuntimeCompiler {
 				return new IOptionByteMap((ByteMap)inner, next);
 			}
 		}
+		if(UFlag.is(option, Production.DFA)) {
+			Verbose.printNFA(p + " " + next.e);
+		}
+
 		Instruction pop = new IFailPop(p, next);
 		return new IFailPush(p, next, encodeExpression(p.get(0), pop));
 	}
 	
 	public final Instruction encodeRepetition(Repetition p, Instruction next) {
-//		if(dfa != null && !p.possibleInfiniteLoop) {
-//			boolean[] optdfa = dfa.clone();
-//			updateDfa(p.get(0), optdfa);
-//			if(isDisjoint(dfa, optdfa)) {
-//				IDfaDispatch match = new IDfaDispatch(p, failed);
-//				Instruction opt = encodeExpression(p.get(0), match);
-//				System.out.println("DFA: " + p + " " + next.e);
-//				System.out.println("  1 " + p + " " + StringUtils.stringfyCharClass(optdfa));
-//				System.out.println("  2 " + next.e + " " + StringUtils.stringfyCharClass(dfa));
-//
-//				for(int ch = 0; ch < dfa.length; ch++) {
-//					if(optdfa[ch]) {
-//						dfa[ch] = true;
-//						match.setJumpTable(ch, opt);
-//						continue;
-//					}
-//					if(dfa[ch]) {
-//						match.setJumpTable(ch, next);
-//					}
-//				}
-//				return match;
-//			}
-//		}
-//		if(dfa != null) {
-//			//System.out.println("NFA: " + p + " " + next.e);
-//			updateDfa(p, dfa);
-//		}
+		if(UFlag.is(option, Production.DFA) && !p.possibleInfiniteLoop && checkInstruction(next)) {
+			boolean[] dfa = predictNext(next);
+			boolean[] optdfa = predictInner(p.get(0), dfa);
+			if(isDisjoint(dfa, optdfa)) {
+				IDfaDispatch match = new IDfaDispatch(p, failed);
+				Instruction opt = replaceConsumeInstruction(encodeExpression(p.get(0), match));
+				next = replaceConsumeInstruction(next);
+				System.out.println("DFA: " + p + " " + next.e);
+				System.out.println("  1 " + p + " " + StringUtils.stringfyCharClass(optdfa));
+				System.out.println("  2 " + next.e + " " + StringUtils.stringfyCharClass(dfa));
+				for(int ch = 0; ch < dfa.length; ch++) {
+					if(optdfa[ch]) {
+						match.setJumpTable(ch, opt);
+						continue;
+					}
+					if(dfa[ch]) {
+						match.setJumpTable(ch, next);
+					}
+				}
+				return match;
+			}
+		}
 		if(UFlag.is(option, Production.Specialization)) {
 			Expression inner = p.get(0).optimize(option);
 			if(inner instanceof ByteChar) {
@@ -368,6 +390,9 @@ public class RuntimeCompiler {
 				Verbose.noticeOptimize("Specialization", p, inner);
 				return new IRepeatedByteMap((ByteMap)inner, next);
 			}
+		}
+		if(UFlag.is(option, Production.DFA)) {
+			Verbose.printNFA(p + " " + next.e);
 		}
 		IFailSkip skip = p.possibleInfiniteLoop ? new IFailCheckSkip(p) : new IFailSkip(p);
 		Instruction start = encodeExpression(p.get(0), skip);
@@ -511,11 +536,13 @@ public class RuntimeCompiler {
 					/* this is a rare case where the selected choice is the parent choice */
 					/* this cause the repeated calls of the same matchers */
 					//System.out.println("NFA: " + StringUtils.formatChar(c) + ": " + merged);
+					Verbose.printNFA(StringUtils.formatChar(c) + ": " + merged);
 					inst = this.encodeUnoptimizedChoice((Choice)merged, next);
 				}
 				else {
 					inst = encodeExpression(merged, next);
 				}
+				inst = this.replaceConsumeInstruction(inst);
 				m.put(key, inst);
 			}
 			dispatch.setJumpTable(c, inst);

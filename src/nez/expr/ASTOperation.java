@@ -37,7 +37,7 @@ public abstract class ASTOperation extends Expression {
 		return this;
 	}
 	@Override
-	public Expression removeASTOperator() {
+	public Expression removeASTOperator(boolean newNonTerminal) {
 		return Factory.newEmpty(s);
 	}
 	@Override

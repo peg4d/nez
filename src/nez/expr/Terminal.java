@@ -25,7 +25,7 @@ public abstract class Terminal extends Expression {
 		return this;
 	}
 	@Override
-	public Expression removeASTOperator() {
+	public Expression removeASTOperator(boolean newNonTerminal) {
 		return this;
 	}
 	@Override

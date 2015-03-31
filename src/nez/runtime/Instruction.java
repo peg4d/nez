@@ -237,11 +237,17 @@ class ICallPush extends Instruction implements StackOperation {
 	}
 	@Override
 	short isAcceptImpl(int ch) {
-		short r = next.isAcceptImpl(ch);
-		if(r == Prediction.Unconsumed) {
-			return jump.isAcceptImpl(ch);
+		try {
+			short r = next.isAcceptImpl(ch);
+			if(r == Prediction.Unconsumed) {
+				return jump == null ? Prediction.Accept : jump.isAcceptImpl(ch);
+			}
+			return r;
 		}
-		return r;
+		catch(StackOverflowError e) {
+			//System.out.println(e + " at " + this.rule.getLocalName());
+			return Prediction.Accept;
+		}
 	}
 
 	@Override
@@ -420,7 +426,7 @@ class IOptionByteMap extends IByteMap {
 }
 
 class IConsume extends Instruction {
-	IConsume(ByteMap e, Instruction next) {
+	IConsume(Expression e, Instruction next) {
 		super(e, next);
 	}
 	@Override

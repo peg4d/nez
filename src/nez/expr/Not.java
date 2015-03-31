@@ -38,7 +38,7 @@ public class Not extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int t = this.inner.inferTypestate(null);
 		if(t == Typestate.ObjectType || t == Typestate.OperationType) {
-			this.inner = this.inner.removeASTOperator();
+			this.inner = this.inner.removeASTOperator(Expression.CreateNonTerminal);
 		}
 		return this;
 	}

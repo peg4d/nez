@@ -30,8 +30,8 @@ public abstract class Unary extends Expression {
 	}
 
 	@Override
-	public Expression removeASTOperator() {
-		return this.dupUnary(inner.removeASTOperator());
+	public Expression removeASTOperator(boolean newNonTerminal) {
+		return this.dupUnary(inner.removeASTOperator(newNonTerminal));
 	}
 	
 	@Override

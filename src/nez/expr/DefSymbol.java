@@ -43,7 +43,7 @@ public class DefSymbol extends Unary {
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int t = this.inner.inferTypestate(null);
 		if(t != Typestate.BooleanType) {
-			this.inner = this.inner.removeASTOperator();
+			this.inner = this.inner.removeASTOperator(Expression.CreateNonTerminal);
 		}
 		return this;
 	}

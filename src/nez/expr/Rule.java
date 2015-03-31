@@ -149,7 +149,7 @@ public class Rule extends Expression {
 	}
 
 	@Override
-	public Expression removeASTOperator() {
+	public Expression removeASTOperator(boolean newNonTerminal) {
 		if(this.inferTypestate(null) == Typestate.BooleanType) {
 			return this;
 		}
@@ -159,7 +159,7 @@ public class Rule extends Expression {
 			r = this.grammar.newRule(name, this.body);
 			r.definedRule = this;
 			r.transType = Typestate.BooleanType;
-			r.body = this.body.removeASTOperator();
+			r.body = this.body.removeASTOperator(newNonTerminal);
 		}
 		return r;
 	}
@@ -216,9 +216,21 @@ public class Rule extends Expression {
 		return this.getUniqueName() + "=";
 	}
 
+	private int dfaOption = -1;
+	private short[] dfaCache = null;
+
 	@Override
 	public short acceptByte(int ch, int option) {
-		return this.body.acceptByte(ch, option);
+		if(option != dfaOption) {
+			if(dfaCache == null) {
+				dfaCache = new short[257];
+			}
+			for(int c = 0; c < dfaCache.length; c++) {
+				dfaCache[c] = this.body.acceptByte(c, option);
+			}
+			this.dfaOption = option;
+		}
+		return dfaCache[ch]; //this.body.acceptByte(ch, option);
 	}
 
 	private boolean[] pdfa = null, ndfa = null;

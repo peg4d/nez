@@ -55,7 +55,10 @@ public abstract class Expression extends AbstractList<Expression> implements Rec
 	public abstract int inferTypestate(UMap<String> visited);
 	public abstract Expression checkTypestate(GrammarChecker checker, Typestate c);
 
-	public abstract Expression removeASTOperator();
+	public final static boolean CreateNonTerminal = true;
+	public final static boolean RemoveOnly = false;
+
+	public abstract Expression removeASTOperator(boolean newNonTerminal);
 	public abstract Expression removeFlag(TreeMap<String, String> undefedFlags);
 	
 	public static boolean hasReachableFlag(Expression e, String flagName, UMap<String> visited) {

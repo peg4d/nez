@@ -96,7 +96,7 @@ public class NonTerminal extends Expression {
 		if(c.required == Typestate.ObjectType) {
 			if(t == Typestate.OperationType) {
 				checker.reportWarning(s, "unexpected AST operations => removed!!");
-				return this.removeASTOperator();
+				return this.removeASTOperator(Expression.CreateNonTerminal);
 			}
 			c.required = Typestate.OperationType;
 			return this;
@@ -110,10 +110,12 @@ public class NonTerminal extends Expression {
 		return this;
 	}
 	@Override
-	public Expression removeASTOperator() {
-		Rule r = (Rule)this.getRule().removeASTOperator();
-		if(!this.ruleName.equals(r.getLocalName())) {
-			return Factory.newNonTerminal(this.s, peg, r.getLocalName());
+	public Expression removeASTOperator(boolean newNonTerminal) {
+		if(newNonTerminal) {
+			Rule r = (Rule)this.getRule().removeASTOperator(newNonTerminal);
+			if(!this.ruleName.equals(r.getLocalName())) {
+				return Factory.newNonTerminal(this.s, peg, r.getLocalName());
+			}
 		}
 		return this;
 	}

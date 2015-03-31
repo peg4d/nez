@@ -33,10 +33,10 @@ public class Sequence extends SequentialExpression {
 		return false;
 	}
 	@Override
-	public Expression removeASTOperator() {
+	public Expression removeASTOperator(boolean newNonTerminal) {
 		UList<Expression> l = new UList<Expression>(new Expression[this.size()]);
 		for(Expression e : this) {
-			Factory.addSequence(l, e.removeASTOperator());
+			Factory.addSequence(l, e.removeASTOperator(newNonTerminal));
 		}
 		return Factory.newSequence(s, l);
 	}

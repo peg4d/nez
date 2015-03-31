@@ -13,6 +13,8 @@ public class Verbose {
 	public static boolean Debug = false;
 	public static boolean Backtrack = false;
 	public static boolean SelfTesting = true;
+	public static boolean NFA = true;
+	
 	
 	public static void setAll() {
 		General = true;
@@ -70,5 +72,10 @@ public class Verbose {
 		}
 	}
 
+	public final static void printNFA(Object s) {
+		if(NFA) {
+			ConsoleUtils.println("NFA: " + s);
+		}
+	}
 	
 }
