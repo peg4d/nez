@@ -209,9 +209,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newNonTerminal("STRING"),
 		};
 		return grammar.newSequence(l);
@@ -221,9 +221,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("IDTOKEN"),
 				grammar.newString("\"")
@@ -238,9 +238,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("IDTOKEN"),
 				grammar.newString("\"")
@@ -252,9 +252,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("IDTOKENS"),
 				grammar.newString("\"")
@@ -268,9 +268,9 @@ public class DTDConverter extends GrammarConverter {
 		String fixedValue = node.textAt(2, "");
 		Expression[] l ={
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString(fixedValue),
 		};
 		return grammar.newSequence(l);
@@ -280,9 +280,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l ={
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("entity"),
 				grammar.newString("\"")
@@ -294,9 +294,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("entities"),
 				grammar.newString("\"")
@@ -308,9 +308,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newNonTerminal("NMTOKEN"),
 		};
 		return grammar.newSequence(l);
@@ -320,9 +320,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newNonTerminal("NMTOKEN"),
 		};
 		return grammar.newSequence(l);
