@@ -97,7 +97,6 @@ public abstract class Command {
 		load("regex", "nez.x.RegexCommand");
 		load("demo", "nez.x.DemoCommand");
 		load("type", "nez.x.TypeCommand");
-		load("dtd", "nez.x.DTDCommand");
 	}
 	
 	public static final Command getCommand(String name) {
