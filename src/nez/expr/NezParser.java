@@ -52,23 +52,6 @@ public class NezParser extends CommonTreeVisitor {
 		//System.out.println("DEBUG? parsed: " + ast);
 		if(ast.is(NezTag.Rule)) {
 			toRule(ast);
-//			if(ast.size() > 3) {
-//				System.out.println("DEBUG? parsed: " + ast);		
-//			}
-//			String ruleName = ast.textAt(0, "");
-//			if(ast.get(0).is(NezTag.String)) {
-//				ruleName = quote(ruleName);
-//			}
-//			Rule rule = loaded.getRule(ruleName);
-//			Expression e = toExpression(ast.get(1));
-//			if(rule != null) {
-//				checker.reportWarning(ast, "duplicated rule name: " + ruleName);
-//				rule = null;
-//			}
-//			rule = loaded.defineRule(ast.get(0), ruleName, e);
-//			if(ast.size() >= 3) {
-//				readAnnotations(rule, ast.get(2));
-//			}
 			return true;
 		}
 //		if(ast.is(NezTag.Import)) {
@@ -117,7 +100,13 @@ public class NezParser extends CommonTreeVisitor {
 		}
 		rule = loaded.defineRule(ast.get(0), ruleName, e);
 		if(ast.size() == 3) {
-			Verbose.todo(ast);
+			Verbose.todo(ast.get(2));
+			if(ast.contains("public")) {
+				rule.isPublic = true;
+			}
+			if(ast.contains("inline")) {
+				rule.isInline = true;
+			}
 		}
 		return rule;
 	}
