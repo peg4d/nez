@@ -75,13 +75,6 @@ public class CommandConfigure {
 		ConsoleUtils.println("");
 		ConsoleUtils.println("The most commonly used nez commands are:");
 		Command.showList();
-		ConsoleUtils.println("  parse        Parse -i input or -s string to -o output");
-		ConsoleUtils.println("  check        Parse -i input or -s string");
-		ConsoleUtils.println("  shell        Try parsing in an interactive way");
-		ConsoleUtils.println("  rel          Convert -f file to relations (csv file)");
-		ConsoleUtils.println("  nezex        Convert -i regex to peg");
-		ConsoleUtils.println("  conv         Convert PEG4d rules to the specified format in -o");
-		ConsoleUtils.println("  find         Search nonterminals that can match inputs");
 		ConsoleUtils.exit(0, Message);
 	}
 	
