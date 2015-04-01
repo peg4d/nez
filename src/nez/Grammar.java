@@ -50,6 +50,15 @@ public class Grammar {
 		return r;
 	}
 	
+	public final Rule defineRule(String name, Expression e) {
+		if (!hasRule(name)) {
+			nameList.add(name);
+		}
+		Rule r = new Rule(null, this, name, e);
+		this.ruleMap.put(name, r);
+		return r;
+	}
+
 //	public int getRuleSize() {
 //		return this.ruleMap.size();
 //	}
@@ -168,7 +177,7 @@ public class Grammar {
 	}
 
 	public final Expression newNot(Expression ... seq) {
-		return Factory.newAnd(src(), newSequence(seq));
+		return Factory.newNot(src(), newSequence(seq));
 	}
 	
 //	public final Expression newByteRange(int c, int c2) {
