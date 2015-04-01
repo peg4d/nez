@@ -32,11 +32,6 @@ public class IsIndent extends Terminal {
 		}
 		return Prediction.Unconsumed;
 	}
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		dfa['\t'] = true;
-		dfa[' '] = true;
-	}
 
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {

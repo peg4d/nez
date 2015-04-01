@@ -47,14 +47,6 @@ public class And extends Unary {
 		}
 		return r;
 	}
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		boolean[] indfa = dfa.clone();
-		this.inner.predict(option, indfa);
-		for(int c = 0; c < dfa.length; c++) {
-			dfa[c]  = (dfa[c] && indfa[c]);
-		}
-	}
 
 	@Override
 	Expression dupUnary(Expression e) {

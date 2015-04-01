@@ -29,19 +29,6 @@ public class ByteChar extends Terminal {
 	}
 	
 	@Override
-	public boolean predict(int option, int ch, boolean k) {
-		return (byteChar == ch) ? true : false;
-	}
-
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		for(int c = 0; c < dfa.length; c++) {
-			dfa[c] = false;
-		}
-		dfa[byteChar] = true;
-	}
-
-	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeByteChar(this, next);
 	}

@@ -28,9 +28,6 @@ public class Repetition1 extends Repetition {
 	@Override public short acceptByte(int ch, int option) {
 		return Prediction.acceptUnary(this, ch, option);
 	}
-	@Override public void predict(int option, boolean[] dfa) {
-		Prediction.predictUnary(this, option, dfa);
-	}
 	
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {

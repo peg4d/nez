@@ -81,14 +81,6 @@ public class Sequence extends SequentialExpression {
 	public short acceptByte(int ch, int option) {
 		return Prediction.acceptSequence(this, ch, option);
 	}
-	@Override
-	public boolean predict(int option, int ch, boolean k) {
-		return Prediction.predictSequence(this, option, ch, k);
-	}
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		Prediction.predictSequence(this, option, dfa);
-	}
 
 	public final boolean isMultiChar() {
 		return this.isMultiChar(0, this.size());

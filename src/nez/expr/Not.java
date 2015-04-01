@@ -72,43 +72,6 @@ public class Not extends Unary {
 		}
 		return Prediction.Unconsumed;
 	}
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		Expression p = this.inner.optimize(option);
-		if(p instanceof Choice) {
-			for(Expression pp : p) {
-				predict(pp, option, dfa);
-			}
-		}
-		else {
-			predict(p, option, dfa);
-		}
-	}
-	private void predict(Expression p, int option, boolean[] dfa) {
-		if(p instanceof ByteMap) {
-			for(int c = 0; c < dfa.length; c++) {
-				if(dfa[c] && ((ByteMap) p).byteMap[c]) {
-					dfa[c] = false;
-				}
-			}
-			return;
-		}
-		if(p instanceof ByteChar) {
-			int c = ((ByteChar) p).byteChar;
-			if(dfa[c]) {
-				dfa[c] = false;
-			}
-			return;
-		}
-		if(p instanceof AnyChar) {
-			for(int c = 0; c < dfa.length; c++) {
-				dfa[c] = false;
-			}
-			dfa[0] = !UFlag.is(option, Production.Binary);
-			dfa[Source.BinaryEOF] = true;
-			return;
-		}
-	}
 
 	@Override
 	Expression dupUnary(Expression e) {

@@ -2,6 +2,7 @@ package nez.expr;
 import java.util.AbstractList;
 import java.util.TreeMap;
 
+import nez.Production;
 import nez.ast.SourcePosition;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
@@ -94,10 +95,11 @@ public abstract class Expression extends AbstractList<Expression> {
 	}
 
 	public abstract short acceptByte(int ch, int option);
-	public  boolean predict(int option, int ch, boolean k) {return false;}  // 
-	public abstract void predict(int option, boolean[] dfa);
+//	public  boolean predict(int option, int ch, boolean k) {return false;}  // 
+//	public abstract void predict(int option, boolean[] dfa);
 	
 	public final Expression optimize(int option) {
+		option = Production.mask(option);
 		if(this.optimizedOption != option) {
 			optimizeImpl(option);
 			this.optimizedOption = option;
@@ -132,10 +134,6 @@ public abstract class Expression extends AbstractList<Expression> {
 	}
 
 	public abstract Instruction encode(RuntimeCompiler bc, Instruction next);
-//	public Instruction encode(Compiler bc, Instruction next) {
-//		// todo
-//		return next;
-//	}
 
 	protected abstract int pattern(GEP gep);
 	protected abstract void examplfy(GEP gep, StringBuilder sb, int p);

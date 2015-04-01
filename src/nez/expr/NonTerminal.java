@@ -156,12 +156,6 @@ public class NonTerminal extends Expression {
 			return Prediction.Accept;
 		}
 	}
-
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		this.getRule().predict(option, dfa);
-	}
-
 	@Override
 	void optimizeImpl(int option) {
 		Expression e = this;
@@ -171,12 +165,10 @@ public class NonTerminal extends Expression {
 		}
 		this.optimized = e;
 	}
-	
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeNonTerminal(this, next);
 	}
-
 	@Override
 	protected int pattern(GEP gep) {
 		return this.deReference().pattern(gep);

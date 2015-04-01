@@ -84,21 +84,6 @@ public class Choice extends SequentialExpression {
 	}
 
 	@Override
-	public void predict(int option, boolean[] dfa) {
-		boolean[] clone = dfa.clone();
-		this.get(0).predict(option, dfa);
-		for(int i = 1; i < this.size(); i++) {
-			boolean[] dfai = clone.clone();
-			this.get(i).predict(option, dfai);
-			for(int c = 0; c < dfai.length; c++) {
-				if(dfai[c]) {
-					dfa[c] = true;
-				}
-			}
-		}
-	}
-
-	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeChoice(this, next);
 	}

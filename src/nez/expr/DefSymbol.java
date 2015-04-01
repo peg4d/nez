@@ -54,10 +54,6 @@ public class DefSymbol extends Unary {
 	public short acceptByte(int ch, int option) {
 		return this.inner.acceptByte(ch, option);
 	}
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		this.inner.predict(option, dfa);
-	}
 	
 	// Utilities
 	public static boolean checkContextSensitivity(Expression e, UMap<String> visitedMap) {

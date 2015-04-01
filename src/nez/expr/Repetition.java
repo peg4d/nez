@@ -66,12 +66,7 @@ public class Repetition extends Unary {
 	@Override public short acceptByte(int ch, int option) {
 		return Prediction.acceptOption(this, ch, option);
 	}
-	
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		Prediction.predictOption(this, option, dfa);
-	}
-		
+			
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeRepetition(this, next);

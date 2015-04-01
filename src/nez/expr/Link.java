@@ -58,28 +58,6 @@ public class Link extends Unary {
 		return inner.acceptByte(ch, option);
 	}
 	@Override
-	public void predict(int option, boolean[] dfa) {
-		this.get(0).predict(option, dfa);
-	}
-
-//	@Override
-//	public boolean match(SourceContext context) {
-//		SyntaxTree left = context.left;
-//		int mark = context.startConstruction();
-//		if(this.inner.optimized.match(context)) {
-//			if(context.left != left) {
-//				context.commitConstruction(mark, context.left);
-//				context.lazyLink(left, this.index, context.left);
-//			}
-//			context.left = left;
-//			left = null;
-//			return true;
-//		}
-//		context.abortConstruction(mark);			
-//		left = null;
-//		return false;
-//	}
-	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeLink(this, next);
 	}

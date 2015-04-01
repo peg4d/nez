@@ -285,7 +285,7 @@ public class Production {
 											| Specialization | Prediction /* | Tracing */;
 	public final static int SafeOption = ASTConstruction | Optimization;
 	
-	public final int mask(int m) {
+	public final static int mask(int m) {
 		return Binary & m;
 	}
 	

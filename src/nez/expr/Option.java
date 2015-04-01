@@ -56,14 +56,6 @@ public class Option extends Unary {
 	@Override public short acceptByte(int ch, int option) {
 		return Prediction.acceptOption(this, ch, option);
 	}
-	@Override
-	public boolean predict(int option, int ch, boolean k) {
-		return Prediction.predictOption(this, option, ch, k);
-	}
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		Prediction.predictOption(this, option, dfa);
-	}
 	
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {

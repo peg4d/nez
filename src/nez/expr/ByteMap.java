@@ -77,18 +77,6 @@ public class ByteMap extends Terminal {
 	public short acceptByte(int ch, int option) {
 		return (byteMap[ch]) ? Prediction.Accept : Prediction.Reject;
 	}
-
-	@Override
-	public boolean predict(int option, int ch, boolean k) {
-		return (byteMap[ch]) ? true : false;
-	}
-
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		for(int c = 0; c < dfa.length; c++) {
-			dfa[c] = byteMap[c];
-		}
-	}
 	
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {

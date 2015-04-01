@@ -54,15 +54,6 @@ public class IsSymbol extends Terminal {
 		return Prediction.Accept;
 	}
 	@Override
-	public void predict(int option, boolean[] dfa) {
-		if(this.symbolExpression != null) {
-			this.symbolExpression.predict(option, dfa);
-		}
-		else {
-			Prediction.predictAnyChar(option, dfa);
-		}
-	}
-	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeIsSymbol(this, next);
 	}

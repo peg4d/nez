@@ -48,9 +48,6 @@ public abstract class ASTOperation extends Expression {
 	public short acceptByte(int ch, int option) {
 		return Prediction.Unconsumed;
 	}
-	@Override
-	public void predict(int option, boolean[] dfa) {
-	}
 
 	@Override
 	protected int pattern(GEP gep) {

@@ -55,16 +55,6 @@ public class AnyChar extends Terminal {
 	}
 	
 	@Override
-	public boolean predict(int option, int ch, boolean k) {
-		return Prediction.predictAnyChar(option, ch, k);
-	}
-
-	@Override
-	public void predict(int option, boolean[] dfa) {
-		Prediction.predictAnyChar(option, dfa);
-	}
-
-	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return bc.encodeMatchAny(this, next);
 	}
