@@ -30,6 +30,16 @@ public class Repetition extends Unary {
 //		}
 		return false;
 	}
+	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited) {
+		this.inner.setOuterLefted(this);
+	}
+	@Override void checkPhase2(GrammarChecker checker) {
+		if(!this.inner.checkAlwaysConsumed(checker, null, null)) {
+			checker.reportError(s, "unconsumed repetition");
+			this.possibleInfiniteLoop = true;
+		}
+	}
+
 	@Override
 	public int inferTypestate(UMap<String> visited) {
 		int t = this.inner.inferTypestate(visited);
@@ -41,10 +51,6 @@ public class Repetition extends Unary {
 	@Override
 	public Expression checkTypestate(GrammarChecker checker, Typestate c) {
 		int required = c.required;
-		if(!this.inner.checkAlwaysConsumed(checker, null, null)) {
-			checker.reportError(s, "unconsumed repetition");
-			this.possibleInfiniteLoop = true;
-		}
 		Expression inn = this.inner.checkTypestate(checker, c);
 		if(required != Typestate.OperationType && c.required == Typestate.OperationType) {
 			checker.reportWarning(s, "unable to create objects in repetition => removed!!");

@@ -60,7 +60,7 @@ public class NonTerminal extends Expression {
 	@Override
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		if(checker != null) {
-			checkPhase1(checker);
+//			checkPhase1(checker, ruleName, visited);
 			if(startNonTerminal != null && startNonTerminal.equals(this.uniqueName)) {
 				checker.reportError(s, "left recursion: " + this.ruleName);
 				checker.foundFatalError();
@@ -74,11 +74,20 @@ public class NonTerminal extends Expression {
 		return false;
 	}
 
-	@Override void checkPhase1(GrammarChecker checker) {
+	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited) {
 		Rule r = this.getRule();
 		if(r == null) {
 			checker.reportWarning(s, "undefined rule: " + this.ruleName + " => created empty rule!!");
 			r = this.peg.newRule(this.ruleName, Factory.newEmpty(s));
+		}
+		String u = r.getUniqueName();
+		if(u.equals(ruleName)) {
+			r.isRecursive = true;
+			return;
+		}
+		if(!visited.hasKey(u)) {
+			visited.put(u, u);
+			checkPhase1(checker, ruleName, visited);
 		}
 	}
 

@@ -26,7 +26,7 @@ public class DefSymbol extends Unary {
 		this.inner.checkAlwaysConsumed(checker, startNonTerminal, stack);
 		return true;
 	}
-	@Override void checkPhase1(GrammarChecker checker) {
+	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited) {
 		checker.setSymbolExpresion(table.getName(), this.inner);
 	}
 	@Override void checkPhase2(GrammarChecker checker) {

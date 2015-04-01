@@ -37,6 +37,12 @@ public class Verbose {
 		}
 	}
 	
+	public static void todo(Object msg) {
+		if(General) {
+			ConsoleUtils.println("TODO " + msg);
+		}
+	}
+	
 	public final static void printElapsedTime(String msg, long t1, long t2) {
 		double d = (t2 - t1) / 1000000;
 		println(msg + ": " + String.format("%f", d) + "[ms]");
@@ -77,5 +83,6 @@ public class Verbose {
 			ConsoleUtils.println("NFA: " + s);
 		}
 	}
+
 	
 }

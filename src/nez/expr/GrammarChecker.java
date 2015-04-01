@@ -58,13 +58,15 @@ public class GrammarChecker {
 	
 	public void verify(Grammar grammar) {
 		UList<String> stack = new UList<String>(new String[64]);
+		UMap<String> visited = new UMap<String>();
 		for(Rule r: grammar.getDefinedRuleList()) {
+			r.minlen = -1;  // reset for all checking
+			r.checkAlwaysConsumed(this, null, stack);
+			visited.clear();
+			checkPhase1(r.getExpression(), r.getUniqueName(), visited);
 			if(Verbose.Grammar) {
 				ConsoleUtils.println(r.getUniqueName() + " = " + r.getExpression());
 			}
-			r.minlen = -1;  // reset for all checking
-			r.checkAlwaysConsumed(this, null, stack);
-			checkPhase1(r.getExpression());
 		}
 		if(this.foundError) {
 			ConsoleUtils.exit(1, "FatalGrammarError");
@@ -86,10 +88,10 @@ public class GrammarChecker {
 		}
 	}
 	
-	private void checkPhase1(Expression p) {
-		p.checkPhase1(this);
+	private void checkPhase1(Expression p, String ruleName, UMap<String> visited) {
+		p.checkPhase1(this, ruleName, visited);
 		for(Expression e: p) {
-			this.checkPhase1(e);
+			this.checkPhase1(e, ruleName, visited);
 		}
 	}
 

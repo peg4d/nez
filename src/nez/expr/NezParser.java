@@ -6,6 +6,7 @@ import nez.SourceContext;
 import nez.ast.CommonTree;
 import nez.ast.CommonTreeVisitor;
 import nez.ast.Tag;
+import nez.main.Verbose;
 import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
@@ -115,21 +116,16 @@ public class NezParser extends CommonTreeVisitor {
 			rule = null;
 		}
 		rule = loaded.defineRule(ast.get(0), ruleName, e);
-		if(ast.size() >= 3) {
-			readAnnotations(rule, ast.get(2));
+		if(ast.size() == 3) {
+			Verbose.todo(ast);
 		}
 		return rule;
 	}
 	
-	private void readAnnotations(Rule rule, CommonTree pego) {
-		for(int i = 0; i < pego.size(); i++) {
-			CommonTree p = pego.get(i);
-			if(p.is(NezTag.Annotation)) {
-				rule.addAnotation(p.textAt(0, ""), p.get(1));
-			}
-		}
+	private String quote(String t) {
+		return "\"" + t + "\"";
 	}
-	
+		
 	public Expression toNonTerminal(CommonTree ast) {
 		String symbol = ast.getText();
 //		if(ruleName.equals(symbol)) {
@@ -147,10 +143,6 @@ public class NezParser extends CommonTreeVisitor {
 		return Factory.newNonTerminal(ast, this.loaded, symbol);
 	}
 
-	private String quote(String t) {
-		return "\"" + t + "\"";
-	}
-
 	public Expression toString(CommonTree ast) {
 		String name = quote(ast.getText());
 		Rule r = this.loaded.getRule(name);
@@ -162,6 +154,7 @@ public class NezParser extends CommonTreeVisitor {
 		}
 		return Factory.newString(ast, StringUtils.unquoteString(ast.getText()));
 	}
+
 
 	public Expression toCharacter(CommonTree ast) {
 		return Factory.newString(ast, StringUtils.unquoteString(ast.getText()));

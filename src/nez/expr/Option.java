@@ -26,7 +26,7 @@ public class Option extends Unary {
 	public boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack) {
 		return false;
 	}
-	@Override void checkPhase1(GrammarChecker checker) {
+	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited) {
 		this.inner.setOuterLefted(this);
 	}
 

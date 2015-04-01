@@ -46,7 +46,7 @@ public abstract class Expression extends AbstractList<Expression> {
 	}
 	public abstract boolean checkAlwaysConsumed(GrammarChecker checker, String startNonTerminal, UList<String> stack);
 	
-	void checkPhase1(GrammarChecker checker) {}
+	void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited) {}
 	void checkPhase2(GrammarChecker checker) {}
 	boolean setOuterLefted(Expression outer) { return false; }
 	

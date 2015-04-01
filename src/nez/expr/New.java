@@ -31,12 +31,18 @@ public class New extends Unconsumed {
 		return false;
 	}
 	
-	@Override boolean setOuterLefted(Expression outer) { 
+	@Override 
+	boolean setOuterLefted(Expression outer) { 
 		if(this.lefted) {
 			this.outer = outer;
 			return false;
 		}
 		return false; 
+	}
+	@Override void checkPhase2(GrammarChecker checker) {
+		if(this.lefted && this.outer == null) {
+			checker.reportError(s, "expected repetition for " + this);
+		}
 	}
 
 	@Override

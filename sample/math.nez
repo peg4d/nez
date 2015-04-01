@@ -4,10 +4,10 @@
  * author: Kimio Kuramitsu
  */
 
-File
+public File
 	= Expr .*
 
-Expr
+public Expr
 	= Sum
 
 Sum

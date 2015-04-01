@@ -3,7 +3,6 @@ package nez.expr;
 import java.util.TreeMap;
 
 import nez.Grammar;
-import nez.ast.CommonTree;
 import nez.ast.SourcePosition;
 import nez.main.Verbose;
 import nez.runtime.Instruction;
@@ -18,6 +17,12 @@ public class Rule extends Expression {
 	String     uname;
 	Expression body;
 	
+	boolean isRecursive = false;
+	boolean isPublic  = false;
+	boolean isInline  = false;
+
+	private Rule definedRule;  // defined
+
 	public Rule(SourcePosition s, Grammar grammar, String name, Expression body) {
 		super(s);
 		this.grammar = grammar;
@@ -80,11 +85,10 @@ public class Rule extends Expression {
 	}
 	
 	public int transType = Typestate.Undefined;
+	
 	public final boolean isPurePEG() {
 		return this.transType == Typestate.BooleanType;
 	}
-	
-	private Rule definedRule;  // defined
 
 	@Override
 	public int inferTypestate(UMap<String> visited) {
@@ -273,6 +277,7 @@ public class Rule extends Expression {
 			Verbose.printSelfTesting("\nPlease report the above to " + Verbose.BugsReport1);
 		}
 	}
+	
 	@Override
 	public void predict(int option, boolean[] dfa) {
 		if(isPredicting) {
@@ -318,10 +323,6 @@ public class Rule extends Expression {
 		}
 	}
 	
-	public void addAnotation(String textAt, CommonTree ast) {
-		// TODO Auto-generated method stub
-	}
-
 	@Override
 	public Instruction encode(RuntimeCompiler bc, Instruction next) {
 		return this.getExpression().encode(bc, next);
