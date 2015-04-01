@@ -36,8 +36,8 @@ public class NezGrammarGenerator extends GrammarGenerator {
 	
 	@Override
 	public void makeHeader() {
-		file.write("// Parsing Expression Grammars for Nez");
-		file.write("// ");
+		file.writeIndent("// Parsing Expression Grammars for Nez");
+		file.writeIndent("// ");
 	}
 
 	String stringfyName(String s) {
@@ -47,6 +47,9 @@ public class NezGrammarGenerator extends GrammarGenerator {
 	@Override
 	public void visitRule(Rule rule) {
 		Expression e = rule.getExpression();
+		if(rule.isPublic()) {
+			file.writeIndent("public");
+		}
 		file.writeIndent(stringfyName(rule.getLocalName()));
 		file.incIndent();
 		file.writeIndent("= ");

@@ -128,15 +128,18 @@ public class RuntimeCompiler {
 		long t = System.nanoTime();
 		for(Rule r : ruleList) {
 			String uname = r.getUniqueName();
-			CodeBlock block = new CodeBlock();
 			if(Verbose.Debug) {
 				Verbose.debug("compiling .. " + r);
 			}
 			Expression e = r.getExpression();
+			if(UFlag.is(option, Production.Inlining)  && this.ruleMap.size() > 0 && r.isInline() ) {
+				System.out.println("skip .. " + r.getLocalName() + "=" + e);
+				continue;
+			}
 			if(!UFlag.is(option, Production.ASTConstruction)) {
 				e = e.removeASTOperator(Expression.RemoveOnly);
-				//System.out.println(r.getLocalName() + "=" + e);
 			}
+			CodeBlock block = new CodeBlock();
 			block.head = encodeExpression(e, new IRet(r));
 			block.start = codeList.size();
 			this.ruleMap.put(uname, block);
@@ -810,13 +813,17 @@ public class RuntimeCompiler {
 	}
 
 	public final Instruction encodeNonTerminal(NonTerminal p, Instruction next) {
+		Rule r = p.getRule();
 		Expression pp = p.optimize(option);
 		if(pp instanceof ByteChar || pp instanceof ByteMap || pp instanceof AnyChar) {
 			Verbose.noticeOptimize("Inlining", p, pp);
 			return encodeExpression(pp, next);
 		}
+		if(r.isInline() && UFlag.is(option, Production.Inlining)) {
+			Verbose.noticeOptimize("Inlining", p, r.getExpression());
+			return encodeExpression(r.getExpression(), next);
+		}
 		if(this.enablePackratParsing()) {
-			Rule r = p.getRule();
 			if(!this.enableASTConstruction() || r.isPurePEG()) {
 				Expression ref = Factory.resolveNonTerminal(r.getExpression());
 				MemoPoint m = this.issueMemoPoint(r.getUniqueName(), ref);
@@ -832,7 +839,7 @@ public class RuntimeCompiler {
 				}
 			}
 		}	
-		return new ICallPush(p.getRule(), next);
+		return new ICallPush(r, next);
 	}
 	
 	private Instruction newLookup(Expression e, IMonitoredSwitch monitor, MemoPoint m, Instruction next, Instruction skip, Instruction failjump) {

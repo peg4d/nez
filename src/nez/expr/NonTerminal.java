@@ -74,20 +74,28 @@ public class NonTerminal extends Expression {
 		return false;
 	}
 
-	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited) {
+	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited, int depth) {
 		Rule r = this.getRule();
 		if(r == null) {
 			checker.reportWarning(s, "undefined rule: " + this.ruleName + " => created empty rule!!");
 			r = this.peg.newRule(this.ruleName, Factory.newEmpty(s));
 		}
-		String u = r.getUniqueName();
-		if(u.equals(ruleName)) {
-			r.isRecursive = true;
-			return;
+		if(depth == 0) {
+			r.refCount += 1;
 		}
-		if(!visited.hasKey(u)) {
-			visited.put(u, u);
-			checkPhase1(checker, ruleName, visited);
+		if(!r.isRecursive) {
+			String u = r.getUniqueName();
+			if(u.equals(ruleName)) {
+				r.isRecursive = true;
+				if(r.isInline) {
+					checker.reportError(s, "recursion disallows inlining " + r.getLocalName());
+					r.isInline = false;
+				}
+			}
+			if(!visited.hasKey(u)) {
+				visited.put(u, ruleName);
+				checker.checkPhase1(r.getExpression(), ruleName, visited, depth+1);
+			}
 		}
 	}
 

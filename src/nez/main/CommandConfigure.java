@@ -172,6 +172,9 @@ public class CommandConfigure {
 				else if(argument.endsWith(":tracing") || argument.endsWith(":trace")) {
 					this.ProductionOption |= Production.Tracing;
 				}
+				else if(argument.endsWith(":inline")) {
+					this.ProductionOption |= Production.Inlining;
+				}
 				else if(argument.endsWith(":dfa")) {
 					this.ProductionOption |= Production.DFA;
 				}
@@ -188,6 +191,9 @@ public class CommandConfigure {
 				}
 				else if(argument.endsWith(":prediction") || argument.endsWith(":predict")) {
 					this.ProductionOption = UFlag.unsetFlag(this.ProductionOption, Production.Prediction);
+				}
+				else if(argument.endsWith(":inline")) {
+					this.ProductionOption = UFlag.unsetFlag(this.ProductionOption, Production.Inlining);
 				}
 				else if(argument.endsWith(":dfa")) {
 					this.ProductionOption = UFlag.unsetFlag(this.ProductionOption, Production.DFA);

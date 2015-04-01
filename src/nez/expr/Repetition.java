@@ -30,7 +30,7 @@ public class Repetition extends Unary {
 //		}
 		return false;
 	}
-	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited) {
+	@Override void checkPhase1(GrammarChecker checker, String ruleName, UMap<String> visited, int depth) {
 		this.inner.setOuterLefted(this);
 	}
 	@Override void checkPhase2(GrammarChecker checker) {

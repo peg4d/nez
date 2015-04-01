@@ -6,13 +6,11 @@ import nez.SourceContext;
 import nez.ast.CommonTree;
 import nez.ast.CommonTreeVisitor;
 import nez.ast.Tag;
-import nez.main.Verbose;
 import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
 
 public class NezParser extends CommonTreeVisitor {
-
 	Production product;
 	Grammar loaded;
 	GrammarChecker checker;
@@ -29,7 +27,7 @@ public class NezParser extends CommonTreeVisitor {
 			if(ast == null) {
 				ConsoleUtils.exit(1, sc.getSyntaxErrorMessage());
 			}
-			if(!this.parse(ast)) {
+			if(!this.parseStatement(ast)) {
 				break;
 			}
 		}
@@ -45,13 +43,13 @@ public class NezParser extends CommonTreeVisitor {
 		if(ast == null || !ast.is(NezTag.Rule)) {
 			return null;
 		}
-		return toRule(ast);
+		return parseRule(ast);
 	}
 	
-	private boolean parse(CommonTree ast) {
+	private boolean parseStatement(CommonTree ast) {
 		//System.out.println("DEBUG? parsed: " + ast);
 		if(ast.is(NezTag.Rule)) {
-			toRule(ast);
+			parseRule(ast);
 			return true;
 		}
 //		if(ast.is(NezTag.Import)) {
@@ -68,7 +66,7 @@ public class NezParser extends CommonTreeVisitor {
 //			System.out.println(ast.formatSourceMessage("error", "syntax error: ascii=" + c));
 //			return false;
 //		}
-		ConsoleUtils.exit(1, ast.formatSourceMessage("error", "Not Nez construct: " + ast));
+		ConsoleUtils.exit(1, ast.formatSourceMessage("error", "syntax error: " + ast));
 		return false;
 	}
 	
@@ -87,10 +85,12 @@ public class NezParser extends CommonTreeVisitor {
 		return (Expression)this.visit(po);
 	}
 	
-	public Rule toRule(CommonTree ast) {
+	public Rule parseRule(CommonTree ast) {
 		String ruleName = ast.textAt(0, "");
+		boolean isTerminal = false;
 		if(ast.get(0).is(NezTag.String)) {
 			ruleName = quote(ruleName);
+			isTerminal = true;
 		}
 		Rule rule = loaded.getRule(ruleName);
 		Expression e = toExpression(ast.get(1));
@@ -99,12 +99,14 @@ public class NezParser extends CommonTreeVisitor {
 			rule = null;
 		}
 		rule = loaded.defineRule(ast.get(0), ruleName, e);
+		rule.isTerminal = isTerminal;
 		if(ast.size() == 3) {
-			Verbose.todo(ast.get(2));
-			if(ast.contains("public")) {
+			CommonTree attrs = ast.get(2);
+			//Verbose.todo(attrs);
+			if(attrs.containsToken("public")) {
 				rule.isPublic = true;
 			}
-			if(ast.contains("inline")) {
+			if(attrs.containsToken("inline")) {
 				rule.isInline = true;
 			}
 		}
@@ -243,25 +245,13 @@ public class NezParser extends CommonTreeVisitor {
 	// PEG4d TransCapturing
 
 	public Expression toNew(CommonTree ast) {
-//		if(Expression.ClassicMode) {
-//			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-//			return Factory.newNew(ast, seq.toList());
-//		}
-//		else {
 		Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
 		return Factory.newNew(ast, false, p);
-//		}
 	}
 
 	public Expression toLeftNew(CommonTree ast) {
-//		if(Expression.ClassicMode) {
-//			Expression seq = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-//			return Factory.newNew(ast, seq.toList());
-//		}
-//		else {
 		Expression p = (ast.size() == 0) ? Factory.newEmpty(ast) : toExpression(ast.get(0));
-		return Factory.newNew(ast, true, p);
-//		}
+		return Factory.newNew(ast, true, p);//		}
 	}
 
 	public Expression toLink(CommonTree ast) {

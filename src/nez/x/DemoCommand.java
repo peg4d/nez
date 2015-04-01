@@ -20,7 +20,7 @@ public class DemoCommand extends Command {
 	@Override
 	public void exec(CommandConfigure config) {
 		Production product = config.getProduction();
-		Grammar peg = product.getRule().getGrammar();
+		Grammar peg = product.getStartRule().getGrammar();
 		String start = config.StartingPoint;
 		NezParser parser = new NezParser();
 		boolean grammarAdded = false;

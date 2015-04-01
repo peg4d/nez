@@ -7,6 +7,7 @@ import nez.ast.SourcePosition;
 import nez.main.Verbose;
 import nez.runtime.Instruction;
 import nez.runtime.RuntimeCompiler;
+import nez.util.ConsoleUtils;
 import nez.util.StringUtils;
 import nez.util.UList;
 import nez.util.UMap;
@@ -17,10 +18,12 @@ public class Rule extends Expression {
 	String     uname;
 	Expression body;
 	
-	boolean isRecursive = false;
 	boolean isPublic  = false;
 	boolean isInline  = false;
-
+	boolean isRecursive = false;
+	int     refCount  = 0;
+	boolean isTerminal = false;
+	
 	private Rule definedRule;  // defined
 
 	public Rule(SourcePosition s, Grammar grammar, String name, Expression body) {
@@ -34,6 +37,18 @@ public class Rule extends Expression {
 	
 	public final Grammar getGrammar() {
 		return this.grammar;
+	}
+	
+	public final boolean isPublic() {
+		return this.isPublic;
+	}
+
+	public final boolean isInline() {
+		return this.isInline || (!isPublic && !isRecursive && this.refCount == 1);
+	}
+
+	public final boolean isRecursive() {
+		return this.isRecursive;
 	}
 	
 	@Override
@@ -338,6 +353,31 @@ public class Rule extends Expression {
 		body.examplfy(gep, sb, p);
 	}
 
-
+	public final void dump() {
+		StringBuilder sb = new StringBuilder();
+		if(this.isPublic) {
+			sb.append("public ");
+		}
+		if(this.isInline()) {
+			sb.append("inline ");
+		}
+		if(this.isRecursive) {
+			sb.append("recursive ");
+		}
+		if(!this.isAlwaysConsumed()) {
+			sb.append("unconsumed ");
+		}
+		boolean[] b = ByteMap.newMap(true);
+		for(int c = 0; c < b.length; c++) {
+			if(this.acceptByte(c, 0) == Prediction.Reject) {
+				b[c] = false;
+			}
+		}
+		sb.append("ref(" + this.refCount + ") ");
+		sb.append("accept" + StringUtils.stringfyCharClass(b) + " ");
+		
+		ConsoleUtils.println(sb.toString());
+		ConsoleUtils.println(this.getUniqueName() + " = " + this.getExpression());
+	}
 
 }

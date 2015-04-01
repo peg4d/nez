@@ -34,7 +34,6 @@ public abstract class GrammarVisitor {
 			try {
 				m = this.getClass().getMethod(name, c);
 			} catch (NoSuchMethodException e) {
-				System.out.println(e);
 				return null;
 			} catch (SecurityException e) {
 				return null;
