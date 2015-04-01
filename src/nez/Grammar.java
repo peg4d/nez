@@ -50,15 +50,6 @@ public class Grammar {
 		return r;
 	}
 	
-	public final Rule defineRule(String name, Expression e) {
-		if (!hasRule(name)) {
-			nameList.add(name);
-		}
-		Rule r = new Rule(null, this, name, e);
-		this.ruleMap.put(name, r);
-		return r;
-	}
-
 //	public int getRuleSize() {
 //		return this.ruleMap.size();
 //	}
