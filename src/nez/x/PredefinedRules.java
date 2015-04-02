@@ -5,8 +5,10 @@ import nez.expr.Expression;
 
 public class PredefinedRules {
 	Grammar grammar;
-	public PredefinedRules(Grammar grammar) {
+	String rootElement;
+	public PredefinedRules(Grammar grammar, String rootElement) {
 		this.grammar = grammar;
+		this.rootElement = rootElement;
 	}
 
 	public void defineRule() {
@@ -26,11 +28,13 @@ public class PredefinedRules {
 		defCDATASECT();
 		defMISC();
 		defCOMMENT();
+		defPCDATA();
 		defEMPTY();
 		defANY();
 		defSpacing();
 		defENDTAG();
 		defNotAny();
+		defRootElement();
 	}
 
 
@@ -79,7 +83,7 @@ public class PredefinedRules {
 		grammar.defineRule(null, "DOCTYPE", grammar.newSequence(l));
 	}
 	void defContent() {
-		Expression choice = grammar.newChoice(grammar.newNonTerminal("Element0"),
+		Expression choice = grammar.newChoice(grammar.newNonTerminal("RootElement"),
 				grammar.newNonTerminal("COMMENT"));
 		Expression[] l = {
 				grammar.newRepetition(grammar.newNonTerminal("S")),
@@ -181,5 +185,17 @@ public class PredefinedRules {
 	void defNotAny() {
 		Expression l = grammar.newNot(grammar.newAnyChar());
 		grammar.defineRule(null, "NotAny", l);
+	}
+	void defPCDATA() {
+		Expression[] l = {
+				grammar.newNonTerminal("TEXT"),
+				grammar.newSequence(grammar.newByteChar('&'), grammar.newNonTerminal("entity"),
+						grammar.newByteChar(';'))
+		};
+		grammar.defineRule(null, "PCDATA", grammar.newChoice(l));
+	}
+	void defRootElement(){
+		String rootElementName = "Element_" + this.rootElement;
+		grammar.defineRule(null, "RootElement", grammar.newNonTerminal(rootElementName));
 	}
 }

@@ -16,7 +16,7 @@ public class DTDConverter extends GrammarConverter {
 	int attDefCount = 0;
 	int elementCount = 0;
 	int entityCount = 0;
-	Map<Integer, String> elementMap = new HashMap<>();
+	Map<Integer, String> elementNameMap = new HashMap<>();
 	Map<String, Integer> attributeMap = new HashMap<>();
 	List<Integer> reqList;
 	List<Integer> impList;
@@ -27,7 +27,7 @@ public class DTDConverter extends GrammarConverter {
 	}
 
 	public void convert(CommonTree node) {
-		predefine();
+		predefine(node);
 		this.visit("visit", node);
 		System.out.println("\nConverted Rule: " + grammar.getResourceName());
 		grammar.dump();
@@ -41,8 +41,9 @@ public class DTDConverter extends GrammarConverter {
 		file.flush();
 	}
 	
-	private void predefine() {
-		PredefinedRules preRules = new PredefinedRules(this.grammar);
+	private void predefine(CommonTree node) {
+		String rootElement = node.get(0).textAt(0, null);
+		PredefinedRules preRules = new PredefinedRules(this.grammar, rootElement);
 		preRules.defineRule();
 	}
 
@@ -66,7 +67,7 @@ public class DTDConverter extends GrammarConverter {
 			this.visit("visit", subnode);
 		}
 		for (int elementID = 0; elementID < elementCount; elementID++) {
-			String elementName = "Element" + elementID;
+			String elementName = "Element_" + elementNameMap.get(elementID);
 			grammar.defineRule(node, elementName, genElement(node, elementID));
 		}
 		grammar.defineRule(node, "entity", genEntityList(node));
@@ -76,30 +77,33 @@ public class DTDConverter extends GrammarConverter {
 
 	public void visitElement(CommonTree node) {
 		String elementName = node.textAt(0, "");
-		elementMap.put(elementCount, elementName);
+		elementNameMap.put(elementCount, elementName);
+		//		elementIDMap.put(elementName, elementCount);
 		grammar.defineRule(node, "Content" + elementCount, toExpression(node.get(1)));
 		elementCount++;
 	}
 
 	private Expression genElement(CommonTree node, int elementID) {
-		String elementName = elementMap.get(elementID);
+		String elementName = elementNameMap.get(elementID);
 		// check whether attribute exists
 		if (attributeMap.containsValue(elementID)) {
 			Expression[] l = {
-			grammar.newString("<" + elementName),
+					grammar.newString("<" + elementName),
+					grammar.newRepetition(grammar.newNonTerminal("S")),
 					grammar.newNonTerminal("Attribute" + elementID),
-			grammar.newString(">"),
+					grammar.newRepetition(grammar.newNonTerminal("S")),
+					grammar.newString(">"),
 					grammar.newNonTerminal("Content" + elementID),
-			grammar.newString("</" + elementName + ">")
+					grammar.newString("</" + elementName + ">")
 			};
 			return grammar.newSequence(l);
 		}
 		else {
 			Expression[] l = {
-			grammar.newString("<" + elementName),
-			grammar.newString( ">"),
+					grammar.newString("<" + elementName),
+					grammar.newString(">"),
 					grammar.newNonTerminal("Content" + elementID),
-			grammar.newString("</" + elementName + ">")
+					grammar.newString("</" + elementName + ">")
 			};
 			return grammar.newSequence(l);
 		}
@@ -205,9 +209,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newNonTerminal("STRING"),
 		};
 		return grammar.newSequence(l);
@@ -217,9 +221,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("IDTOKEN"),
 				grammar.newString("\"")
@@ -234,9 +238,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("IDTOKEN"),
 				grammar.newString("\"")
@@ -248,9 +252,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("IDTOKENS"),
 				grammar.newString("\"")
@@ -264,9 +268,9 @@ public class DTDConverter extends GrammarConverter {
 		String fixedValue = node.textAt(2, "");
 		Expression[] l ={
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString(fixedValue),
 		};
 		return grammar.newSequence(l);
@@ -276,9 +280,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l ={
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("entity"),
 				grammar.newString("\"")
@@ -290,9 +294,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newString("\""),
 				grammar.newNonTerminal("entities"),
 				grammar.newString("\"")
@@ -304,9 +308,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newNonTerminal("NMTOKEN"),
 		};
 		return grammar.newSequence(l);
@@ -316,9 +320,9 @@ public class DTDConverter extends GrammarConverter {
 		String attName = node.getParent().textAt(0, "");
 		Expression[] l = {
 				grammar.newString(attName),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newByteChar('='),
-				grammar.newNonTerminal("S"),
+				grammar.newRepetition(grammar.newNonTerminal("S")),
 				grammar.newNonTerminal("NMTOKEN"),
 		};
 		return grammar.newSequence(l);
@@ -329,7 +333,7 @@ public class DTDConverter extends GrammarConverter {
 		if (listLength == 1) {
 			Expression[] l = {
 					grammar.newNonTerminal("AttDef" + attID + "_" + attlist[0]),
-					grammar.newRepetition(grammar.newNonTerminal("_")),
+					grammar.newRepetition(grammar.newNonTerminal("S")),
 					grammar.newNonTerminal("ENDTAG")
 			};
 			return grammar.newSequence(l);
@@ -355,7 +359,7 @@ public class DTDConverter extends GrammarConverter {
 		if (listLength == 0) {
 			Expression[] l = {
 					grammar.newRepetition(grammar.newNonTerminal("AttChoice" + attID)),
-					grammar.newNonTerminal("S"),
+					grammar.newRepetition(grammar.newNonTerminal("S")),
 					grammar.newNonTerminal("ENDTAG")
 			};
 			return grammar.newSequence(l);
